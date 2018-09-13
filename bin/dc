@@ -7,4 +7,7 @@ PROJECT_DIR="$( cd $BIN/.. && pwd  )"
 [[ -z "$COMPOSE_PROJECT" ]] && COMPOSE_PROJECT=$(basename $PROJECT_DIR)
 [[ -z "$ROLE" ]] && ROLE=dev
 
+HOST_IP=`ip -4 addr show scope global dev docker0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
+export HOST_IP=$HOST_IP
+
 docker-compose -p $COMPOSE_PROJECT -f compose/$ROLE.yml $*

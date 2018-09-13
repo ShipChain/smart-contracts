@@ -3,14 +3,16 @@ version: '3.2'
 services:
   ganache:
     image: trufflesuite/ganache-cli
-    ports:
-      - "7545:8545"
+    expose:
+      - "8545"
 
   truffle:
     build:
       context: ../
     stdin_open: true
     tty: true
+    extra_hosts:
+     - "outside:${HOST_IP}"
     depends_on:
       - ganache
     volumes:
