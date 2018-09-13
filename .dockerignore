@@ -1,0 +1,4 @@
+bin/
+.dockerignore
+.gitignore
+Dockerfile

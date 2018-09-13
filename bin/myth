@@ -1,0 +1,5 @@
+#!/bin/bash
+
+bin/truffle compile
+docker run -v $(pwd)/truffle:/tmp -w "/tmp/" mythril/myth --truffle
+
