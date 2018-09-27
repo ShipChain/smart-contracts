@@ -5,6 +5,7 @@ const uuidToHex = require('uuid-to-hex');
 const LoadContract = artifacts.require("LoadContract");
 
 const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3 };
+const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, WITHDRAWN:4};
 const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2 };
 
 async function createShipment(shipmentUuid, shipper, fundingType=EscrowFundingType.NO_FUNDING, fundingAmount=0){
@@ -117,6 +118,8 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.reverts(registry.setInProgress(shipmentUuid, {from: CARRIER}), "Escrow must be Funded");
 
         assert.equal(await registry.shipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await registry.escrowState(shipmentUuid), EscrowState.CREATED);
+        assert.equal(await registry.escrowType(shipmentUuid), EscrowFundingType.SHIP);
     });
 
 });

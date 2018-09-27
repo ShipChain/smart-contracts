@@ -26,7 +26,7 @@ contract LoadContract is Ownable {
     mapping (bytes16 => Shipment.Data) private allShipmentData;
     mapping (bytes16 => Escrow.Data) private allEscrowData;
 
-    modifier escrowState(bytes16 _shipmentUuid, Escrow.State _state, string message) {
+    modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string message) {
         Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
         require(escrow.state == Escrow.State.NOT_CREATED || escrow.state == _state, message);
         _;
@@ -34,6 +34,11 @@ contract LoadContract is Ownable {
 
     modifier shipmentExists(bytes16 _shipmentUuid) {
         require(allShipmentData[_shipmentUuid].shipper != address(0x0), "Shipment does not exist");
+        _;
+    }
+
+    modifier hasEscrow(bytes16 _shipmentUuid) {
+        require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
         _;
     }
 
@@ -122,7 +127,7 @@ contract LoadContract is Ownable {
     function setInProgress(bytes16 _shipmentUuid)
         public
         shipmentExists(_shipmentUuid)
-        escrowState(_shipmentUuid, Escrow.State.FUNDED, "Escrow must be Funded")
+        escrowHasState(_shipmentUuid, Escrow.State.FUNDED, "Escrow must be Funded")
     {
         allShipmentData[_shipmentUuid].setInProgress();
     }
@@ -165,16 +170,29 @@ contract LoadContract is Ownable {
         return allShipmentData[_shipmentUuid].state;
     }
 
-    /** @dev Returns the Esrow for a shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @return Escrow's struct casted as a Escrow "object" you can call methods on.
+    /** @notice Returns the Escrow state.
+      * @param _shipmentUuid bytes16 Shipment's UUID
       */
-    function getEscrow(bytes16 _shipmentUuid)
-        private
+    function escrowState(bytes16 _shipmentUuid)
+        public
         view
         shipmentExists(_shipmentUuid)
-        returns (Escrow.Data storage escrow)
+        hasEscrow(_shipmentUuid)
+        returns(Escrow.State)
     {
-        escrow = allEscrowData[_shipmentUuid];
+        return allEscrowData[_shipmentUuid].state;
+    }
+
+    /** @notice Returns the Escrow state.
+      * @param _shipmentUuid bytes16 Shipment's UUID
+      */
+    function escrowType(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        hasEscrow(_shipmentUuid)
+        returns(Escrow.FundingType)
+    {
+        return allEscrowData[_shipmentUuid].fundingType;
     }
 }
