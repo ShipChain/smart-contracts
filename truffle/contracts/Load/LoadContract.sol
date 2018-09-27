@@ -27,13 +27,13 @@ contract LoadContract is Ownable {
     mapping (bytes16 => Escrow.Data) private allEscrowData;
 
     modifier escrowState(bytes16 _shipmentUuid, Escrow.State _state, string message) {
-        Escrow.Data storage escrow = getEscrow(_shipmentUuid);
+        Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
         require(escrow.state == Escrow.State.NOT_CREATED || escrow.state == _state, message);
         _;
     }
 
     modifier shipmentExists(bytes16 _shipmentUuid) {
-        require(getShipment(_shipmentUuid).shipper != address(0x0), "Shipment does not exist");
+        require(allShipmentData[_shipmentUuid].shipper != address(0x0), "Shipment does not exist");
         _;
     }
 
@@ -50,11 +50,11 @@ contract LoadContract is Ownable {
                     _fundingType == Escrow.FundingType.ETHER, "Invalid Funding Type");
             require(_contractedAmount > 0, "Escrow must have an amount");
 
-            Escrow.Data storage escrow = getEscrow(_shipmentUuid);
+            Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
             require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
         }
 
-        Shipment.Data storage shipment = getShipment(_shipmentUuid);
+        Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
         require(shipment.shipper == address(0x0), "Shipment already exists");
 
         shipment.shipper = msg.sender;
@@ -79,7 +79,7 @@ contract LoadContract is Ownable {
         external
         shipmentExists(_shipmentUuid)
     {
-        getShipment(_shipmentUuid).setVaultUrl(_shipmentUuid, _vaultUrl);
+        allShipmentData[_shipmentUuid].setVaultUrl(_shipmentUuid, _vaultUrl);
     }
 
     /** @notice Associates a Vault Hash with this Shipment.
@@ -89,8 +89,9 @@ contract LoadContract is Ownable {
       */
     function setVaultHash(bytes16 _shipmentUuid, string _vaultHash)
         external
+        shipmentExists(_shipmentUuid)
     {
-        getShipment(_shipmentUuid).setVaultHash(_shipmentUuid, _vaultHash);
+        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
     }
 
     /** @notice Defines the Carrier for this Shipment.
@@ -99,8 +100,9 @@ contract LoadContract is Ownable {
       */
     function setCarrier(bytes16 _shipmentUuid, address _carrier)
         public
+        shipmentExists(_shipmentUuid)
     {
-        getShipment(_shipmentUuid).setCarrier(_carrier);
+        allShipmentData[_shipmentUuid].setCarrier(_carrier);
     }
 
     /** @notice Defines the Moderator for this Shipment.
@@ -109,8 +111,9 @@ contract LoadContract is Ownable {
       */
     function setModerator(bytes16 _shipmentUuid, address _moderator)
         public
+        shipmentExists(_shipmentUuid)
     {
-        getShipment(_shipmentUuid).setModerator(_moderator);
+        allShipmentData[_shipmentUuid].setModerator(_moderator);
     }
 
     /** @notice Updates the Shipment state to "In Progress".
@@ -118,9 +121,10 @@ contract LoadContract is Ownable {
       */
     function setInProgress(bytes16 _shipmentUuid)
         public
+        shipmentExists(_shipmentUuid)
         escrowState(_shipmentUuid, Escrow.State.FUNDED, "Escrow must be Funded")
     {
-        getShipment(_shipmentUuid).setInProgress();
+        allShipmentData[_shipmentUuid].setInProgress();
     }
 
     /** @notice Updates the Shipment state to "Complete".
@@ -128,48 +132,37 @@ contract LoadContract is Ownable {
       */
     function setComplete(bytes16 _shipmentUuid)
         public
+        shipmentExists(_shipmentUuid)
     {
-        getShipment(_shipmentUuid).setComplete();
+        allShipmentData[_shipmentUuid].setComplete();
     }
 
     /** @notice Returns the Shipment Shipper.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function shipper(bytes16 _shipmentUuid) public view returns(address) {
-        return getShipment(_shipmentUuid).shipper;
+    function shipper(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(address) {
+        return allShipmentData[_shipmentUuid].shipper;
     }
 
     /** @notice Returns the Shipment Carrier.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function carrier(bytes16 _shipmentUuid) public view returns(address) {
-        return getShipment(_shipmentUuid).carrier;
+    function carrier(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(address) {
+        return allShipmentData[_shipmentUuid].carrier;
     }
 
     /** @notice Returns the Shipment Moderator.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function moderator(bytes16 _shipmentUuid) public view returns(address) {
-        return getShipment(_shipmentUuid).moderator;
+    function moderator(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(address) {
+        return allShipmentData[_shipmentUuid].moderator;
     }
 
     /** @notice Returns the Shipment state.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function shipmentState(bytes16 _shipmentUuid) public view returns(Shipment.State) {
-        return getShipment(_shipmentUuid).state;
-    }
-
-    /** @dev Returns the Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @return Shipment's struct casted as a Shipment "object" you can call methods on.
-      */
-    function getShipment(bytes16 _shipmentUuid)
-        private
-        view
-        returns (Shipment.Data storage shipment)
-    {
-        shipment = allShipmentData[_shipmentUuid];
+    function shipmentState(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(Shipment.State) {
+        return allShipmentData[_shipmentUuid].state;
     }
 
     /** @dev Returns the Esrow for a shipment.
@@ -179,6 +172,7 @@ contract LoadContract is Ownable {
     function getEscrow(bytes16 _shipmentUuid)
         private
         view
+        shipmentExists(_shipmentUuid)
         returns (Escrow.Data storage escrow)
     {
         escrow = allEscrowData[_shipmentUuid];
