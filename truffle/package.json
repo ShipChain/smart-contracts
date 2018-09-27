@@ -1,0 +1,25 @@
+{
+  "scripts": {
+    "truffle": "./node_modules/.bin/truffle",
+    "lint": "./node_modules/.bin/solhint ./**/**/*.sol",
+    "coverage": "./node_modules/.bin/solidity-coverage",
+    "surya": "npm run surya:inheritance && npm run surya:graph && npm run surya:describe",
+    "surya:describe": "./node_modules/.bin/surya describe contracts/**/*.sol",
+    "surya:inheritance": "./node_modules/.bin/surya inheritance contracts/**/*.sol | dot -Tpng > ContractInheritance.png",
+    "surya:graph": "./node_modules/.bin/surya graph contracts/**/*.sol | dot -Tpng > ContractGraph.png",
+    "surya:mdreport": "./node_modules/.bin/surya mdreport AllContracts.md contracts/**/*.sol"
+  },
+  "dependencies": {
+    "eth-gas-reporter": "^0.1.12",
+    "mocha-junit-reporter": "^1.18.0",
+    "mocha-multi-reporters": "^1.1.7",
+    "openzeppelin-solidity": "^1.12.0",
+    "solhint": "^1.2.1",
+    "solidity-coverage": "^0.5.11",
+    "surya": "^0.2.7",
+    "truffle": "^4.1.14",
+    "truffle-assertions": "^0.5.0",
+    "uuid": "^3.3.2",
+    "uuid-to-hex": "^1.0.3"
+  }
+}

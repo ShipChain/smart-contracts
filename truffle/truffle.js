@@ -9,6 +9,23 @@ module.exports = {
       host: "outside",
       port: 7545,
       network_id: "*"
+    },
+    circleci: {
+      host: "localhost",
+      port: 8545,
+      network_id: "*"
+    },
+    coverage: {
+      host: "localhost",
+      port: 8555,
+      network_id: "*"
     }
-  }
+  },
+  mocha: {
+    useColors: true,
+    reporter: 'mocha-multi-reporters',
+    reporterOptions: {
+      configFile: './mocha-reporter-config.json',
+    }
+  },
 };

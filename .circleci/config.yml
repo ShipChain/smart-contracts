@@ -1,0 +1,153 @@
+version: 2 # use CircleCI 2.0
+
+jobs: # a collection of steps
+  solhint:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - run:
+          name: "Solhint"
+          command: |
+            sudo npm install -g solhint
+            mkdir truffle/test-results && solhint truffle/**/**/*.sol -f junit > truffle/test-results/solhint.xml
+      - store_test_results:
+          path: truffle/test-results
+
+  truffle-compile:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - run:
+          name: "Compile Truffle"
+          command: |
+            cd truffle
+            npm install
+            npm run truffle -- compile --all
+      - run:
+          name: "Install Soljitsu"
+          command: sudo npm install -g soljitsu
+      - run:
+          name: "Flatten solidity for static analysis"
+          command: soljitsu flatten --truffle truffle --dest-dir truffle/flat-sol
+      - persist_to_workspace:
+          root: truffle
+          paths:
+            - build
+            - node_modules
+            - flat-sol
+
+  mythril:
+    docker:
+      - image: mythril/myth:0.18.11
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Run Mythril"
+          command: |
+            cd truffle
+            myth --truffle
+
+  truffle-tests:
+    docker:
+      - image: circleci/node:10.10-stretch
+      - image: trufflesuite/ganache-cli:v6.1.8
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Truffle Tests"
+          command: |
+            cd truffle
+            npm run truffle -- test --network circleci
+      - store_test_results:
+          path: truffle/test-results
+
+  solidity-coverage:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Solidity test coverage"
+          command: |
+            cd truffle
+            npm run coverage
+      - store_artifacts:
+          path: truffle/coverage
+
+#  manticore:
+#    docker:
+#      - image: trailofbits/manticore:latest
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Manticore analysis"
+#          command: |
+#            cd truffle
+#            manticore --detect-all ./flat-sol/Load.LoadRegistry.sol --contract LoadRegistry
+
+#  echidna:
+#    docker:
+#      - image: shipchain/echidna:latest
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Echidna tests"
+#          command: |
+#            cd truffle
+#            echidna-test flat-sol/*.sol
+
+  oyente:
+    docker:
+      - image: shipchain/oyente:0.4.24
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Oyente tests"
+          command: |
+            cd truffle
+            python /oyente/oyente/oyente.py -s flat-sol/Load.BasicShipment.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.ERC20Escrow.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadRegistry.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadShipment.sol
+
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - solhint
+      - truffle-compile:
+          requires:
+            - solhint
+      - mythril:
+          requires:
+            - truffle-compile
+      - truffle-tests:
+          requires:
+            - truffle-compile
+      - solidity-coverage:
+          requires:
+            - truffle-compile
+#      - manticore:
+#          requires:
+#            - truffle-compile
+#      - echidna:
+#          requires:
+#            - truffle-compile
+      - oyente:
+          requires:
+            - truffle-compile

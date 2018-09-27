@@ -1,1 +1,7 @@
 .idea/
+truffle/node_modules/
+truffle/test-results/
+truffle/coverage*
+truffle/flat-sol
+truffle/build
+truffle/npm-debug.log
