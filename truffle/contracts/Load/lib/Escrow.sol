@@ -26,11 +26,6 @@ library Escrow {
         _;
     }
 
-    modifier successfulStateChange(Data storage self, State successState) {
-        _;
-        self.state = successState;
-    }
-
     // TODO: function receiveApproval(address from, uint256 amount, address token, bytes data) public {}
     function trackFunding(Data storage self, uint256 amount)
         internal
@@ -49,16 +44,16 @@ library Escrow {
     function releaseFunds(Data storage self)
         internal
         requiredState(self, State.FUNDED)
-        successfulStateChange(self, State.RELEASED)
     {
+        self.state = State.RELEASED;
         emit EscrowReleased(self.fundedAmount);
     }
 
     function withdrawn(Data storage self)
         internal
         requiredState(self, State.RELEASED)
-        successfulStateChange(self, State.WITHDRAWN)
     {
+        self.state = State.WITHDRAWN;
         emit EscrowWithdrawn(self.fundedAmount);
     }
 }
