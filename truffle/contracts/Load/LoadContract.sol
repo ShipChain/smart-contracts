@@ -227,7 +227,6 @@ contract LoadContract is Ownable {
         public
         view
         shipmentExists(_shipmentUuid)
-        hasEscrow(_shipmentUuid)
         returns(Escrow.State escrowState)
     {
         return allEscrowData[_shipmentUuid].state;
@@ -240,7 +239,6 @@ contract LoadContract is Ownable {
         public
         view
         shipmentExists(_shipmentUuid)
-        hasEscrow(_shipmentUuid)
         returns(Escrow.FundingType escrowFundingType)
     {
         return allEscrowData[_shipmentUuid].fundingType;
