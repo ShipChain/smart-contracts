@@ -7,36 +7,53 @@ import {Vault} from "./lib/Vault.sol";
 import {Escrow} from "./lib/Escrow.sol";
 
 
-/** @title Load Registry */
+/** @title Load Contract */
 contract LoadContract is Ownable {
+
+    // Library namespaces
     using Shipment for Shipment.Data;
     using Vault for Shipment.Data;
     using Escrow for Escrow.Data;
 
+    // Shipment Events
     event ShipmentCreated(bytes16 shipmentUuid);
 
+    // Vault Events
     event VaultUrl(bytes16 shipmentUuid, string vaultUrl);
     event VaultHash(bytes16 shipmentUuid, string vaultHash);
 
+    // Escrow Events
     event EscrowCreated(bytes16 shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
     event EscrowFunded(uint256 amount);
     event EscrowReleased(uint256 amount);
     event EscrowWithdrawn(uint256 amount);
 
+    // Library data storage
     mapping (bytes16 => Shipment.Data) private allShipmentData;
     mapping (bytes16 => Escrow.Data) private allEscrowData;
 
-    modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string message) {
+    /** @dev Revert if shipment has an escrow and escrow state is not correct
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _state Escrow.State required state if escrow exists.
+      * @param _message string Revert message.
+      */
+    modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string _message) {
         Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
-        require(escrow.state == Escrow.State.NOT_CREATED || escrow.state == _state, message);
+        require(escrow.state == Escrow.State.NOT_CREATED || escrow.state == _state, _message);
         _;
     }
 
+    /** @dev Revert if shipment does not exist
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
     modifier shipmentExists(bytes16 _shipmentUuid) {
         require(allShipmentData[_shipmentUuid].shipper != address(0x0), "Shipment does not exist");
         _;
     }
 
+    /** @dev Revert if shipment does not have escrow
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
     modifier hasEscrow(bytes16 _shipmentUuid) {
         require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
         _;
@@ -44,6 +61,8 @@ contract LoadContract is Ownable {
 
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
+      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is defined.
       * @dev Emits ShipmentCreated on success.
       */
     function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType,
