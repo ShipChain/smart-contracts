@@ -70,6 +70,11 @@ contract LoadContract is Ownable {
         _;
     }
 
+    /** @notice Does not accept Ether.
+      * @dev Prevent fallthrough method from accepting ETH
+      */
+    function () public payable {revert();}
+
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
@@ -243,4 +248,17 @@ contract LoadContract is Ownable {
     {
         return allEscrowData[_shipmentUuid].fundingType;
     }
+
+    function fundEscrowEther(bytes16 _shipmentUuid)
+        public
+        shipmentExists(_shipmentUuid)
+        hasEscrow(_shipmentUuid)
+        escrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created")
+        escrowHasType(_shipmentUuid, Escrow.FundingType.ETHER, "Escrow funding type must be Ether")
+        payable
+    {
+        allEscrowData[_shipmentUuid].trackFunding(msg.value);
+    }
+
+    // TODO: function receiveApproval(address from, uint256 amount, address token, bytes data) public {}
 }

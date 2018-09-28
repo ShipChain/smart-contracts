@@ -26,7 +26,6 @@ library Escrow {
         _;
     }
 
-    // TODO: function receiveApproval(address from, uint256 amount, address token, bytes data) public {}
     function trackFunding(Data storage self, uint256 amount)
         internal
         requiredState(self, State.CREATED)
