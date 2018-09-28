@@ -1,6 +1,7 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 import {Shipment} from "./lib/Shipment.sol";
 import {Vault} from "./lib/Vault.sol";
@@ -14,6 +15,9 @@ contract LoadContract is Ownable {
     using Shipment for Shipment.Data;
     using Vault for Shipment.Data;
     using Escrow for Escrow.Data;
+
+    // Registry Events
+    event TokenContractAddressSet(address tokenContractAddress);
 
     // Shipment Events
     event ShipmentCreated(bytes16 shipmentUuid);
@@ -31,6 +35,8 @@ contract LoadContract is Ownable {
     // Library data storage
     mapping (bytes16 => Shipment.Data) private allShipmentData;
     mapping (bytes16 => Escrow.Data) private allEscrowData;
+
+    address private shipTokenContractAddress;
 
     /** @dev Revert if shipment has an escrow and escrow state is not correct
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
@@ -74,6 +80,20 @@ contract LoadContract is Ownable {
       * @dev Prevent fallthrough method from accepting ETH
       */
     function () public payable {revert();}
+
+    /** @notice Sets the SHIPToken Contract address.  Only tokens from this address will be accepted.
+      * @dev Only Owner
+      */
+    function setShipTokenContractAddress(address _shipTokenAddress)
+        external
+        onlyOwner
+    {
+        require(shipTokenContractAddress == address(0x0), "Token address already set");
+
+        shipTokenContractAddress = _shipTokenAddress;
+
+        emit TokenContractAddressSet(shipTokenContractAddress);
+    }
 
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
@@ -249,6 +269,9 @@ contract LoadContract is Ownable {
         return allEscrowData[_shipmentUuid].fundingType;
     }
 
+    /** @notice Returns the Escrow funding type.
+      * @param _shipmentUuid bytes16 Shipment's UUID
+      */
     function fundEscrowEther(bytes16 _shipmentUuid)
         public
         shipmentExists(_shipmentUuid)
@@ -260,5 +283,24 @@ contract LoadContract is Ownable {
         allEscrowData[_shipmentUuid].trackFunding(msg.value);
     }
 
-    // TODO: function receiveApproval(address from, uint256 amount, address token, bytes data) public {}
+    /** @notice Called from ERC20 SHIPToken after approveAndCall.
+      * @param from address Sender of the tokens
+      * @param amount uint256 amount of tokens sent to escrow
+      * @param token address SHIPToken address
+      * @param data bytes Extra data containing the bytes16 shipmentUuid
+      */
+    function receiveApproval(address from, uint256 amount, address token, bytes data)
+        public
+    {
+        require(msg.sender == shipTokenContractAddress, "Ship Token address does not match");
+
+        bytes16 _shipmentUuid = bytes16(data);
+
+        allEscrowData[_shipmentUuid].trackFunding(amount);
+
+        if (!ERC20(token).transferFrom(from, address(this), amount)) {
+            revert();
+        }
+
+    }
 }

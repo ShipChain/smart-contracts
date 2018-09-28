@@ -3,7 +3,7 @@
     "truffle": "./node_modules/.bin/truffle",
     "lint": "./node_modules/.bin/solhint ./**/**/*.sol",
     "coverage": "./node_modules/.bin/solidity-coverage",
-    "surya": "npm run surya:inheritance && npm run surya:graph && npm run surya:describe",
+    "surya": "npm run surya:inheritance && npm run surya:graph && npm run surya:mdreport && npm run surya:describe",
     "surya:describe": "./node_modules/.bin/surya describe contracts/**/*.sol",
     "surya:inheritance": "./node_modules/.bin/surya inheritance contracts/**/*.sol | dot -Tpng > ContractInheritance.png",
     "surya:graph": "./node_modules/.bin/surya graph contracts/**/*.sol | dot -Tpng > ContractGraph.png",
