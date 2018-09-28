@@ -164,7 +164,7 @@ contract LoadContract is Ownable {
     /** @notice Returns the Shipment Shipper.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function shipper(bytes16 _shipmentUuid)
+    function getShipper(bytes16 _shipmentUuid)
         public
         view
         shipmentExists(_shipmentUuid)
@@ -176,7 +176,7 @@ contract LoadContract is Ownable {
     /** @notice Returns the Shipment Carrier.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function carrier(bytes16 _shipmentUuid)
+    function getCarrier(bytes16 _shipmentUuid)
         public
         view
         shipmentExists(_shipmentUuid)
@@ -188,7 +188,7 @@ contract LoadContract is Ownable {
     /** @notice Returns the Shipment Moderator.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function moderator(bytes16 _shipmentUuid)
+    function getModerator(bytes16 _shipmentUuid)
         public
         view
         shipmentExists(_shipmentUuid)
@@ -200,11 +200,11 @@ contract LoadContract is Ownable {
     /** @notice Returns the Shipment state.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function shipmentState(bytes16 _shipmentUuid)
+    function getShipmentState(bytes16 _shipmentUuid)
         public
         view
         shipmentExists(_shipmentUuid)
-        returns(Shipment.State state)
+        returns(Shipment.State shipmentState)
     {
         return allShipmentData[_shipmentUuid].state;
     }
@@ -212,20 +212,20 @@ contract LoadContract is Ownable {
     /** @notice Returns the Escrow state.
       * @param _shipmentUuid bytes16 Shipment's UUID
       */
-    function escrowState(bytes16 _shipmentUuid)
+    function getEscrowState(bytes16 _shipmentUuid)
         public
         view
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
-        returns(Escrow.State state)
+        returns(Escrow.State escrowState)
     {
         return allEscrowData[_shipmentUuid].state;
     }
 
-    /** @notice Returns the Escrow state.
+    /** @notice Returns the Escrow funding type.
       * @param _shipmentUuid bytes16 Shipment's UUID
       */
-    function escrowType(bytes16 _shipmentUuid)
+    function getEscrowFundingType(bytes16 _shipmentUuid)
         public
         view
         shipmentExists(_shipmentUuid)

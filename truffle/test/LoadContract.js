@@ -34,31 +34,31 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === shipmentUuid;
         });
-        assert.equal(await registry.shipper(shipmentUuid), SHIPPER);
+        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
     });
 
     it("should only allow Shipper to set Carrier", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
-        assert.equal(await registry.shipper(shipmentUuid), SHIPPER);
+        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
 
         await truffleAssert.reverts(registry.setCarrier(shipmentUuid, CARRIER, {from: MODERATOR}), "Only Shipper allowed to set Carrier");
 
         await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-        assert.equal(await registry.carrier(shipmentUuid), CARRIER);
+        assert.equal(await registry.getCarrier(shipmentUuid), CARRIER);
     });
 
     it("should only allow Shipper to set Moderator", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
-        assert.equal(await registry.shipper(shipmentUuid), SHIPPER);
+        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
 
         await truffleAssert.reverts(registry.setModerator(shipmentUuid, MODERATOR, {from: CARRIER}), "Only Shipper allowed to set Moderator");
 
         await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
-        assert.equal(await registry.moderator(shipmentUuid), MODERATOR);
+        assert.equal(await registry.getModerator(shipmentUuid), MODERATOR);
     });
 
     it("should emit VaultUrl", async () => {
@@ -102,11 +102,11 @@ contract('LoadContract', async (accounts) => {
 
         await truffleAssert.reverts(registry.setInProgress(shipmentUuid, {from: SHIPPER}), "Only Carrier or Moderator allowed to set In Progress");
 
-        assert.equal(await registry.shipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
 
         await registry.setInProgress(shipmentUuid, {from: CARRIER});
 
-        assert.equal(await registry.shipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
+        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
     });
 
     it("should set inProgress with Escrow", async () => {
@@ -117,9 +117,9 @@ contract('LoadContract', async (accounts) => {
 
         await truffleAssert.reverts(registry.setInProgress(shipmentUuid, {from: CARRIER}), "Escrow must be Funded");
 
-        assert.equal(await registry.shipmentState(shipmentUuid), ShipmentState.INITIATED);
-        assert.equal(await registry.escrowState(shipmentUuid), EscrowState.CREATED);
-        assert.equal(await registry.escrowType(shipmentUuid), EscrowFundingType.SHIP);
+        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+        assert.equal(await registry.getEscrowFundingType(shipmentUuid), EscrowFundingType.SHIP);
     });
 
 });
