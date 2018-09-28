@@ -164,28 +164,48 @@ contract LoadContract is Ownable {
     /** @notice Returns the Shipment Shipper.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function shipper(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(address) {
+    function shipper(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        returns(address shipper)
+    {
         return allShipmentData[_shipmentUuid].shipper;
     }
 
     /** @notice Returns the Shipment Carrier.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function carrier(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(address) {
+    function carrier(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        returns(address carrier)
+    {
         return allShipmentData[_shipmentUuid].carrier;
     }
 
     /** @notice Returns the Shipment Moderator.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function moderator(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(address) {
+    function moderator(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        returns(address moderator)
+    {
         return allShipmentData[_shipmentUuid].moderator;
     }
 
     /** @notice Returns the Shipment state.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
-    function shipmentState(bytes16 _shipmentUuid) public view shipmentExists(_shipmentUuid) returns(Shipment.State) {
+    function shipmentState(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        returns(Shipment.State state)
+    {
         return allShipmentData[_shipmentUuid].state;
     }
 
@@ -197,7 +217,7 @@ contract LoadContract is Ownable {
         view
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
-        returns(Escrow.State)
+        returns(Escrow.State state)
     {
         return allEscrowData[_shipmentUuid].state;
     }
@@ -210,7 +230,7 @@ contract LoadContract is Ownable {
         view
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
-        returns(Escrow.FundingType)
+        returns(Escrow.FundingType escrowFundingType)
     {
         return allEscrowData[_shipmentUuid].fundingType;
     }
