@@ -1,4 +1,10 @@
 module.exports = {
+  solc: {
+    optimizer: {
+      enabled: true,
+      runs: 999999
+    }
+  },
   networks: {
     development: {
       host: "ganache",
