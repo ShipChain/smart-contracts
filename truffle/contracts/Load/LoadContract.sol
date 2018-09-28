@@ -6,12 +6,14 @@ import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import {Shipment} from "./lib/Shipment.sol";
 import {Vault} from "./lib/Vault.sol";
 import {Escrow} from "./lib/Escrow.sol";
+import {Converter} from "./lib/Converter.sol";
 
 
 /** @title Load Contract */
 contract LoadContract is Ownable {
 
     // Library namespaces
+    using Converter for bytes;
     using Shipment for Shipment.Data;
     using Vault for Shipment.Data;
     using Escrow for Escrow.Data;
@@ -294,7 +296,7 @@ contract LoadContract is Ownable {
     {
         require(msg.sender == shipTokenContractAddress, "Ship Token address does not match");
 
-        bytes16 _shipmentUuid = bytes16(data);
+        bytes16 _shipmentUuid = data.toBytes16();
 
         allEscrowData[_shipmentUuid].trackFunding(amount);
 
