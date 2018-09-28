@@ -38,8 +38,19 @@ contract LoadContract is Ownable {
       * @param _message string Revert message.
       */
     modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string _message) {
-        Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
-        require(escrow.state == Escrow.State.NOT_CREATED || escrow.state == _state, _message);
+        require(allEscrowData[_shipmentUuid].state == Escrow.State.NOT_CREATED ||
+                allEscrowData[_shipmentUuid].state == _state, _message);
+        _;
+    }
+
+    /** @dev Revert if shipment has an escrow and escrow state is not correct
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _fundingType Escrow.FundingType required funding type if escrow exists.
+      * @param _message string Revert message.
+      */
+    modifier escrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string _message) {
+        require(allEscrowData[_shipmentUuid].state == Escrow.State.NOT_CREATED ||
+                allEscrowData[_shipmentUuid].fundingType == _fundingType, _message);
         _;
     }
 
