@@ -68,6 +68,11 @@ contract('LoadContract with Escrow', async (accounts) => {
     });
 
     //#region SHIP
+    it("should only allow token address to be set once", async () => {
+        const registry = await LoadContract.deployed();
+        await truffleAssert.reverts(registry.setShipTokenContractAddress(0), "Token address already set");
+    });
+
     it("should not fund SHIP Escrow with Ether", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
