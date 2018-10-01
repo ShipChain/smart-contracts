@@ -109,4 +109,12 @@ contract('LoadContract', async (accounts) => {
         assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
     });
 
+    it("should not fund NO_FUNDING Escrow with Ether", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER);
+
+        await truffleAssert.reverts(registry.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Shipment has no escrow");
+    });
+
 });

@@ -5,13 +5,13 @@ const uuidToHex = require('uuid-to-hex');
 const LoadContract = artifacts.require("LoadContract");
 const SHIPToken = artifacts.require("./utils/SHIPToken.sol");
 
-const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3 };
-const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, WITHDRAWN:4};
-const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2 };
+const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3};
+const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, WITHDRAWN: 4};
+const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2};
 
-async function createShipment(shipmentUuid, shipper, fundingType=EscrowFundingType.SHIP, fundingAmount=500){
+async function createShipment(shipmentUuid, shipper, fundingType = EscrowFundingType.SHIP, fundingAmount = web3.toWei(1, "ether")) {
     let options = {};
-    if(shipper){
+    if (shipper) {
         options.from = shipper;
     }
 
@@ -21,12 +21,11 @@ async function createShipment(shipmentUuid, shipper, fundingType=EscrowFundingTy
 }
 
 async function createShipToken(accounts){
-    console.log('wat0');
     const shipToken = await SHIPToken.new();
-    await shipToken.mint(accounts[0], 500 * (10 ** 18));
-    await shipToken.mint(accounts[1], 500 * (10 ** 18));
-    await shipToken.mint(accounts[2], 500 * (10 ** 18));
-    await shipToken.mint(accounts[3], 500 * (10 ** 18));
+    await shipToken.mint(accounts[0], web3.toWei(1000, "ether"));
+    await shipToken.mint(accounts[1], web3.toWei(1000, "ether"));
+    await shipToken.mint(accounts[2], web3.toWei(1000, "ether"));
+    await shipToken.mint(accounts[3], web3.toWei(1000, "ether"));
     return shipToken;
 }
 
@@ -40,7 +39,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await LoadContract.deployed();
-        const newShipmentTx = await registry.createNewShipment(shipmentUuid, EscrowFundingType.SHIP, 500, {from: SHIPPER});
+        const newShipmentTx = await registry.createNewShipment(shipmentUuid, EscrowFundingType.SHIP, web3.toWei(1, "ether"), {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === shipmentUuid;
@@ -72,7 +71,43 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
         assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
-        await shipToken.approveAndCall(registry.address, 500, shipmentUuid);
+        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+    });
+
+    it("should prevent accepting Eth via fallback function", async () => {
+        const registry = await LoadContract.deployed();
+        const sender = SHIPPER;
+        const receiver = registry.address;
+        const amount = web3.toWei(1, "ether");
+
+        // truffleAssert does not work for sendTransaction.  Catch manually
+        try {
+            web3.eth.sendTransaction({from: sender, to: receiver, value: amount});
+            assert.fail('Expected revert not received');
+        } catch (error) {
+            const revertFound = error.message.search('revert') >= 0;
+            assert(revertFound, `Expected "revert", got ${error} instead`);
+        }
+    });
+
+    it("should not fund SHIP Escrow with Ether", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.SHIP);
+
+        await truffleAssert.reverts(registry.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Escrow funding type must be Ether");
+    });
+
+    it("should fund ETH Escrow with Ether", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+
+        const amount = web3.toWei(1, "ether");
+        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: amount});
+
+        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
