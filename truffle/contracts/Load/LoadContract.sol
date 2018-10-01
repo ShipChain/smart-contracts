@@ -46,8 +46,7 @@ contract LoadContract is Ownable {
       * @param _message string Revert message.
       */
     modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string _message) {
-        require(allEscrowData[_shipmentUuid].state == Escrow.State.NOT_CREATED ||
-                allEscrowData[_shipmentUuid].state == _state, _message);
+        requireEscrowHasState(_shipmentUuid, _state, _message);
         _;
     }
 
@@ -57,8 +56,7 @@ contract LoadContract is Ownable {
       * @param _message string Revert message.
       */
     modifier escrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string _message) {
-        require(allEscrowData[_shipmentUuid].state == Escrow.State.NOT_CREATED ||
-                allEscrowData[_shipmentUuid].fundingType == _fundingType, _message);
+        requireEscrowHasType(_shipmentUuid, _fundingType, _message);
         _;
     }
 
@@ -66,7 +64,7 @@ contract LoadContract is Ownable {
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
     modifier shipmentExists(bytes16 _shipmentUuid) {
-        require(allShipmentData[_shipmentUuid].shipper != address(0x0), "Shipment does not exist");
+        requireShipmentExists(_shipmentUuid);
         _;
     }
 
@@ -74,7 +72,7 @@ contract LoadContract is Ownable {
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
     modifier hasEscrow(bytes16 _shipmentUuid) {
-        require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
+        requireHasEscrow(_shipmentUuid);
         _;
     }
 
@@ -295,6 +293,10 @@ contract LoadContract is Ownable {
         public
     {
         require(msg.sender == shipTokenContractAddress, "Ship Token address does not match");
+        requireShipmentExists(_shipmentUuid);
+        requireHasEscrow(_shipmentUuid);
+        requireEscrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created");
+        requireEscrowHasType(_shipmentUuid, Escrow.FundingType.SHIP, "Escrow funding type must be SHIP");
 
         bytes16 _shipmentUuid = data.toBytes16();
 
@@ -304,5 +306,51 @@ contract LoadContract is Ownable {
             revert();
         }
 
+    }
+
+    /** @dev Revert if shipment has an escrow and escrow state is not correct
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _state Escrow.State required state if escrow exists.
+      * @param _message string Revert message.
+      */
+    function requireEscrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string _message)
+        private
+        view
+    {
+        require(allEscrowData[_shipmentUuid].state == Escrow.State.NOT_CREATED ||
+                allEscrowData[_shipmentUuid].state == _state, _message);
+    }
+
+    /** @dev Revert if shipment has an escrow and escrow state is not correct
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _fundingType Escrow.FundingType required funding type if escrow exists.
+      * @param _message string Revert message.
+      */
+    function requireEscrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string _message)
+        private
+        view
+    {
+        require(allEscrowData[_shipmentUuid].state == Escrow.State.NOT_CREATED ||
+                allEscrowData[_shipmentUuid].fundingType == _fundingType, _message);
+    }
+
+    /** @dev Revert if shipment does not exist
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
+    function requireShipmentExists(bytes16 _shipmentUuid)
+        private
+        view
+    {
+        require(allShipmentData[_shipmentUuid].shipper != address(0x0), "Shipment does not exist");
+    }
+
+    /** @dev Revert if shipment does not have escrow
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
+    function requireHasEscrow(bytes16 _shipmentUuid)
+        private
+        view
+    {
+        require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
     }
 }
