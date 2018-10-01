@@ -119,11 +119,25 @@ jobs: # a collection of steps
           name: "Oyente tests"
           command: |
             cd truffle
-            python /oyente/oyente/oyente.py -s flat-sol/Load.BasicShipment.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.ERC20Escrow.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadRegistry.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadShipment.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadContract.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Escrow.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Shipment.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Vault.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Converter.sol
 
+#  securify:
+#    docker:
+#      - image: shipchain/securify:0.4.24
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Securify tests"
+#          command: |
+#            rm -rf /contracts
+#            ln -s "$(realpath truffle/flat-sol)" /contracts
+#            /docker_run_securify
 
 workflows:
   version: 2
@@ -151,3 +165,6 @@ workflows:
       - oyente:
           requires:
             - truffle-compile
+#      - securify:
+#          requires:
+#            - truffle-compile
