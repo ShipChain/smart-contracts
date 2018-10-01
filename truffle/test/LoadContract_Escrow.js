@@ -34,6 +34,13 @@ contract('LoadContract with Escrow', async (accounts) => {
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
     const INVALID = accounts[9];
+    let shipToken;
+
+    before(async () => {
+        shipToken = await createShipToken(accounts);
+        const registry = await LoadContract.deployed();
+        await registry.setShipTokenContractAddress(shipToken.address);
+    });
 
     it("should create a LoadShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
@@ -60,21 +67,32 @@ contract('LoadContract with Escrow', async (accounts) => {
         assert.equal(await registry.getEscrowFundingType(shipmentUuid), EscrowFundingType.SHIP);
     });
 
+    //#region SHIP
     it("should accept SHIP", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const shipToken = await createShipToken(accounts);
-
         const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setShipTokenContractAddress(shipToken.address);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
-        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
         await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
+    it("should handle partial SHIP funding", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER);
+
+        await shipToken.approveAndCall(registry.address, web3.toWei(0.5, "ether"), shipmentUuid);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+
+        await shipToken.approveAndCall(registry.address, web3.toWei(0.49, "ether"), shipmentUuid);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+
+        await shipToken.approveAndCall(registry.address, web3.toWei(0.01, "ether"), shipmentUuid);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+    });
+    //#endregion
+
+    //#region ETH
     it("should prevent accepting Eth via fallback function", async () => {
         const registry = await LoadContract.deployed();
         const sender = SHIPPER;
@@ -110,5 +128,5 @@ contract('LoadContract with Escrow', async (accounts) => {
         assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
-
+    //#endregion
 });
