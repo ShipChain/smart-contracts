@@ -76,6 +76,14 @@ contract LoadContract is Ownable {
         _;
     }
 
+    /** @dev Revert if msg.sender is not the shipment moderator
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
+    modifier isModerator(bytes16 _shipmentUuid) {
+        requireIsModerator(_shipmentUuid);
+        _;
+    }
+
     /** @notice Does not accept Ether.
       * @dev Prevent fallthrough method from accepting ETH
       */
@@ -307,6 +315,18 @@ contract LoadContract is Ownable {
 
     }
 
+    /** @notice Releases the escrow to the carrier
+      * @param _shipmentUuid bytes16 Shipment's UUID
+      */
+    function releaseEscrow(bytes16 _shipmentUuid)
+        public
+        shipmentExists(_shipmentUuid)
+        hasEscrow(_shipmentUuid)
+        isModerator(_shipmentUuid)
+    {
+        allEscrowData[_shipmentUuid].releaseFunds();
+    }
+
     /** @dev Revert if shipment has an escrow and escrow state is not correct
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _state Escrow.State required state if escrow exists.
@@ -351,5 +371,15 @@ contract LoadContract is Ownable {
         view
     {
         require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
+    }
+
+    /** @dev Revert if msg.sender is not the moderator
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
+    function requireIsModerator(bytes16 _shipmentUuid)
+        private
+        view
+    {
+        require(msg.sender == allShipmentData[_shipmentUuid].moderator, "Action only available to the moderator");
     }
 }
