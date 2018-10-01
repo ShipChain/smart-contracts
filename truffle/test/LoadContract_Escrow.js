@@ -68,7 +68,15 @@ contract('LoadContract with Escrow', async (accounts) => {
     });
 
     //#region SHIP
-    it("should accept SHIP", async () => {
+    it("should not fund SHIP Escrow with Ether", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.SHIP);
+
+        await truffleAssert.reverts(registry.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Escrow funding type must be Ether");
+    });
+
+    it("should fund SHIP Escrow with SHIP", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
@@ -109,15 +117,15 @@ contract('LoadContract with Escrow', async (accounts) => {
         }
     });
 
-    it("should not fund SHIP Escrow with Ether", async () => {
+    it("should not fund Ether Escrow with SHIP", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.SHIP);
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
 
-        await truffleAssert.reverts(registry.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Escrow funding type must be Ether");
+        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid), "Escrow funding type must be SHIP");
     });
 
-    it("should fund ETH Escrow with Ether", async () => {
+    it("should fund Ether Escrow with ETH", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
@@ -126,6 +134,21 @@ contract('LoadContract with Escrow', async (accounts) => {
         await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: amount});
 
         assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+    });
+
+    it("should handle partial ETH funding", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+
+        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.5, "ether")});
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+
+        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.49, "ether")});
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+
+        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.01, "ether")});
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
     //#endregion
