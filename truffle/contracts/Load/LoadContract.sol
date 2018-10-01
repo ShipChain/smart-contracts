@@ -30,7 +30,7 @@ contract LoadContract is Ownable {
 
     // Escrow Events
     event EscrowCreated(bytes16 shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
-    event EscrowFunded(uint256 amount);
+    event EscrowFunded(uint256 amount, uint256 total);
     event EscrowReleased(uint256 amount);
     event EscrowWithdrawn(uint256 amount);
 
@@ -292,13 +292,12 @@ contract LoadContract is Ownable {
     function receiveApproval(address from, uint256 amount, address token, bytes data)
         public
     {
+        bytes16 _shipmentUuid = data.toBytes16();
         require(msg.sender == shipTokenContractAddress, "Ship Token address does not match");
         requireShipmentExists(_shipmentUuid);
         requireHasEscrow(_shipmentUuid);
         requireEscrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created");
         requireEscrowHasType(_shipmentUuid, Escrow.FundingType.SHIP, "Escrow funding type must be SHIP");
-
-        bytes16 _shipmentUuid = data.toBytes16();
 
         allEscrowData[_shipmentUuid].trackFunding(amount);
 

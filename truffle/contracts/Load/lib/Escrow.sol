@@ -6,7 +6,7 @@ import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
 library Escrow {
     using SafeMath for uint256;
 
-    event EscrowFunded(uint256 amount);
+    event EscrowFunded(uint256 amount, uint256 total);
     event EscrowReleased(uint256 amount);
     event EscrowWithdrawn(uint256 amount);
 
@@ -31,13 +31,13 @@ library Escrow {
         requiredState(self, State.CREATED)
     {
         require(amount > 0);
-        self.fundedAmount.add(amount);
+        self.fundedAmount = self.fundedAmount.add(amount);
 
         if (self.fundedAmount >= self.contractedAmount) {
             self.state = State.FUNDED;
         }
 
-        emit EscrowFunded(amount);
+        emit EscrowFunded(amount, self.fundedAmount);
     }
 
     function releaseFunds(Data storage self)
