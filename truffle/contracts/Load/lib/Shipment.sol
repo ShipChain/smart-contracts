@@ -21,6 +21,7 @@ library Shipment {
         internal
         isShipper(self, "Only Shipper allowed to set Carrier")
     {
+        require(self.state == State.INITIATED, "Carrier can only be modified in Initiated state");
         self.carrier = _carrier;
     }
 
@@ -28,6 +29,7 @@ library Shipment {
         internal
         isShipper(self, "Only Shipper allowed to set Moderator")
     {
+        require(self.state == State.INITIATED, "Moderator can only be modified in Initiated state");
         self.moderator = _moderator;
     }
 
@@ -36,6 +38,7 @@ library Shipment {
     {
         require(msg.sender == self.carrier || msg.sender == self.moderator,
             "Only Carrier or Moderator allowed to set In Progress");
+        require(self.state == State.INITIATED, "Only Initiated shipments can be marked In Progress");
         self.state = State.IN_PROGRESS;
     }
 
