@@ -48,11 +48,14 @@ library Escrow {
         emit EscrowReleased(self.fundedAmount);
     }
 
-    function withdrawn(Data storage self)
+    function withdraw(Data storage self)
         internal
         requiredState(self, State.RELEASED)
+        returns(uint amount)
     {
+        amount = self.fundedAmount;
+        self.fundedAmount = 0;
         self.state = State.WITHDRAWN;
-        emit EscrowWithdrawn(self.fundedAmount);
+        emit EscrowWithdrawn(amount);
     }
 }

@@ -120,14 +120,29 @@ contract('LoadContract with Escrow', async (accounts) => {
         const registry = await createShipment(shipmentUuid, SHIPPER);
         await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid), "Action only available to the moderator");
+        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
         await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow state invalid for action");
 
         await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
+
         await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.RELEASED);
     });
 
+    it("should be able to withdraw SHIP escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER);
+        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
+        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
+
+        let carrierBalance = await shipToken.balanceOf(CARRIER);
+        await registry.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.deepEqual(await shipToken.balanceOf(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))));
+    });
     //#endregion
 
     //#region ETH
@@ -180,6 +195,38 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.01, "ether")});
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+    });
+
+    it("should be able to release ETH escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+
+        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
+        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow state invalid for action");
+
+        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
+
+        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.RELEASED);
+    });
+
+    it("should be able to withdraw ETH escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
+        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
+
+        let carrierBalance = await web3.eth.getBalance(CARRIER);
+        let withdrawTxReceipt = await registry.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
+        const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
+        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.deepEqual(await web3.eth.getBalance(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))).minus(gasCost));
     });
     //#endregion
 });

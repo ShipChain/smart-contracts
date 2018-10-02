@@ -76,11 +76,21 @@ contract LoadContract is Ownable {
         _;
     }
 
-    /** @dev Revert if msg.sender is not the shipment moderator
+    /** @dev Revert if msg.sender is not the shipment moderator or shipper
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
-    modifier isModerator(bytes16 _shipmentUuid) {
-        requireIsModerator(_shipmentUuid);
+    modifier canRelease(bytes16 _shipmentUuid) {
+        require(msg.sender == allShipmentData[_shipmentUuid].moderator ||
+                msg.sender == allShipmentData[_shipmentUuid].shipper,
+                "Only the shipper or moderator can release escrow");
+        _;
+    }
+
+    /** @dev Revert if msg.sender is not the shipment carrier
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
+    modifier canWithdraw(bytes16 _shipmentUuid) {
+        require(msg.sender == allShipmentData[_shipmentUuid].carrier, "Only the carrier can withdraw escrow");
         _;
     }
 
@@ -301,7 +311,8 @@ contract LoadContract is Ownable {
         public
     {
         bytes16 _shipmentUuid = data.toBytes16();
-        require(msg.sender == shipTokenContractAddress, "Ship Token address does not match");
+        require(msg.sender == shipTokenContractAddress && token == shipTokenContractAddress,
+                "Ship Token address does not match");
         requireShipmentExists(_shipmentUuid);
         requireHasEscrow(_shipmentUuid);
         requireEscrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created");
@@ -322,9 +333,27 @@ contract LoadContract is Ownable {
         public
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
-        isModerator(_shipmentUuid)
+        canRelease(_shipmentUuid)
     {
         allEscrowData[_shipmentUuid].releaseFunds();
+    }
+
+    /** @notice Withdraws the escrow to the carrier's account
+      * @param _shipmentUuid bytes16 Shipment's UUID
+      */
+    function withdrawEscrow(bytes16 _shipmentUuid)
+        public
+        shipmentExists(_shipmentUuid)
+        hasEscrow(_shipmentUuid)
+        canWithdraw(_shipmentUuid)
+    {
+        uint amount = allEscrowData[_shipmentUuid].withdraw();
+
+        if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.ETHER) {
+            msg.sender.transfer(amount);
+        } else if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.SHIP) {
+            ERC20(shipTokenContractAddress).transfer(msg.sender, amount);
+        }
     }
 
     /** @dev Revert if shipment has an escrow and escrow state is not correct
@@ -371,15 +400,5 @@ contract LoadContract is Ownable {
         view
     {
         require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
-    }
-
-    /** @dev Revert if msg.sender is not the moderator
-      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
-      */
-    function requireIsModerator(bytes16 _shipmentUuid)
-        private
-        view
-    {
-        require(msg.sender == allShipmentData[_shipmentUuid].moderator, "Action only available to the moderator");
     }
 }
