@@ -135,8 +135,9 @@ jobs: # a collection of steps
 #      - run:
 #          name: "Securify tests"
 #          command: |
-#            rm -rf /contracts
-#            ln -s "$(realpath truffle/flat-sol)" /contracts
+#            rm /contracts/example.sol
+#            cp -r "$(realpath truffle/flat-sol)/." /contracts
+#            cd /
 #            /docker_run_securify
 
 workflows:
