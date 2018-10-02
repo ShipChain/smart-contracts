@@ -1,99 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-    <!--<style>-->
-        <!--#graphDiv {-->
-            <!--min-height: 500px;-->
-            <!--min-width: 500px;-->
-        <!--}-->
-    <!--</style>-->
+    <meta charset="utf-8">
 </head>
 <body>
 
-  <div class="mermaid">
-graph TB
-    subgraph Owner Actions
-        Owner -- setTokenContractAddress --> LoadContract
-        LoadContract -- tokenContractAddress --> LoadContract
-    end
-
-    A[Christmas] -->|Get money| B(Go shopping)
-    B --> C{Let me think}
-    C --hi--> C
-    C -->|One| D[Laptop]
-    C -->|Two| E>iPhone]
-    C -->|Three| F[fa:fa-car Car]
-  </div>
-  <div class="mermaid">
-graph TB
-
-    c1-->a2
-
-    subgraph one
-        a1-->a2
-    end
-    subgraph two
-        b1-->b2
-    end
-    subgraph three
-        c1-->c2
-    end
-  </div>
-
-  <div class="mermaid">
+<div class="mermaid" id="Shipment Sequence">
 sequenceDiagram
-    participant Owner
-    participant LoadContract
-    participant Shipper
-    participant Carrier
-    participant Moderator
-    Owner ->> LoadContract: setTokenContractAddress
-    Shipper ->> LoadContract: createNewShipment
-    Shipper ->> LoadContract: setCarrier
-    Carrier ->> LoadContract: setInProgress
-  </div>
+participant SL as Shipment
+participant L as LoadContract
+participant S as Shipper
+participant C as Carrier
+participant M as Moderator
 
-  <!--<div id="graphDiv" ></div>-->
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
+S ->>L: createNewShipment
+activate L
+L-->>SL: setState(INITIATED)
+activate SL
+L-->>SL: setShipper(Shipper)
+deactivate SL
+note over L: emit ShipmentCreated
+deactivate L
+
+S ->> +L: setCarrier
+L -->> SL: setCarrier(Carrier)
+activate SL
+deactivate SL
+deactivate L
+
+opt Moderated Shipment
+S ->> +L: setModerator
+L -->> SL: setModerator(Moderator)
+activate SL
+deactivate SL
+deactivate L
+end
+
+S ->> +L: setVaultUrl
+L -->> SL: setVaultUrl(url)
+activate SL
+deactivate SL
+note over L: emit VaultUrl
+deactivate L
+
+alt Carrier
+C ->> +L: setInProgress
+L -->> SL: setState(IN_PROGRESS)
+activate SL
+deactivate SL
+deactivate L
+else Moderator
+M ->> +L: setInProgress
+L -->> SL: setState(IN_PROGRESS)
+activate SL
+deactivate SL
+deactivate L
+end
+
+loop While in Progress
+C ->> +L: setVaultHash
+L -->> SL: setVaultHash(hash)
+activate SL
+deactivate SL
+note over L: emit VaultHash
+end
+deactivate L
+
+alt Shipper
+S ->> +L: setComplete
+L -->> SL: setState(COMPLETE)
+activate SL
+deactivate SL
+deactivate L
+else Moderator
+M ->> +L: setComplete
+L -->> SL: setState(COMPLETE)
+activate SL
+deactivate SL
+deactivate L
+end
+</div>
+
+<script src="https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
 <script>
     var config = {
-        startOnLoad:true,
+        startOnLoad: true,
         theme: "default",
-        flowchart:{
+        flowchart: {
             curve: 'basis',
-            useMaxWidth:true,
-            htmlLabels:true
+            useMaxWidth: true,
+            htmlLabels: true
+        },
+        sequence: {
+            diagramMarginX:50,
+            diagramMarginY:10,
+            boxMargin: 20,
+            boxTextMargin:5,
+            noteMargin:10,
+            messageMargin:35,
+            mirrorActors:true
         }
     };
     mermaid.initialize(config);
-
-    // $(document).ready(function() {
-    //     mermaid.mermaidAPI.initialize(config);
-    //
-    //     // Below injection logic does not produce an appropriately sized graph
-    //     $(function(){
-    //         // Example of using the API
-    //         var element = document.querySelector("#graphDiv");
-    //
-    //         var insertSvg = function(svgCode, bindFunctions){
-    //             element.innerHTML = svgCode;
-    //         };
-    //
-    //         var graphDefinition = 'graph TD\n' +
-    //             'A[Christmas] -->|Get money| B(Go shopping)\n' +
-    //             'B --> C{Let me think}\n' +
-    //             'C -->|One| D[Laptop]\n' +
-    //             'C -->|Two| E[iPhone]\n' +
-    //             'C -->|Three| F[fa:fa-car Car]';
-    //         var graph = mermaid.mermaidAPI.render('graphDiv', graphDefinition, insertSvg);
-    //         console.log(graph);
-    //     });
-    // });
-
-
 </script>
 </body>
 </html>
