@@ -117,6 +117,12 @@ Unit test with `bin/truffle test`
 
 Static Code Analysis with `bin/myth`
 
+## Documentation
+
+[Mermaid](https://mermaidjs.github.io/) charts in development in `truffle/LoadContract.html`.
+
+[Live Editor](https://mermaidjs.github.io/mermaid-live-editor) is available.
+
 ## Helpful Links
 
 ### Solidity
