@@ -44,6 +44,14 @@ deactivate SL
 note over L: emit VaultUrl
 deactivate L
 
+
+S ->> +L: setVaultHash
+L -->> SL: setVaultHash(hash)
+activate SL
+deactivate SL
+note over L: emit VaultHash
+deactivate L
+
 alt Carrier
 C ->> +L: setInProgress
 L -->> SL: setState(IN_PROGRESS)

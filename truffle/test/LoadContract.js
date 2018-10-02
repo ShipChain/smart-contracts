@@ -72,7 +72,7 @@ contract('LoadContract', async (accounts) => {
 
         await truffleAssert.reverts(registry.setVaultUrl(shipmentUuid, vaultUrl), "Only Shipper allowed to set VaultUrl");
 
-        const setVaultTx = await registry.setVaultUrl(shipmentUuid, vaultUrl, {from: accounts[1]});
+        const setVaultTx = await registry.setVaultUrl(shipmentUuid, vaultUrl, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(setVaultTx, "VaultUrl", ev => {
             return ev.vaultUrl === vaultUrl;
@@ -80,18 +80,27 @@ contract('LoadContract', async (accounts) => {
     });
 
     it("should emit VaultHash", async () => {
-        const vaultHash = "0x1234567890";
+        const vaultHash_shipper = "0x1234567890";
+        const vaultHash_carrier = "0x1234567890";
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
+        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.setVaultHash(shipmentUuid, vaultHash), "Only Shipper allowed to set VaultHash");
+        await truffleAssert.reverts(registry.setVaultHash(shipmentUuid, vaultHash_shipper), "Only Shipper or Carrier allowed to set VaultHash");
 
-        const setVaultTx = await registry.setVaultHash(shipmentUuid, vaultHash, {from: accounts[1]});
+        const setVaultTx_shipper = await registry.setVaultHash(shipmentUuid, vaultHash_shipper, {from: SHIPPER});
 
-        await truffleAssert.eventEmitted(setVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === vaultHash;
+        await truffleAssert.eventEmitted(setVaultTx_shipper, "VaultHash", ev => {
+            return ev.vaultHash === vaultHash_shipper;
         });
+
+        const setVaultTx_carrier = await registry.setVaultHash(shipmentUuid, vaultHash_carrier, {from: CARRIER});
+
+        await truffleAssert.eventEmitted(setVaultTx_carrier, "VaultHash", ev => {
+            return ev.vaultHash === vaultHash_carrier;
+        });
+
     });
 
     it("should set inProgress", async () => {
