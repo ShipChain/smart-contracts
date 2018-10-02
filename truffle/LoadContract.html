@@ -10,28 +10,48 @@
     <!--</style>-->
 </head>
 <body>
+
   <div class="mermaid">
 graph TB
-    sq[Square shape] --> ci((Circle shape))
-
-    subgraph A subgraph
-        od>Odd shape]-- Two line<br/>edge comment --> ro
-        di{Diamond with <br/> line break} -.-> ro(Rounded<br>square<br>shape)
-        di==>ro2(Rounded square shape)
+    subgraph Owner Actions
+        Owner -- setTokenContractAddress --> LoadContract
+        LoadContract -- tokenContractAddress --> LoadContract
     end
 
-    %% Notice that no text in shape are added here instead that is appended further down
-    e --> od3>Really long text with linebreak<br>in an Odd shape]
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C --hi--> C
+    C -->|One| D[Laptop]
+    C -->|Two| E>iPhone]
+    C -->|Three| F[fa:fa-car Car]
+  </div>
+  <div class="mermaid">
+graph TB
 
-    %% Comments after double percent signs
-    e((Inner / circle<br>and some odd <br>special characters)) --> f(,.?!+-*ز)
+    c1-->a2
 
-    cyr[Cyrillic]-->cyr2((Circle shape Начало));
+    subgraph one
+        a1-->a2
+    end
+    subgraph two
+        b1-->b2
+    end
+    subgraph three
+        c1-->c2
+    end
+  </div>
 
-     classDef green fill:#9f6,stroke:#333,stroke-width:2px;
-     classDef orange fill:#f96,stroke:#333,stroke-width:4px;
-     class sq,e green
-     class di orange
+  <div class="mermaid">
+sequenceDiagram
+    participant Owner
+    participant LoadContract
+    participant Shipper
+    participant Carrier
+    participant Moderator
+    Owner ->> LoadContract: setTokenContractAddress
+    Shipper ->> LoadContract: createNewShipment
+    Shipper ->> LoadContract: setCarrier
+    Carrier ->> LoadContract: setInProgress
   </div>
 
   <!--<div id="graphDiv" ></div>-->
@@ -43,31 +63,35 @@ graph TB
         startOnLoad:true,
         theme: "default",
         flowchart:{
+            curve: 'basis',
             useMaxWidth:true,
             htmlLabels:true
         }
     };
-    $(document).ready(function() {
-        mermaid.mermaidAPI.initialize(config);
-        // Below injection logic does not produce an appropriately sized graph
-        $(function(){
-            // Example of using the API
-            // var element = document.querySelector("#graphDiv");
-            //
-            // var insertSvg = function(svgCode, bindFunctions){
-            //     element.innerHTML = svgCode;
-            // };
-            //
-            // var graphDefinition = 'graph TD\n' +
-            //     'A[Christmas] -->|Get money| B(Go shopping)\n' +
-            //     'B --> C{Let me think}\n' +
-            //     'C -->|One| D[Laptop]\n' +
-            //     'C -->|Two| E[iPhone]\n' +
-            //     'C -->|Three| F[fa:fa-car Car]';
-            // var graph = mermaid.mermaidAPI.render('graphDiv', graphDefinition, insertSvg);
-            // console.log(graph);
-        });
-    });
+    mermaid.initialize(config);
+
+    // $(document).ready(function() {
+    //     mermaid.mermaidAPI.initialize(config);
+    //
+    //     // Below injection logic does not produce an appropriately sized graph
+    //     $(function(){
+    //         // Example of using the API
+    //         var element = document.querySelector("#graphDiv");
+    //
+    //         var insertSvg = function(svgCode, bindFunctions){
+    //             element.innerHTML = svgCode;
+    //         };
+    //
+    //         var graphDefinition = 'graph TD\n' +
+    //             'A[Christmas] -->|Get money| B(Go shopping)\n' +
+    //             'B --> C{Let me think}\n' +
+    //             'C -->|One| D[Laptop]\n' +
+    //             'C -->|Two| E[iPhone]\n' +
+    //             'C -->|Three| F[fa:fa-car Car]';
+    //         var graph = mermaid.mermaidAPI.render('graphDiv', graphDefinition, insertSvg);
+    //         console.log(graph);
+    //     });
+    // });
 
 
 </script>
