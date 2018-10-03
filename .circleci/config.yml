@@ -30,13 +30,16 @@ jobs: # a collection of steps
           command: sudo npm install -g soljitsu
       - run:
           name: "Flatten solidity for static analysis"
-          command: soljitsu flatten --truffle truffle --dest-dir truffle/flat-sol
+          command: |
+            soljitsu flatten --truffle truffle --dest-dir truffle/flat-sol
+            soljitsu combine --truffle truffle --dest-dir truffle/combined-sol
       - persist_to_workspace:
           root: truffle
           paths:
             - build
             - node_modules
             - flat-sol
+            - combined-sol
 
   mythril:
     docker:
@@ -84,16 +87,17 @@ jobs: # a collection of steps
 
 #  manticore:
 #    docker:
-#      - image: trailofbits/manticore:latest
+#      - image: shipchain/manticore:0.2.1.1
 #    steps:
 #      - checkout
 #      - attach_workspace:
 #          at: truffle
 #      - run:
 #          name: "Manticore analysis"
+#          no_output_timeout: 30m
 #          command: |
 #            cd truffle
-#            manticore --detect-all ./flat-sol/Load.LoadRegistry.sol --contract LoadRegistry
+#            manticore --no-testcases --detect-all ./combined-sol/Load.LoadContract.sol --contract LoadContract
 
 #  echidna:
 #    docker:
