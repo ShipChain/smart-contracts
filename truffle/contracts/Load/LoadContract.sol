@@ -104,11 +104,6 @@ contract LoadContract is Ownable {
         _;
     }
 
-    /** @notice Does not accept Ether.
-      * @dev Prevent fallthrough method from accepting ETH
-      */
-    function () public payable {revert();}
-
     /** @notice Sets the SHIPToken Contract address.  Only tokens from this address will be accepted.
       * @dev Only Owner
       */
