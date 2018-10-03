@@ -40,6 +40,16 @@ contract LoadContract is Ownable {
 
     address private shipTokenContractAddress;
 
+    /** @dev Revert if shipment state is not correct
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _state Shipment.State required state.
+      * @param _message string Revert message.
+      */
+    modifier shipmentHasState(bytes16 _shipmentUuid, Shipment.State _state, string _message) {
+        require(allShipmentData[_shipmentUuid].state == _state, _message);
+        _;
+    }
+
     /** @dev Revert if shipment has an escrow and escrow state is not correct
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _state Escrow.State required state if escrow exists.
@@ -334,6 +344,8 @@ contract LoadContract is Ownable {
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
         canRelease(_shipmentUuid)
+        escrowHasState(_shipmentUuid, Escrow.State.FUNDED, "Escrow must be Funded")
+        shipmentHasState(_shipmentUuid, Shipment.State.COMPLETE, "Shipment must be Complete")
     {
         allEscrowData[_shipmentUuid].releaseFunds();
     }

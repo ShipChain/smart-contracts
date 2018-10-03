@@ -118,6 +118,22 @@ contract('LoadContract', async (accounts) => {
         assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
     });
 
+    it("should set Complete", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const registry = await createShipment(shipmentUuid, SHIPPER);
+        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+
+        await truffleAssert.reverts(registry.setComplete(shipmentUuid, {from: CARRIER}), "Only Shipper or Moderator allowed to set Complete");
+        await truffleAssert.reverts(registry.setComplete(shipmentUuid, {from: SHIPPER}), "Only In Progress shipments can be marked Complete");
+
+        await registry.setInProgress(shipmentUuid, {from: CARRIER});
+
+        await registry.setComplete(shipmentUuid, {from: SHIPPER});
+
+        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.COMPLETE);
+    });
+
     it("should not fund NO_FUNDING Escrow with Ether", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
