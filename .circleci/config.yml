@@ -97,7 +97,9 @@ jobs: # a collection of steps
 #          no_output_timeout: 30m
 #          command: |
 #            cd truffle
-#            manticore --no-testcases --detect-all ./combined-sol/Load.LoadContract.sol --contract LoadContract
+#            manticore --no-testcases --detect-all ./combined-sol/Load.LoadContract.sol --contract LoadContract --workspace ./manticore
+#      - store_artifacts:
+#          path: truffle/manticore
 
 #  echidna:
 #    docker:
