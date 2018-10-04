@@ -15,9 +15,9 @@ async function createShipment(shipmentUuid, shipper, fundingType = EscrowFunding
         options.from = shipper;
     }
 
-    const registry = await LoadContract.deployed();
-    await registry.createNewShipment(shipmentUuid, fundingType, fundingAmount, options);
-    return registry;
+    const contract = await LoadContract.deployed();
+    await contract.createNewShipment(shipmentUuid, fundingType, fundingAmount, options);
+    return contract;
 }
 
 async function createShipToken(accounts){
@@ -38,139 +38,139 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     before(async () => {
         shipToken = await createShipToken(accounts);
-        const registry = await LoadContract.deployed();
-        await registry.setShipTokenContractAddress(shipToken.address);
+        const contract = await LoadContract.deployed();
+        await contract.setShipTokenContractAddress(shipToken.address);
     });
 
     it("should create a LoadShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await LoadContract.deployed();
-        const newShipmentTx = await registry.createNewShipment(shipmentUuid, EscrowFundingType.SHIP, web3.toWei(1, "ether"), {from: SHIPPER});
+        const contract = await LoadContract.deployed();
+        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.SHIP, web3.toWei(1, "ether"), {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === shipmentUuid;
         });
-        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
+        assert.equal(await contract.getShipper(shipmentUuid), SHIPPER);
     });
 
     it("should set inProgress", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        const contract = await createShipment(shipmentUuid, SHIPPER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.setInProgress(shipmentUuid, {from: CARRIER}), "Escrow must be Funded");
+        await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: CARRIER}), "Escrow must be Funded");
 
-        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
-        assert.equal(await registry.getEscrowFundingType(shipmentUuid), EscrowFundingType.SHIP);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
+        assert.equal(await contract.getEscrowFundingType(shipmentUuid), EscrowFundingType.SHIP);
     });
 
     //#region SHIP
     it("should only allow token address to be set once", async () => {
-        const registry = await LoadContract.deployed();
-        await truffleAssert.reverts(registry.setShipTokenContractAddress(0), "Token address already set");
+        const contract = await LoadContract.deployed();
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(0), "Token address already set");
     });
 
     it("should not fund SHIP Escrow with Ether", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.SHIP);
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.SHIP);
 
-        await truffleAssert.reverts(registry.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Escrow funding type must be Ether");
+        await truffleAssert.reverts(contract.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Escrow funding type must be Ether");
     });
 
     it("should fund SHIP Escrow with SHIP", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
+        const contract = await createShipment(shipmentUuid, SHIPPER);
 
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid), "Only the shipper can fund escrow");
+        await truffleAssert.reverts(shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid), "Only the shipper can fund escrow");
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
+        await shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
 
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
     it("should handle partial SHIP funding", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
+        const contract = await createShipment(shipmentUuid, SHIPPER);
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(0.5, "ether"), shipmentUuid, {from: SHIPPER});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+        await shipToken.approveAndCall(contract.address, web3.toWei(0.5, "ether"), shipmentUuid, {from: SHIPPER});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(0.49, "ether"), shipmentUuid, {from: SHIPPER});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+        await shipToken.approveAndCall(contract.address, web3.toWei(0.49, "ether"), shipmentUuid, {from: SHIPPER});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(0.01, "ether"), shipmentUuid, {from: SHIPPER});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+        await shipToken.approveAndCall(contract.address, web3.toWei(0.01, "ether"), shipmentUuid, {from: SHIPPER});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
     it("should revert with invalid SHIP funding parameters", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
+        const contract = await createShipment(shipmentUuid, SHIPPER);
 
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, -1, shipmentUuid, {from: SHIPPER}));
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), 0, {from: SHIPPER}), "Shipment does not exist");
+        await truffleAssert.reverts(shipToken.approveAndCall(contract.address, -1, shipmentUuid, {from: SHIPPER}));
+        await truffleAssert.reverts(shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), 0, {from: SHIPPER}), "Shipment does not exist");
         await truffleAssert.reverts(shipToken.approveAndCall(0, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER}));
     });
 
     it("should be able to release SHIP escrow", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        const contract = await createShipment(shipmentUuid, SHIPPER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow must be Funded");
+        await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
+        await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow must be Funded");
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
+        await shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
+        await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
 
-        await registry.setInProgress(shipmentUuid, {from: CARRIER});
-        await registry.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
-        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.RELEASED);
+        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.RELEASED);
     });
 
     it("should be able to withdraw SHIP escrow", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
-        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
-        await registry.setInProgress(shipmentUuid, {from: CARRIER});
-        await registry.setComplete(shipmentUuid, {from: SHIPPER});
+        const contract = await createShipment(shipmentUuid, SHIPPER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
-        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
 
 
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
         let carrierBalance = await shipToken.balanceOf(CARRIER);
-        await registry.withdrawEscrow(shipmentUuid, {from: CARRIER});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
         assert.deepEqual(await shipToken.balanceOf(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))));
 
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
     //#endregion
 
     //#region ETH
     it("should prevent accepting Eth via fallback function", async () => {
-        const registry = await LoadContract.deployed();
+        const contract = await LoadContract.deployed();
         const sender = SHIPPER;
-        const receiver = registry.address;
+        const receiver = contract.address;
         const amount = web3.toWei(1, "ether");
 
         // truffleAssert does not work for sendTransaction.  Catch manually
@@ -186,84 +186,84 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("should not fund Ether Escrow with SHIP", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
 
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER}), "Escrow funding type must be SHIP");
+        await truffleAssert.reverts(shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER}), "Escrow funding type must be SHIP");
     });
 
     it("should fund Ether Escrow with ETH", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
 
         const amount = web3.toWei(1, "ether");
-        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: amount});
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: amount});
 
-        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
     it("should handle partial ETH funding", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
 
-        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.5, "ether")});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.5, "ether")});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.49, "ether")});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.49, "ether")});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.01, "ether")});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.01, "ether")});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
     it("should be able to release ETH escrow", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow must be Funded");
+        await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
+        await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow must be Funded");
 
-        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
 
-        await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
+        await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
 
-        await registry.setInProgress(shipmentUuid, {from: CARRIER});
-        await registry.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
-        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.RELEASED);
+        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.RELEASED);
     });
 
     it("should be able to withdraw ETH escrow", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
-        await registry.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
-        await registry.setInProgress(shipmentUuid, {from: CARRIER});
-        await registry.setComplete(shipmentUuid, {from: SHIPPER});
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
-        await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
 
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
         let carrierBalance = await web3.eth.getBalance(CARRIER);
-        let withdrawTxReceipt = await registry.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
-        assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
         assert.deepEqual(await web3.eth.getBalance(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))).minus(gasCost));
 
-        await truffleAssert.reverts(registry.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
     //#endregion
 });
