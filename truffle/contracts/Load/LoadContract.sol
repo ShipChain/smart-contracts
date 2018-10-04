@@ -30,9 +30,10 @@ contract LoadContract is Ownable {
 
     // Escrow Events
     event EscrowCreated(bytes16 shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
-    event EscrowFunded(uint256 amount, uint256 total);
-    event EscrowReleased(uint256 amount);
-    event EscrowWithdrawn(uint256 amount);
+    event EscrowFunded(bytes16 _shipmentUuid, uint256 amount, uint256 total);
+    event EscrowReleased(bytes16 _shipmentUuid, uint256 amount);
+    event EscrowRefunded(bytes16 _shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(bytes16 _shipmentUuid, uint256 amount);
 
     // Library data storage
     mapping (bytes16 => Shipment.Data) private allShipmentData;
@@ -303,7 +304,7 @@ contract LoadContract is Ownable {
         escrowHasType(_shipmentUuid, Escrow.FundingType.ETHER, "Escrow funding type must be Ether")
         payable
     {
-        allEscrowData[_shipmentUuid].trackFunding(msg.value);
+        allEscrowData[_shipmentUuid].trackFunding(_shipmentUuid, msg.value);
     }
 
     /** @notice Called from ERC20 SHIPToken after approveAndCall.
@@ -323,7 +324,7 @@ contract LoadContract is Ownable {
         requireEscrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created");
         requireEscrowHasType(_shipmentUuid, Escrow.FundingType.SHIP, "Escrow funding type must be SHIP");
 
-        allEscrowData[_shipmentUuid].trackFunding(amount);
+        allEscrowData[_shipmentUuid].trackFunding(_shipmentUuid, amount);
 
         if (!ERC20(token).transferFrom(from, address(this), amount)) {
             revert();
@@ -342,7 +343,7 @@ contract LoadContract is Ownable {
         escrowHasState(_shipmentUuid, Escrow.State.FUNDED, "Escrow must be Funded")
         shipmentHasState(_shipmentUuid, Shipment.State.COMPLETE, "Shipment must be Complete")
     {
-        allEscrowData[_shipmentUuid].releaseFunds();
+        allEscrowData[_shipmentUuid].releaseFunds(_shipmentUuid);
     }
 
     /** @notice Withdraws the escrow to the carrier's account
@@ -354,7 +355,7 @@ contract LoadContract is Ownable {
         hasEscrow(_shipmentUuid)
         canWithdraw(_shipmentUuid)
     {
-        uint amount = allEscrowData[_shipmentUuid].withdraw();
+        uint amount = allEscrowData[_shipmentUuid].withdraw(_shipmentUuid);
 
         if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.ETHER) {
             msg.sender.transfer(amount);

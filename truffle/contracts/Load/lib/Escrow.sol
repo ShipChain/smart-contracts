@@ -6,9 +6,10 @@ import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
 library Escrow {
     using SafeMath for uint256;
 
-    event EscrowFunded(uint256 amount, uint256 total);
-    event EscrowReleased(uint256 amount);
-    event EscrowWithdrawn(uint256 amount);
+    event EscrowFunded(bytes16 _shipmentUuid, uint256 amount, uint256 total);
+    event EscrowReleased(bytes16 _shipmentUuid, uint256 amount);
+    event EscrowRefunded(bytes16 _shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(bytes16 _shipmentUuid, uint256 amount);
 
     enum FundingType {NO_FUNDING, SHIP, ETHER}
     enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, WITHDRAWN}
@@ -26,7 +27,7 @@ library Escrow {
         _;
     }
 
-    function trackFunding(Data storage self, uint256 amount)
+    function trackFunding(Data storage self, bytes16 _shipmentUuid, uint256 amount)
         internal
         requiredState(self, State.CREATED)
     {
@@ -37,18 +38,18 @@ library Escrow {
             self.state = State.FUNDED;
         }
 
-        emit EscrowFunded(amount, self.fundedAmount);
+        emit EscrowFunded(_shipmentUuid, amount, self.fundedAmount);
     }
 
-    function releaseFunds(Data storage self)
+    function releaseFunds(Data storage self, bytes16 _shipmentUuid)
         internal
         requiredState(self, State.FUNDED)
     {
         self.state = State.RELEASED;
-        emit EscrowReleased(self.fundedAmount);
+        emit EscrowReleased(_shipmentUuid, self.fundedAmount);
     }
 
-    function withdraw(Data storage self)
+    function withdraw(Data storage self, bytes16 _shipmentUuid)
         internal
         requiredState(self, State.RELEASED)
         returns(uint amount)
@@ -56,6 +57,6 @@ library Escrow {
         amount = self.fundedAmount;
         self.fundedAmount = 0;
         self.state = State.WITHDRAWN;
-        emit EscrowWithdrawn(amount);
+        emit EscrowWithdrawn(_shipmentUuid, amount);
     }
 }
