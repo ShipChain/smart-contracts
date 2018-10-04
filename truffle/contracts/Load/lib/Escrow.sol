@@ -66,6 +66,6 @@ library Escrow {
         returns(uint amount)
     {
         self.state = State.REFUNDED;
-        emit EscrowWithdrawn(_shipmentUuid, amount);
+        emit EscrowRefunded(_shipmentUuid, amount);
     }
 }
