@@ -117,6 +117,15 @@ Unit test with `bin/truffle test`
 
 Static Code Analysis with `bin/myth`
 
+If you start getting errors similar to this:
+
+```
+Error: sender doesn't have enough funds to send tx. 
+The upfront cost is: 672197500000000000 and the
+sender's account only has: 663666560000000000
+```
+then you need to restart your Ganache as you have run out of ETH.  If you are testing with `bin/truffle` then use `bin/dc down`.  If you are testing with `bin/truffle-gui` then restart the Ganache application.
+
 ## Documentation
 
 [Mermaid](https://mermaidjs.github.io/) charts in development in `truffle/LoadContract.html`.
