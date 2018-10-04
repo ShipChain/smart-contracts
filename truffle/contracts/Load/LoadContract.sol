@@ -110,7 +110,11 @@ contract LoadContract is Ownable {
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
     modifier canWithdraw(bytes16 _shipmentUuid) {
-        require(msg.sender == allShipmentData[_shipmentUuid].carrier, "Only the carrier can withdraw escrow");
+        require((msg.sender == allShipmentData[_shipmentUuid].carrier &&
+                allEscrowData[_shipmentUuid].state == Escrow.State.RELEASED) ||
+                (msg.sender == allShipmentData[_shipmentUuid].shipper &&
+                allEscrowData[_shipmentUuid].state == Escrow.State.REFUNDED),
+                "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
         _;
     }
 
