@@ -12,7 +12,7 @@ library Escrow {
     event EscrowWithdrawn(bytes16 _shipmentUuid, uint256 amount);
 
     enum FundingType {NO_FUNDING, SHIP, ETHER}
-    enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, WITHDRAWN}
+    enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, REFUNDED, WITHDRAWN}
 
     struct Data {
         // TODO: PACK PLS
@@ -57,6 +57,15 @@ library Escrow {
         amount = self.fundedAmount;
         self.fundedAmount = 0;
         self.state = State.WITHDRAWN;
+        emit EscrowWithdrawn(_shipmentUuid, amount);
+    }
+
+    function refund(Data storage self, bytes16 _shipmentUuid)
+        internal
+        requiredState(self, State.FUNDED)
+        returns(uint amount)
+    {
+        self.state = State.REFUNDED;
         emit EscrowWithdrawn(_shipmentUuid, amount);
     }
 }

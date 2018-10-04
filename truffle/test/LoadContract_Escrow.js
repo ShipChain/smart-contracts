@@ -6,7 +6,7 @@ const LoadContract = artifacts.require("LoadContract");
 const SHIPToken = artifacts.require("./utils/SHIPToken.sol");
 
 const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3};
-const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, WITHDRAWN: 4};
+const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
 const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2};
 
 async function createShipment(shipmentUuid, shipper, fundingType = EscrowFundingType.SHIP, fundingAmount = web3.toWei(1, "ether")) {
