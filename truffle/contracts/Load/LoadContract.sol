@@ -106,6 +106,14 @@ contract LoadContract is Ownable {
         _;
     }
 
+    /** @dev Revert if msg.sender is not the shipment moderator or shipper
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      */
+    modifier canRefund(bytes16 _shipmentUuid) {
+        require(msg.sender == allShipmentData[_shipmentUuid].moderator, "Only moderator can refund escrow");
+        _;
+    }
+
     /** @dev Revert if msg.sender is not the shipment carrier
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
@@ -378,6 +386,19 @@ contract LoadContract is Ownable {
         } else if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.SHIP) {
             ERC20(shipTokenContractAddress).transfer(msg.sender, amount);
         }
+    }
+
+    /** @notice Allows shipper to retrieve escrow
+      * @param _shipmentUuid bytes16 Shipment's UUID
+      */
+    function refundEscrow(bytes16 _shipmentUuid)
+        public
+        shipmentExists(_shipmentUuid)
+        hasEscrow(_shipmentUuid)
+        canRefund(_shipmentUuid)
+        shipmentHasState(_shipmentUuid, Shipment.State.CANCELED, "Shipment must be Canceled to refund")
+    {
+        allEscrowData[_shipmentUuid].refund(_shipmentUuid);
     }
 
     /** @dev Revert if shipment has an escrow and escrow state is not correct
