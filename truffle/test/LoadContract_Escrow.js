@@ -164,6 +164,49 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
+
+    it("should be able to withdraw all from overfunded SHIP escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const contract = await createShipment(shipmentUuid, SHIPPER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await shipToken.approveAndCall(contract.address, web3.toWei(2, "ether"), shipmentUuid, {from: SHIPPER});
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        let carrierBalance = await shipToken.balanceOf(CARRIER);
+        await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.deepEqual(await shipToken.balanceOf(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(2, "ether"))));
+    });
+
+    it("should be able to refund SHIP escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const contract = await createShipment(shipmentUuid, SHIPPER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
+
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Canceled to refund");
+
+        await contract.setCanceled(shipmentUuid, {from: CARRIER});
+
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Only moderator can refund escrow");
+
+        await contract.refundEscrow(shipmentUuid, {from: MODERATOR});
+
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+
+        let shipperBalance = await shipToken.balanceOf(SHIPPER);
+        await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.deepEqual(await shipToken.balanceOf(SHIPPER), shipperBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))));
+
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+    });
     //#endregion
 
     //#region ETH
@@ -250,6 +293,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
 
@@ -264,6 +308,54 @@ contract('LoadContract with Escrow', async (accounts) => {
         assert.deepEqual(await web3.eth.getBalance(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))).minus(gasCost));
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+    });
+
+    it("should be able to withdraw all from overfunded ETH escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(2, "ether")});
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+
+        let carrierBalance = await web3.eth.getBalance(CARRIER);
+        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
+        const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.deepEqual(await web3.eth.getBalance(CARRIER), carrierBalance.plus(web3.toBigNumber(web3.toWei(2, "ether"))).minus(gasCost));
+    });
+
+    it("should be able to refund ETH escrow", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const contract = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
+
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Canceled to refund");
+
+        await contract.setCanceled(shipmentUuid, {from: CARRIER});
+
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Only moderator can refund escrow");
+
+        await contract.refundEscrow(shipmentUuid, {from: MODERATOR});
+
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
+
+        let shipperBalance = await web3.eth.getBalance(SHIPPER);
+        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
+        const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
+        const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
+        assert.deepEqual(await web3.eth.getBalance(SHIPPER), shipperBalance.plus(web3.toBigNumber(web3.toWei(1, "ether"))).minus(gasCost));
+
+        await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
     //#endregion
 });
