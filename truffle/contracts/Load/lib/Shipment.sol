@@ -2,14 +2,16 @@ pragma solidity 0.4.24;
 
 
 library Shipment {
-    enum State {INITIATED, IN_PROGRESS, COMPLETE, CANCELED }
+    enum State {INITIATED, IN_PROGRESS, COMPLETE, CANCELED}
 
     struct Data {
-        // TODO: PACK PLS
-        address shipper;
-        address carrier;
-        address moderator;
-        State state;
+        /* Slot 0 */
+        address shipper; //20 bytes
+        /* Slot 1 */
+        address carrier; //20 bytes
+        /* Slot 2 */
+        address moderator; //20 bytes
+        State state; //1 byte
     }
 
     modifier isShipper(Data storage self, string message) {

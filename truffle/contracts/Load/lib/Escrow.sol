@@ -15,11 +15,13 @@ library Escrow {
     enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, REFUNDED, WITHDRAWN}
 
     struct Data {
-        // TODO: PACK PLS
-        FundingType fundingType;
-        State state;
-        uint256 contractedAmount;
-        uint256 fundedAmount;
+        /* Slot 0 */
+        uint256 contractedAmount; //32 bytes
+        /* Slot 1 */
+        uint256 fundedAmount; //32 bytes
+        /* Slot 2 */
+        FundingType fundingType; //1 byte
+        State state; //1 byte
     }
 
     modifier requiredState(Data storage self, State _requiredState) {
@@ -31,7 +33,7 @@ library Escrow {
         internal
         requiredState(self, State.CREATED)
     {
-        require(amount > 0);
+        require(amount > 0, "Funded amount must be non-zero");
         self.fundedAmount = self.fundedAmount.add(amount);
 
         if (self.fundedAmount >= self.contractedAmount) {

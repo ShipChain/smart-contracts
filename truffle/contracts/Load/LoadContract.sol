@@ -35,11 +35,14 @@ contract LoadContract is Ownable {
     event EscrowRefunded(bytes16 _shipmentUuid, uint256 amount);
     event EscrowWithdrawn(bytes16 _shipmentUuid, uint256 amount);
 
-    // Library data storage
-    mapping (bytes16 => Shipment.Data) private allShipmentData;
-    mapping (bytes16 => Escrow.Data) private allEscrowData;
+    /* Slot 0 */
+    address private shipTokenContractAddress; // 20 bytes
 
-    address private shipTokenContractAddress;
+    // Library data storage
+    /* Slot 1 */
+    mapping (bytes16 => Shipment.Data) private allShipmentData;
+    /* Slot 2 */
+    mapping (bytes16 => Escrow.Data) private allEscrowData;
 
     /** @dev Revert if shipment state is not correct
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
@@ -146,8 +149,7 @@ contract LoadContract is Ownable {
       * @param _contractedAmount uint256 Escrow token/ether amount if escrow is defined.
       * @dev Emits ShipmentCreated on success.
       */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType,
-        uint256 _contractedAmount)
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, uint256 _contractedAmount)
         external
     {
         if (_fundingType != Escrow.FundingType.NO_FUNDING) {
