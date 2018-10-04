@@ -53,4 +53,18 @@ library Shipment {
             "Only In Progress shipments can be marked Complete");
         self.state = State.COMPLETE;
     }
+
+    function setCanceled(Data storage self)
+        internal
+    {
+        require(self.state != State.CANCELED, "Already canceled");
+        require(self.state != State.INITIATED ||
+                msg.sender == self.shipper || msg.sender == self.carrier || msg.sender == self.moderator,
+                "Only shipper, carrier, or moderator can cancel an Initiated shipment");
+        require(self.state != State.IN_PROGRESS || msg.sender == self.carrier || msg.sender == self.moderator,
+                "Only carrier or moderator can cancel an In Progress shipment");
+        require(self.state != State.COMPLETE || msg.sender == self.moderator,
+                "Only moderator can cancel a Completed shipment");
+        self.state = State.CANCELED;
+    }
 }

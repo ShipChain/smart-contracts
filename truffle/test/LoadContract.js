@@ -8,16 +8,6 @@ const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3 };
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
 const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2 };
 
-async function createShipment(shipmentUuid, shipper){
-    let options = {};
-    if(shipper){
-        options.from = shipper;
-    }
-
-    const registry = await LoadContract.deployed();
-    await registry.createNewShipment(shipmentUuid, 0, 0, options);
-    return registry;
-}
 
 contract('LoadContract', async (accounts) => {
     const SHIPPER = accounts[1];
@@ -25,54 +15,65 @@ contract('LoadContract', async (accounts) => {
     const MODERATOR = accounts[3];
     const INVALID = accounts[9];
 
+    let contract;
+    before(async () =>{
+        contract = await LoadContract.deployed();
+    });
+
+    async function createShipment(){
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        return shipmentUuid;
+    }
+
     it("should create a LoadShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-
-        const registry = await LoadContract.deployed();
-        const newShipmentTx = await registry.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === shipmentUuid;
         });
-        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
+        assert.equal(await contract.getShipper(shipmentUuid), SHIPPER);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.NOT_CREATED);
     });
 
     it("should only allow Shipper to set Carrier", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
+        assert.equal(await contract.getShipper(shipmentUuid), SHIPPER);
 
-        await truffleAssert.reverts(registry.setCarrier(shipmentUuid, CARRIER, {from: MODERATOR}), "Only Shipper allowed to set Carrier");
+        await truffleAssert.reverts(contract.setCarrier(shipmentUuid, CARRIER, {from: MODERATOR}), "Only Shipper allowed to set Carrier");
 
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
-        assert.equal(await registry.getCarrier(shipmentUuid), CARRIER);
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        assert.equal(await contract.getCarrier(shipmentUuid), CARRIER);
     });
 
     it("should only allow Shipper to set Moderator", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        assert.equal(await registry.getShipper(shipmentUuid), SHIPPER);
+        assert.equal(await contract.getShipper(shipmentUuid), SHIPPER);
 
-        await truffleAssert.reverts(registry.setModerator(shipmentUuid, MODERATOR, {from: CARRIER}), "Only Shipper allowed to set Moderator");
+        await truffleAssert.reverts(contract.setModerator(shipmentUuid, MODERATOR, {from: CARRIER}), "Only Shipper allowed to set Moderator");
 
-        await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
-        assert.equal(await registry.getModerator(shipmentUuid), MODERATOR);
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        assert.equal(await contract.getModerator(shipmentUuid), MODERATOR);
     });
 
     it("should emit VaultUrl", async () => {
         const vaultUrl = "vault.example.com/meta.json";
-        const shipmentUuid = uuidToHex(uuidv4(), true);
+        const shipmentUuid = await createShipment();
         const invalidShipment = uuidToHex(uuidv4(), true);
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
+        await truffleAssert.reverts(contract.setVaultUrl(invalidShipment, vaultUrl), "Shipment does not exist");
 
-        await truffleAssert.reverts(registry.setVaultUrl(invalidShipment, vaultUrl), "Shipment does not exist");
+        await truffleAssert.reverts(contract.setVaultUrl(shipmentUuid, vaultUrl), "Only Shipper allowed to set VaultUrl");
 
-        await truffleAssert.reverts(registry.setVaultUrl(shipmentUuid, vaultUrl), "Only Shipper allowed to set VaultUrl");
-
-        const setVaultTx = await registry.setVaultUrl(shipmentUuid, vaultUrl, {from: SHIPPER});
+        const setVaultTx = await contract.setVaultUrl(shipmentUuid, vaultUrl, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(setVaultTx, "VaultUrl", ev => {
             return ev.vaultUrl === vaultUrl;
@@ -82,20 +83,17 @@ contract('LoadContract', async (accounts) => {
     it("should emit VaultHash", async () => {
         const vaultHash_shipper = "0x1234567890";
         const vaultHash_carrier = "0x1234567890";
-        const shipmentUuid = uuidToHex(uuidv4(), true);
+        const shipmentUuid = await createShipment();
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await truffleAssert.reverts(contract.setVaultHash(shipmentUuid, vaultHash_shipper), "Only Shipper or Carrier allowed to set VaultHash");
 
-        await truffleAssert.reverts(registry.setVaultHash(shipmentUuid, vaultHash_shipper), "Only Shipper or Carrier allowed to set VaultHash");
-
-        const setVaultTx_shipper = await registry.setVaultHash(shipmentUuid, vaultHash_shipper, {from: SHIPPER});
+        const setVaultTx_shipper = await contract.setVaultHash(shipmentUuid, vaultHash_shipper, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(setVaultTx_shipper, "VaultHash", ev => {
             return ev.vaultHash === vaultHash_shipper;
         });
 
-        const setVaultTx_carrier = await registry.setVaultHash(shipmentUuid, vaultHash_carrier, {from: CARRIER});
+        const setVaultTx_carrier = await contract.setVaultHash(shipmentUuid, vaultHash_carrier, {from: CARRIER});
 
         await truffleAssert.eventEmitted(setVaultTx_carrier, "VaultHash", ev => {
             return ev.vaultHash === vaultHash_carrier;
@@ -104,42 +102,73 @@ contract('LoadContract', async (accounts) => {
     });
 
     it("should set inProgress", async () => {
-        const shipmentUuid = uuidToHex(uuidv4(), true);
+        const shipmentUuid = await createShipment();
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: SHIPPER}), "Only Carrier or Moderator allowed to set In Progress");
 
-        await truffleAssert.reverts(registry.setInProgress(shipmentUuid, {from: SHIPPER}), "Only Carrier or Moderator allowed to set In Progress");
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
 
-        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
 
-        await registry.setInProgress(shipmentUuid, {from: CARRIER});
-
-        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
     });
 
     it("should set Complete", async () => {
-        const shipmentUuid = uuidToHex(uuidv4(), true);
+        const shipmentUuid = await createShipment();
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-        await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await truffleAssert.reverts(contract.setComplete(shipmentUuid, {from: CARRIER}), "Only Shipper or Moderator allowed to set Complete");
+        await truffleAssert.reverts(contract.setComplete(shipmentUuid, {from: SHIPPER}), "Only In Progress shipments can be marked Complete");
 
-        await truffleAssert.reverts(registry.setComplete(shipmentUuid, {from: CARRIER}), "Only Shipper or Moderator allowed to set Complete");
-        await truffleAssert.reverts(registry.setComplete(shipmentUuid, {from: SHIPPER}), "Only In Progress shipments can be marked Complete");
+        await contract.setInProgress(shipmentUuid, {from: CARRIER});
 
-        await registry.setInProgress(shipmentUuid, {from: CARRIER});
+        await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
-        await registry.setComplete(shipmentUuid, {from: SHIPPER});
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.COMPLETE);
+    });
 
-        assert.equal(await registry.getShipmentState(shipmentUuid), ShipmentState.COMPLETE);
+    it("should set Canceled", async () => {
+        let shipmentUuid = await createShipment();
+
+        // No one else can cancel
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: INVALID}), "Only shipper, carrier, or moderator can cancel an Initiated shipment");
+
+        //Shipper can cancel an initiated shipment
+        await contract.setCanceled(shipmentUuid, {from: SHIPPER});
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CANCELED);
+
+        //Can't cancel a canceled shipment
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: SHIPPER}), "Already canceled");
+
+        //Carrier and moderator can cancel an initiated shipment
+        await contract.setCanceled(await createShipment(), {from: MODERATOR});
+        await contract.setCanceled(await createShipment(), {from: CARRIER});
+
+        //Shipper can't cancel an in progress shipment
+        shipmentUuid = await createShipment();
+        await contract.setInProgress(shipmentUuid, {from: MODERATOR});
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: SHIPPER}), "Only carrier or moderator can cancel an In Progress shipment");
+
+        //Carrier and moderator can cancel an in progress shipment
+        await contract.setCanceled(shipmentUuid, {from: CARRIER});
+        shipmentUuid = await createShipment();
+        await contract.setInProgress(shipmentUuid, {from: MODERATOR});
+        await contract.setCanceled(shipmentUuid, {from: MODERATOR});
+
+        //Neither shipper nor carrier can cancel a complete shipment
+        shipmentUuid = await createShipment();
+        await contract.setInProgress(shipmentUuid, {from: MODERATOR});
+        await contract.setComplete(shipmentUuid, {from: MODERATOR});
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: SHIPPER}), "Only moderator can cancel a Completed shipment");
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: CARRIER}), "Only moderator can cancel a Completed shipment");
+
+        //Moderator can cancel a completed shipment
+        await contract.setCanceled(shipmentUuid, {from: MODERATOR});
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CANCELED);
     });
 
     it("should not fund NO_FUNDING Escrow with Ether", async () => {
-        const shipmentUuid = uuidToHex(uuidv4(), true);
+        const shipmentUuid = await createShipment();
 
-        const registry = await createShipment(shipmentUuid, SHIPPER);
-
-        await truffleAssert.reverts(registry.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Shipment has no escrow");
+        await truffleAssert.reverts(contract.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Shipment has no escrow");
     });
-
 });

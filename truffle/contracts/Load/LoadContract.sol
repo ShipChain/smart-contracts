@@ -244,6 +244,16 @@ contract LoadContract is Ownable {
         allShipmentData[_shipmentUuid].setComplete();
     }
 
+    /** @notice Updates the Shipment state to "Canceled".
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      */
+    function setCanceled(bytes16 _shipmentUuid)
+        public
+        shipmentExists(_shipmentUuid)
+    {
+        allShipmentData[_shipmentUuid].setCanceled();
+    }
+
     /** @notice Returns the Shipment Shipper.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
