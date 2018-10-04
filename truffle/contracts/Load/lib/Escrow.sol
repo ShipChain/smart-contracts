@@ -24,16 +24,12 @@ library Escrow {
         State state; //1 byte
     }
 
-    modifier requiredState(Data storage self, State _requiredState) {
-        require(self.state == _requiredState, "Escrow state invalid for action");
-        _;
-    }
-
     function trackFunding(Data storage self, bytes16 _shipmentUuid, uint256 amount)
         internal
-        requiredState(self, State.CREATED)
     {
+        require(self.state == State.CREATED, "Escrow must be Created");
         require(amount > 0, "Funded amount must be non-zero");
+
         self.fundedAmount = self.fundedAmount.add(amount);
 
         if (self.fundedAmount >= self.contractedAmount) {
@@ -45,17 +41,19 @@ library Escrow {
 
     function releaseFunds(Data storage self, bytes16 _shipmentUuid)
         internal
-        requiredState(self, State.FUNDED)
     {
+        require(self.state == State.FUNDED, "Escrow must be Funded");
+
         self.state = State.RELEASED;
         emit EscrowReleased(_shipmentUuid, self.fundedAmount);
     }
 
     function withdraw(Data storage self, bytes16 _shipmentUuid)
         internal
-        requiredState(self, State.RELEASED)
         returns(uint amount)
     {
+        require(self.state == State.RELEASED || self.state == State.REFUNDED, "Escrow must be Released or Refunded");
+
         amount = self.fundedAmount;
         self.fundedAmount = 0;
         self.state = State.WITHDRAWN;
@@ -64,10 +62,10 @@ library Escrow {
 
     function refund(Data storage self, bytes16 _shipmentUuid)
         internal
-        requiredState(self, State.FUNDED)
-        returns(uint amount)
     {
+        require(self.state == State.CREATED || self.state == State.FUNDED, "Escrow must be Created or Funded");
+
         self.state = State.REFUNDED;
-        emit EscrowRefunded(_shipmentUuid, amount);
+        emit EscrowRefunded(_shipmentUuid, self.fundedAmount);
     }
 }
