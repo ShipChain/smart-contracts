@@ -151,8 +151,12 @@ subgraph Escrow State
     E_R -- "withdrawEscrow() <br/> [carrier]" --> E_W
 
     %% Refund State Transitions
-    E_F -- "refundEscrow() <br/> [moderator || ShipChain if > 90 days] <br/> Shipment[Canceled]" --> E_X
-    E_X -- "withdrawEscrow() <br/> [shipper]" --> E_W
+    E_F -- "refundEscrow() <br/> [moderator] <br/> Shipment[Canceled]
+        <br/> <br/> OR <br/> <br/>
+        refundEscrow() <br/> [shipper || carrier] <br/> now > created + 90 days
+        <br/> <br/> OR <br/> <br/>
+        refundEscrow(refundAddress) <br/> [owner]" --> E_X
+    E_X -- "withdrawEscrow() <br/> [refundAddress]" --> E_W
 
 end
 
@@ -164,13 +168,13 @@ subgraph Shipment State
     S_X((Canceled))
 
     %% Normal State Transitions
-    S_I -- "setInProgress() <br/> [carrier || moderator] <br/> Escrow[Not Created || Funded]" --> S_P
+    S_I -- "setInProgress() <br/> [carrier != 0x0] <br/> [carrier || moderator] <br/> Escrow[Not Created || Funded]" --> S_P
     S_P -- "setComplete() <br/> [carrier || moderator]" --> S_C
 
     %% Cancellation States
     S_I -- "cancelShipment() <br/> [shipper || carrier || moderator]" --> S_X
     S_P -- "cancelShipment() <br/> [carrier || moderator]" --> S_X
-    S_C -- "cancelShipment() <br/> [carrier || moderator]" --> S_X
+    S_C -- "cancelShipment() <br/> [moderator]" --> S_X
 
 end
 </div>
