@@ -5,8 +5,10 @@
 </head>
 <body>
 
-<div class="mermaid" id="Shipment Sequence">
+<div class="mermaid" id="EscrowSequence">
 sequenceDiagram
+participant T as Token
+participant E as Escrow
 participant SL as Shipment
 participant L as LoadContract
 participant S as Shipper
@@ -14,52 +16,82 @@ participant C as Carrier
 participant M as Moderator
 
 
-S ->>L: createNewShipment
+S ->> L: createNewShipment(funding arguments)
 activate L
-L-->>SL: setState(INITIATED)
+L -->> SL: setState(INITIATED)
 activate SL
-L-->>SL: setShipper(Shipper)
+L -->> SL: setShipper(Shipper)
 deactivate SL
 note over L: emit ShipmentCreated
+opt Escrowed Shipment
+L -->> E: setState(CREATED)
+activate E
+L -->> E: setFundingType(type)
+L -->> E: setContractedAmount(value)
+deactivate E
+note over L: emit EscrowCreated
 deactivate L
+end
 
-S ->> +L: setCarrier
+S ->> L: setCarrier
+activate L
 L -->> SL: setCarrier(Carrier)
 activate SL
 deactivate SL
 deactivate L
 
 opt Moderated Shipment
-S ->> +L: setModerator
+S ->> L: setModerator
+activate L
 L -->> SL: setModerator(Moderator)
 activate SL
 deactivate SL
 deactivate L
 end
 
-S ->> +L: setVaultUrl
+S ->> L: setVaultUrl
+activate L
 L -->> SL: setVaultUrl(url)
 activate SL
 deactivate SL
 note over L: emit VaultUrl
 deactivate L
 
-
-S ->> +L: setVaultHash
-L -->> SL: setVaultHash(hash)
+opt Escrowed Shipment
+loop While fundedAmount < contractedAmount
+alt SHIP Token
+S ->> T: approveAndCall(Shipment, amount)
+activate T
+T -->> L: receiveApproval(Shipper, amount, Shipment)
+activate L
+L -->> SL: trackFunding(amount)
 activate SL
 deactivate SL
-note over L: emit VaultHash
+L -->> T: transferFrom(Shipper, LoadContract)
+T -->> L: $SHIP
+deactivate T
 deactivate L
+else ETH
+S ->> L: fundEscrowEther() $
+activate L
+L -->> SL: trackFunding(amount)
+activate SL
+deactivate SL
+deactivate L
+end
+end
+end
 
 alt Carrier
-C ->> +L: setInProgress
+C ->> L: setInProgress
+activate L
 L -->> SL: setState(IN_PROGRESS)
 activate SL
 deactivate SL
 deactivate L
 else Moderator
-M ->> +L: setInProgress
+M ->> L: setInProgress
+activate L
 L -->> SL: setState(IN_PROGRESS)
 activate SL
 deactivate SL
@@ -67,34 +99,95 @@ deactivate L
 end
 
 loop While in Progress
-C ->> +L: setVaultHash
+C ->> L: setVaultHash
+activate L
 L -->> SL: setVaultHash(hash)
 activate SL
 deactivate SL
 note over L: emit VaultHash
-end
 deactivate L
+end
 
-alt Shipper
-S ->> +L: setComplete
+alt Carrier
+C ->> L: setComplete
+activate L
 L -->> SL: setState(COMPLETE)
 activate SL
 deactivate SL
 deactivate L
 else Moderator
-M ->> +L: setComplete
+M ->> L: setComplete
+activate L
 L -->> SL: setState(COMPLETE)
 activate SL
 deactivate SL
 deactivate L
 end
+note over T,M: ADD RELEASE/WITHDRAW/REFUND/CANCEL
+</div>
+
+<div class="mermaid" id="EscrowState">
+graph TB
+
+S_I -. " " .-> E_N
+E_F -. " " .-> S_P
+S_C -. " " .-> E_R
+S_X -. " " .-> E_X
+
+subgraph Escrow State
+    %% Actor definitions
+    E_N((Not Created))
+    E_C((Created))
+    E_F((Funded))
+    E_R((Released))
+    E_W((Withdrawn))
+    E_X((Refunded))
+
+    %% Normal State Transitions
+    E_N -- "createNewShipment() <br/> [fundingType != NO_FUNDING] <br/> [fundingType in (SHIP, ETH)]" --> E_C
+    E_C -- "trackFunds() <br/> [fundedAmount < contractedAmount]" --> E_C
+    E_C -- "[fundedAmount >= contractedAmount]" --> E_F
+    E_F -- "releaseEscrow() <br/> [shipper || moderator] <br/> Shipment[Complete]" --> E_R
+    E_R -- "withdrawEscrow() <br/> [carrier]" --> E_W
+
+    %% Refund State Transitions
+    E_F -- "refundEscrow() <br/> [moderator || ShipChain if > 90 days] <br/> Shipment[Canceled]" --> E_X
+    E_X -- "withdrawEscrow() <br/> [shipper]" --> E_W
+
+end
+
+subgraph Shipment State
+    %% Actor definitions
+    S_I((Initiated))
+    S_P((In Progress))
+    S_C((Complete))
+    S_X((Canceled))
+
+    %% Normal State Transitions
+    S_I -- "setInProgress() <br/> [carrier || moderator] <br/> Escrow[Not Created || Funded]" --> S_P
+    S_P -- "setComplete() <br/> [carrier || moderator]" --> S_C
+
+    %% Cancellation States
+    S_I -- "cancelShipment() <br/> [shipper || carrier || moderator]" --> S_X
+    S_P -- "cancelShipment() <br/> [carrier || moderator]" --> S_X
+    S_C -- "cancelShipment() <br/> [carrier || moderator]" --> S_X
+
+end
 </div>
 
 <script src="https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
 <script>
+    var shipchain_orange = '#EC7241';
     var config = {
         startOnLoad: true,
-        theme: "default",
+        // theme: "forest",
+        themeCSS: `
+        .actor, .labelBox { fill: ${shipchain_orange}; }
+        .loopLine { stroke: ${shipchain_orange}; }
+        .cluster rect { stroke: ${shipchain_orange} !important; }
+        .node circle { fill: ${shipchain_orange} !important; }
+        .edgeLabel { background-color: #dedede; }
+        `,
         flowchart: {
             curve: 'basis',
             useMaxWidth: true,
