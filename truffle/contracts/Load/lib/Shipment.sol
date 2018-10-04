@@ -38,6 +38,7 @@ library Shipment {
     function setInProgress(Data storage self)
         internal
     {
+        require(self.carrier != address(0), "Carrier must exist before marking a shipment In Progress");
         require(msg.sender == self.carrier || msg.sender == self.moderator,
             "Only Carrier or Moderator allowed to set In Progress");
         require(self.state == State.INITIATED, "Only Initiated shipments can be marked In Progress");

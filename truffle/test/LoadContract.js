@@ -102,7 +102,11 @@ contract('LoadContract', async (accounts) => {
     });
 
     it("should set inProgress", async () => {
-        const shipmentUuid = await createShipment();
+        let shipmentUuid = uuidToHex(uuidv4(), true);
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: MODERATOR}), "Carrier must exist before marking a shipment In Progress");
+
+        shipmentUuid = await createShipment();
 
         await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: SHIPPER}), "Only Carrier or Moderator allowed to set In Progress");
 
