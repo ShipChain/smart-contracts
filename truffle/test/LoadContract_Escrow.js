@@ -85,7 +85,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
-        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
+
+        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid), "Only the shipper can fund escrow");
+
+        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
+
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
@@ -94,13 +98,13 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(0.5, "ether"), shipmentUuid);
+        await shipToken.approveAndCall(registry.address, web3.toWei(0.5, "ether"), shipmentUuid, {from: SHIPPER});
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(0.49, "ether"), shipmentUuid);
+        await shipToken.approveAndCall(registry.address, web3.toWei(0.49, "ether"), shipmentUuid, {from: SHIPPER});
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(0.01, "ether"), shipmentUuid);
+        await shipToken.approveAndCall(registry.address, web3.toWei(0.01, "ether"), shipmentUuid, {from: SHIPPER});
         assert.equal(await registry.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
@@ -109,9 +113,9 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         const registry = await createShipment(shipmentUuid, SHIPPER);
 
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, -1, shipmentUuid));
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), 0), "Shipment does not exist");
-        await truffleAssert.reverts(shipToken.approveAndCall(0, web3.toWei(1, "ether"), shipmentUuid));
+        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, -1, shipmentUuid, {from: SHIPPER}));
+        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), 0, {from: SHIPPER}), "Shipment does not exist");
+        await truffleAssert.reverts(shipToken.approveAndCall(0, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER}));
     });
 
     it("should be able to release SHIP escrow", async () => {
@@ -124,7 +128,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid), "Only the shipper or moderator can release escrow");
         await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Escrow must be Funded");
 
-        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
+        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
 
         await truffleAssert.reverts(registry.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
 
@@ -141,7 +145,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const registry = await createShipment(shipmentUuid, SHIPPER);
         await registry.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
         await registry.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
-        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid);
+        await shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
         await registry.setInProgress(shipmentUuid, {from: CARRIER});
         await registry.setComplete(shipmentUuid, {from: SHIPPER});
         await registry.releaseEscrow(shipmentUuid, {from: MODERATOR});
@@ -175,7 +179,7 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         const registry = await createShipment(shipmentUuid, SHIPPER, EscrowFundingType.ETHER);
 
-        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid), "Escrow funding type must be SHIP");
+        await truffleAssert.reverts(shipToken.approveAndCall(registry.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER}), "Escrow funding type must be SHIP");
     });
 
     it("should fund Ether Escrow with ETH", async () => {

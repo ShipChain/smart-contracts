@@ -87,6 +87,15 @@ contract LoadContract is Ownable {
         _;
     }
 
+    /** @dev Revert if Shipper is not the Escrow funder
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param from address Wallet of the Escrow funder
+      */
+    modifier canFund(bytes16 _shipmentUuid, address from) {
+        requireCanFund(_shipmentUuid, from);
+        _;
+    }
+
     /** @dev Revert if msg.sender is not the shipment moderator or shipper
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
@@ -300,6 +309,7 @@ contract LoadContract is Ownable {
         public
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
+        canFund(_shipmentUuid, msg.sender)
         escrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created")
         escrowHasType(_shipmentUuid, Escrow.FundingType.ETHER, "Escrow funding type must be Ether")
         payable
@@ -319,8 +329,10 @@ contract LoadContract is Ownable {
         bytes16 _shipmentUuid = data.toBytes16();
         require(msg.sender == shipTokenContractAddress && token == shipTokenContractAddress,
                 "Ship Token address does not match");
+        // Following require functions should match the modifiers on fundEscrowEther above
         requireShipmentExists(_shipmentUuid);
         requireHasEscrow(_shipmentUuid);
+        requireCanFund(_shipmentUuid, from);
         requireEscrowHasState(_shipmentUuid, Escrow.State.CREATED, "Escrow must be created");
         requireEscrowHasType(_shipmentUuid, Escrow.FundingType.SHIP, "Escrow funding type must be SHIP");
 
@@ -408,5 +420,16 @@ contract LoadContract is Ownable {
         view
     {
         require(allEscrowData[_shipmentUuid].state != Escrow.State.NOT_CREATED, "Shipment has no escrow");
+    }
+
+    /** @dev Revert if Shipper is not the Escrow funder
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param from address Wallet of the Escrow funder
+      */
+    function requireCanFund(bytes16 _shipmentUuid, address from)
+        private
+        view
+    {
+        require(allShipmentData[_shipmentUuid].shipper == from, "Only the shipper can fund escrow");
     }
 }
