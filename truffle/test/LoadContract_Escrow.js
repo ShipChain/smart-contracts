@@ -189,11 +189,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         await shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
 
-        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Canceled to refund");
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Moderator can only refund canceled shipment escrows");
 
         await contract.setCanceled(shipmentUuid, {from: CARRIER});
 
-        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Only moderator can refund escrow");
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Moderator can only refund canceled shipment escrows");
 
         await contract.refundEscrow(shipmentUuid, {from: MODERATOR});
 
@@ -337,11 +337,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
 
-        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Canceled to refund");
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Moderator can only refund canceled shipment escrows");
 
         await contract.setCanceled(shipmentUuid, {from: CARRIER});
 
-        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Only moderator can refund escrow");
+        await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Moderator can only refund canceled shipment escrows");
 
         await contract.refundEscrow(shipmentUuid, {from: MODERATOR});
 

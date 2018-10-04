@@ -113,7 +113,16 @@ contract LoadContract is Ownable {
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       */
     modifier canRefund(bytes16 _shipmentUuid) {
-        require(msg.sender == allShipmentData[_shipmentUuid].moderator, "Only moderator can refund escrow");
+        if (now < allEscrowData[_shipmentUuid].getTimeoutDate()) {
+            require(msg.sender == owner || (msg.sender == allShipmentData[_shipmentUuid].moderator &&
+                                            allShipmentData[_shipmentUuid].state == Shipment.State.CANCELED),
+                    "Moderator can only refund canceled shipment escrows");
+        } else {
+            require(msg.sender == owner || msg.sender == allShipmentData[_shipmentUuid].shipper ||
+                    msg.sender == allShipmentData[_shipmentUuid].carrier ||
+                    msg.sender == allShipmentData[_shipmentUuid].moderator,
+                    "Only the members of the shipment can refund escrow");
+        }
         _;
     }
 
@@ -123,7 +132,7 @@ contract LoadContract is Ownable {
     modifier canWithdraw(bytes16 _shipmentUuid) {
         require((msg.sender == allShipmentData[_shipmentUuid].carrier &&
                 allEscrowData[_shipmentUuid].state == Escrow.State.RELEASED) ||
-                (msg.sender == allShipmentData[_shipmentUuid].shipper &&
+                (msg.sender == allEscrowData[_shipmentUuid].refundAddress &&
                 allEscrowData[_shipmentUuid].state == Escrow.State.REFUNDED),
                 "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
         _;
@@ -172,6 +181,8 @@ contract LoadContract is Ownable {
             escrow.state = Escrow.State.CREATED;
             escrow.fundingType = _fundingType;
             escrow.contractedAmount = _contractedAmount;
+            escrow.createdAt = now;
+            escrow.refundAddress = shipment.shipper;
 
             emit EscrowCreated(_shipmentUuid, _fundingType, _contractedAmount);
         }
@@ -382,7 +393,7 @@ contract LoadContract is Ownable {
         allEscrowData[_shipmentUuid].releaseFunds(_shipmentUuid);
     }
 
-    /** @notice Withdraws the escrow to the carrier's account
+    /** @notice Withdraws the escrow to the sender's account
       * @param _shipmentUuid bytes16 Shipment's UUID
       */
     function withdrawEscrow(bytes16 _shipmentUuid)
@@ -408,7 +419,6 @@ contract LoadContract is Ownable {
         shipmentExists(_shipmentUuid)
         hasEscrow(_shipmentUuid)
         canRefund(_shipmentUuid)
-        shipmentHasState(_shipmentUuid, Shipment.State.CANCELED, "Shipment must be Canceled to refund")
     {
         allEscrowData[_shipmentUuid].refund(_shipmentUuid);
     }

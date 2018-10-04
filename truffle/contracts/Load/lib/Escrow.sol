@@ -5,6 +5,7 @@ import {SafeMath} from "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 library Escrow {
     using SafeMath for uint256;
+    using Escrow for Data;
 
     event EscrowFunded(bytes16 _shipmentUuid, uint256 amount, uint256 total);
     event EscrowReleased(bytes16 _shipmentUuid, uint256 amount);
@@ -14,14 +15,27 @@ library Escrow {
     enum FundingType {NO_FUNDING, SHIP, ETHER}
     enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, REFUNDED, WITHDRAWN}
 
+    uint256 public constant TIMEOUT = 90 days;
+
     struct Data {
         /* Slot 0 */
         uint256 contractedAmount; //32 bytes
         /* Slot 1 */
         uint256 fundedAmount; //32 bytes
         /* Slot 2 */
+        uint256 createdAt; //32 bytes
+        /* Slot 3 */
         FundingType fundingType; //1 byte
         State state; //1 byte
+        address refundAddress; //20 bytes
+    }
+
+    function getTimeoutDate(Data storage self)
+        internal
+        view
+        returns(uint256 timeoutDate)
+    {
+        timeoutDate = self.createdAt.add(TIMEOUT);
     }
 
     function trackFunding(Data storage self, bytes16 _shipmentUuid, uint256 amount)
