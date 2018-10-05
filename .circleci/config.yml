@@ -28,6 +28,7 @@ jobs: # a collection of steps
       - run:
           name: "Flatten solidity for static analysis"
           command: |
+            cd truffle
             npm run flatten
             npm run combine
       - persist_to_workspace:
@@ -93,7 +94,10 @@ jobs: # a collection of steps
           name: "Slither analysis"
           command: |
             cd truffle
-            slither flat-sol
+            mkdir slither || true
+            slither flat-sol/Load.LoadContract.sol --json slither/output.json || true
+            slither flat-sol/Load.LoadContract.sol --printer-inheritance
+            dot -Tpng flat-sol/Load.LoadContract.sol.dot > slither/LoadContract.png
       - store_artifacts:
           path: truffle/slither
 
