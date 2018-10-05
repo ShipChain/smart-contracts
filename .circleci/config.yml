@@ -26,13 +26,10 @@ jobs: # a collection of steps
             npm install
             npm run truffle -- compile --all
       - run:
-          name: "Install Soljitsu"
-          command: sudo npm install -g soljitsu
-      - run:
           name: "Flatten solidity for static analysis"
           command: |
-            soljitsu flatten --truffle truffle --dest-dir truffle/flat-sol
-            soljitsu combine --truffle truffle --dest-dir truffle/combined-sol
+            npm run flatten
+            npm run combine
       - persist_to_workspace:
           root: truffle
           paths:
@@ -84,6 +81,21 @@ jobs: # a collection of steps
             npm run coverage || true
       - store_artifacts:
           path: truffle/coverage
+
+  slither:
+    docker:
+      - image: shipchain/slither:0.4.24
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Slither analysis"
+          command: |
+            cd truffle
+            slither flat-sol
+      - store_artifacts:
+          path: truffle/slither
 
 #  manticore:
 #    docker:
@@ -170,6 +182,9 @@ workflows:
 #          requires:
 #            - truffle-compile
       - oyente:
+          requires:
+            - truffle-compile
+      - slither:
           requires:
             - truffle-compile
 #      - securify:
