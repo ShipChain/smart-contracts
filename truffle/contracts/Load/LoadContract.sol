@@ -20,6 +20,7 @@ contract LoadContract is Ownable {
 
     // Registry Events
     event TokenContractAddressSet(address tokenContractAddress);
+    event EscrowRefundAddressSet(bytes16 shipmentUuid, address refundAddress);
 
     // Shipment Events
     event ShipmentCreated(bytes16 shipmentUuid);
@@ -116,7 +117,7 @@ contract LoadContract is Ownable {
         if (now < allEscrowData[_shipmentUuid].getTimeoutDate()) {
             require(msg.sender == owner || (msg.sender == allShipmentData[_shipmentUuid].moderator &&
                                             allShipmentData[_shipmentUuid].state == Shipment.State.CANCELED),
-                    "Moderator can only refund canceled shipment escrows");
+                    "Refunds can only be issued to Canceled shipments by the Moderator");
         } else {
             require(msg.sender == owner || msg.sender == allShipmentData[_shipmentUuid].shipper ||
                     msg.sender == allShipmentData[_shipmentUuid].carrier ||
@@ -150,6 +151,22 @@ contract LoadContract is Ownable {
         shipTokenContractAddress = _shipTokenAddress;
 
         emit TokenContractAddressSet(shipTokenContractAddress);
+    }
+
+    /** @notice Sets the shipment escrow refund address.  Refunds will be paid out to this address.
+      * @dev Only Owner
+      */
+    function setEscrowRefundAddress(bytes16 _shipmentUuid, address _refundAddress)
+        external
+        onlyOwner
+        shipmentExists(_shipmentUuid)
+        hasEscrow(_shipmentUuid)
+    {
+        require(_refundAddress != address(0x0), "Must provide a refund address");
+
+        allEscrowData[_shipmentUuid].refundAddress = _refundAddress;
+
+        emit EscrowRefundAddressSet(_shipmentUuid, _refundAddress);
     }
 
     /** @notice Creates a new Shipment and stores it in the Load Registry.
