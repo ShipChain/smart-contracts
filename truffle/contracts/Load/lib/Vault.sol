@@ -5,14 +5,14 @@ import {Shipment} from "./Shipment.sol";
 
 
 library Vault {
-    event VaultUrl(bytes16 shipmentUuid, string vaultUrl);
+    event VaultUri(bytes16 shipmentUuid, string vaultUri);
     event VaultHash(bytes16 shipmentUuid, string vaultHash);
 
-    function setVaultUrl(Shipment.Data storage self, bytes16 _shipmentUuid, string _vaultUrl)
+    function setVaultUri(Shipment.Data storage self, bytes16 _shipmentUuid, string _vaultUri)
         internal
     {
-        require(msg.sender == self.shipper, "Only Shipper allowed to set VaultUrl");
-        emit VaultUrl(_shipmentUuid, _vaultUrl);
+        require(msg.sender == self.shipper, "Only Shipper allowed to set VaultUri");
+        emit VaultUri(_shipmentUuid, _vaultUri);
     }
 
     function setVaultHash(Shipment.Data storage self, bytes16 _shipmentUuid, string _vaultHash)

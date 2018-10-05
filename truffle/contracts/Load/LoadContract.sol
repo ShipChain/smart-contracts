@@ -26,7 +26,7 @@ contract LoadContract is Ownable {
     event ShipmentCreated(bytes16 shipmentUuid);
 
     // Vault Events
-    event VaultUrl(bytes16 shipmentUuid, string vaultUrl);
+    event VaultUri(bytes16 shipmentUuid, string vaultUri);
     event VaultHash(bytes16 shipmentUuid, string vaultHash);
 
     // Escrow Events
@@ -207,14 +207,14 @@ contract LoadContract is Ownable {
 
     /** @notice Associates a Vault URL with this Shipment.
       * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultUrl string URL of the external vault.
-      * @dev Emits VaultUrl on success
+      * @param _vaultUri string URI of the external vault.
+      * @dev Emits VaultUri on success
       */
-    function setVaultUrl(bytes16 _shipmentUuid, string _vaultUrl)
+    function setVaultUri(bytes16 _shipmentUuid, string _vaultUri)
         external
         shipmentExists(_shipmentUuid)
     {
-        allShipmentData[_shipmentUuid].setVaultUrl(_shipmentUuid, _vaultUrl);
+        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
     }
 
     /** @notice Associates a Vault Hash with this Shipment.

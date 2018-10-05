@@ -64,19 +64,19 @@ contract('LoadContract', async (accounts) => {
         assert.equal(await contract.getModerator(shipmentUuid), MODERATOR);
     });
 
-    it("should emit VaultUrl", async () => {
-        const vaultUrl = "vault.example.com/meta.json";
+    it("should emit VaultUri", async () => {
+        const vaultUri = "vault.example.com/meta.json";
         const shipmentUuid = await createShipment();
         const invalidShipment = uuidToHex(uuidv4(), true);
 
-        await truffleAssert.reverts(contract.setVaultUrl(invalidShipment, vaultUrl), "Shipment does not exist");
+        await truffleAssert.reverts(contract.setVaultUri(invalidShipment, vaultUri), "Shipment does not exist");
 
-        await truffleAssert.reverts(contract.setVaultUrl(shipmentUuid, vaultUrl), "Only Shipper allowed to set VaultUrl");
+        await truffleAssert.reverts(contract.setVaultUri(shipmentUuid, vaultUri), "Only Shipper allowed to set VaultUri");
 
-        const setVaultTx = await contract.setVaultUrl(shipmentUuid, vaultUrl, {from: SHIPPER});
+        const setVaultTx = await contract.setVaultUri(shipmentUuid, vaultUri, {from: SHIPPER});
 
-        await truffleAssert.eventEmitted(setVaultTx, "VaultUrl", ev => {
-            return ev.vaultUrl === vaultUrl;
+        await truffleAssert.eventEmitted(setVaultTx, "VaultUri", ev => {
+            return ev.vaultUri === vaultUri && ev.shipmentUuid === shipmentUuid;
         });
     });
 
