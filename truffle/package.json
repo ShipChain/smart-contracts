@@ -21,6 +21,7 @@
     "soljitsu": "^1.0.0",
     "surya": "^0.2.7",
     "truffle": "^4.1.14",
+    "solc": "0.4.24",
     "truffle-assertions": "^0.5.0",
     "uuid": "^3.3.2",
     "uuid-to-hex": "^1.0.3"

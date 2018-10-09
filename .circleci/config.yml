@@ -162,6 +162,36 @@ jobs: # a collection of steps
 #            cd /
 #            /docker_run_securify
 
+  deploy-version:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Install sponge"
+          command: |
+            sudo apt-get install moreutils
+      - run:
+          name: "Avoid hosts unknown for github"
+          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+      - run:
+          name: "Clone meta-contracts"
+          command: |
+            git clone git@github.com:shipchain/meta-contracts.git
+            git -C meta-contracts checkout truffle-deploy
+      - run:
+          name: "Update meta-contracts repo with new LOAD version"
+          command: |
+            export VERSION=$(cat truffle/contracts/Load/VERSION)
+            export ABI=$(jq -rc .abi truffle/build/contracts/LoadContract.json)
+            export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/LoadContract.json)
+            jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/index.json
+            jq -r '.contracts.LOAD.versions[env.VERSION].abi=env.ABI | .contracts.LOAD.versions[env.VERSION].bin=env.BYTECODE | .contracts.LOAD.versions[env.VERSION].git-hash=env.CIRCLE_SHA1' meta-contracts/index.json | sponge meta-contracts/index.json
+            git -C meta-contracts commit -a -m "Published LOAD $VERSION to meta-contracts"
+            git -C meta-contracts push
+
 workflows:
   version: 2
   build-and-test:
@@ -194,3 +224,11 @@ workflows:
 #      - securify:
 #          requires:
 #            - truffle-compile
+      - hold-deploy:
+          type: approval
+          requires:
+            - truffle-tests
+            - mythril
+      - deploy-version:
+          requires:
+            - hold-deploy
