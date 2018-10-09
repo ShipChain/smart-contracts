@@ -35,7 +35,8 @@ contract LoadContract is Ownable {
     event VaultHash(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultHash);
 
     // Escrow Events
-    event EscrowCreated(address indexed msgSender, bytes16 indexed shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
+    event EscrowCreated(address indexed msgSender, bytes16 indexed shipmentUuid, Escrow.FundingType fundingType,
+                        uint256 contractedAmount);
     event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
     event EscrowFunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
     event EscrowReleased(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
