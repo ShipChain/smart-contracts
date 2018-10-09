@@ -19,28 +19,28 @@ contract LoadContract is Ownable {
     using Escrow for Escrow.Data;
 
     // Registry Events
-    event TokenContractAddressSet(address tokenContractAddress);
-    event EscrowRefundAddressSet(bytes16 indexed shipmentUuid, address refundAddress);
+    event TokenContractAddressSet(address indexed msgSender, address tokenContractAddress);
+    event EscrowRefundAddressSet(address indexed msgSender, bytes16 indexed shipmentUuid, address refundAddress);
 
     // Shipment Events
-    event ShipmentCreated(bytes16 indexed shipmentUuid);
-    event ShipmentCarrierSet(bytes16 indexed shipmentUuid, address carrier);
-    event ShipmentModeratorSet(bytes16 indexed shipmentUuid, address moderator);
-    event ShipmentInProgress(bytes16 indexed shipmentUuid);
-    event ShipmentComplete(bytes16 indexed shipmentUuid);
-    event ShipmentCanceled(bytes16 indexed shipmentUuid);
+    event ShipmentCreated(address indexed msgSender, bytes16 indexed shipmentUuid);
+    event ShipmentCarrierSet(address indexed msgSender, bytes16 indexed shipmentUuid, address carrier);
+    event ShipmentModeratorSet(address indexed msgSender, bytes16 indexed shipmentUuid, address moderator);
+    event ShipmentInProgress(address indexed msgSender, bytes16 indexed shipmentUuid);
+    event ShipmentComplete(address indexed msgSender, bytes16 indexed shipmentUuid);
+    event ShipmentCanceled(address indexed msgSender, bytes16 indexed shipmentUuid);
 
     // Vault Events
-    event VaultUri(bytes16 indexed shipmentUuid, string vaultUri);
-    event VaultHash(bytes16 indexed shipmentUuid, string vaultHash);
+    event VaultUri(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultUri);
+    event VaultHash(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultHash);
 
     // Escrow Events
-    event EscrowCreated(bytes16 indexed shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
-    event EscrowDeposited(bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowFunded(bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
-    event EscrowReleased(bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowRefunded(bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowWithdrawn(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowCreated(address indexed msgSender, bytes16 indexed shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
+    event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowFunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
+    event EscrowReleased(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowRefunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes
@@ -156,7 +156,7 @@ contract LoadContract is Ownable {
 
         shipTokenContractAddress = _shipTokenAddress;
 
-        emit TokenContractAddressSet(shipTokenContractAddress);
+        emit TokenContractAddressSet(msg.sender, shipTokenContractAddress);
     }
 
     /** @notice Sets the shipment escrow refund address.  Refunds will be paid out to this address.
@@ -172,7 +172,7 @@ contract LoadContract is Ownable {
 
         allEscrowData[_shipmentUuid].refundAddress = _refundAddress;
 
-        emit EscrowRefundAddressSet(_shipmentUuid, _refundAddress);
+        emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
     /** @notice Creates a new Shipment and stores it in the Load Registry.
@@ -198,7 +198,7 @@ contract LoadContract is Ownable {
 
         shipment.shipper = msg.sender;
 
-        emit ShipmentCreated(_shipmentUuid);
+        emit ShipmentCreated(msg.sender, _shipmentUuid);
 
         if (_fundingType != Escrow.FundingType.NO_FUNDING) {
             escrow.state = Escrow.State.CREATED;
@@ -207,7 +207,7 @@ contract LoadContract is Ownable {
             escrow.createdAt = now;
             escrow.refundAddress = shipment.shipper;
 
-            emit EscrowCreated(_shipmentUuid, _fundingType, _contractedAmount);
+            emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount);
         }
     }
 

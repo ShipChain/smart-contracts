@@ -7,11 +7,11 @@ library Escrow {
     using SafeMath for uint256;
     using Escrow for Data;
 
-    event EscrowDeposited(bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowFunded(bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
-    event EscrowReleased(bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowRefunded(bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowWithdrawn(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowFunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
+    event EscrowReleased(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowRefunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
 
     enum FundingType {NO_FUNDING, SHIP, ETHER}
     enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, REFUNDED, WITHDRAWN}
@@ -47,11 +47,11 @@ library Escrow {
 
         self.fundedAmount = self.fundedAmount.add(amount);
 
-        emit EscrowDeposited(_shipmentUuid, amount);
+        emit EscrowDeposited(msg.sender, _shipmentUuid, amount);
 
         if (self.fundedAmount >= self.contractedAmount) {
             self.state = State.FUNDED;
-            emit EscrowFunded(_shipmentUuid, self.fundedAmount, self.contractedAmount);
+            emit EscrowFunded(msg.sender, _shipmentUuid, self.fundedAmount, self.contractedAmount);
         }
     }
 
@@ -61,7 +61,7 @@ library Escrow {
         require(self.state == State.FUNDED, "Escrow must be Funded");
 
         self.state = State.RELEASED;
-        emit EscrowReleased(_shipmentUuid, self.fundedAmount);
+        emit EscrowReleased(msg.sender, _shipmentUuid, self.fundedAmount);
     }
 
     function withdraw(Data storage self, bytes16 _shipmentUuid)
@@ -73,7 +73,7 @@ library Escrow {
         amount = self.fundedAmount;
         self.fundedAmount = 0;
         self.state = State.WITHDRAWN;
-        emit EscrowWithdrawn(_shipmentUuid, amount);
+        emit EscrowWithdrawn(msg.sender, _shipmentUuid, amount);
     }
 
     function refund(Data storage self, bytes16 _shipmentUuid)
@@ -82,6 +82,6 @@ library Escrow {
         require(self.state == State.CREATED || self.state == State.FUNDED, "Escrow must be Created or Funded");
 
         self.state = State.REFUNDED;
-        emit EscrowRefunded(_shipmentUuid, self.fundedAmount);
+        emit EscrowRefunded(msg.sender, _shipmentUuid, self.fundedAmount);
     }
 }
