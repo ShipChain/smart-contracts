@@ -174,8 +174,12 @@ jobs: # a collection of steps
           command: |
             sudo apt-get install moreutils
       - run:
-          name: "Avoid hosts unknown for github"
-          command: echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+          name: "Configure Git"
+          command: |
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+            git config --global user.email ahodges+shippy@shipchain.io
+            git config --global user.name MrShippy
+
       - run:
           name: "Clone meta-contracts"
           command: |
