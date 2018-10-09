@@ -184,7 +184,6 @@ jobs: # a collection of steps
           name: "Clone meta-contracts"
           command: |
             git clone git@github.com:shipchain/meta-contracts.git
-            git -C meta-contracts checkout truffle-deploy
       - run:
           name: "Update meta-contracts repo with new LOAD version"
           command: |
@@ -230,9 +229,15 @@ workflows:
 #            - truffle-compile
       - hold-deploy:
           type: approval
+          filters:
+            branches:
+              only: master
           requires:
             - truffle-tests
             - mythril
       - deploy-version:
+          filters:
+            branches:
+              only: master
           requires:
             - hold-deploy
