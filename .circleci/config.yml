@@ -187,7 +187,7 @@ jobs: # a collection of steps
             export VERSION=$(cat truffle/contracts/Load/VERSION)
             export ABI=$(jq -rc .abi truffle/build/contracts/LoadContract.json)
             export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/LoadContract.json)
-            jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/index.json || echo "Current version is already deployed" && exit 1
+            jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/index.json || { echo "Current version is already deployed"; exit 1; }
             jq -r '.contracts.LOAD.versions[env.VERSION].abi=env.ABI | .contracts.LOAD.versions[env.VERSION].bin=env.BYTECODE | .contracts.LOAD.versions[env.VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.LOAD.latest=env.VERSION' meta-contracts/index.json | sponge meta-contracts/index.json
             git -C meta-contracts commit -a -m "Published LOAD $VERSION to meta-contracts"
             git -C meta-contracts push
