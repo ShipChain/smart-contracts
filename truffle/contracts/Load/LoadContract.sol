@@ -24,6 +24,11 @@ contract LoadContract is Ownable {
 
     // Shipment Events
     event ShipmentCreated(bytes16 shipmentUuid);
+    event ShipmentCarrierSet(bytes16 shipmentUuid, address carrier);
+    event ShipmentModeratorSet(bytes16 shipmentUuid, address moderator);
+    event ShipmentInProgress(bytes16 shipmentUuid);
+    event ShipmentComplete(bytes16 shipmentUuid);
+    event ShipmentCanceled(bytes16 shipmentUuid);
 
     // Vault Events
     event VaultUri(bytes16 shipmentUuid, string vaultUri);
@@ -237,7 +242,7 @@ contract LoadContract is Ownable {
         public
         shipmentExists(_shipmentUuid)
     {
-        allShipmentData[_shipmentUuid].setCarrier(_carrier);
+        allShipmentData[_shipmentUuid].setCarrier(_shipmentUuid, _carrier);
     }
 
     /** @notice Defines the Moderator for this Shipment.
@@ -248,7 +253,7 @@ contract LoadContract is Ownable {
         public
         shipmentExists(_shipmentUuid)
     {
-        allShipmentData[_shipmentUuid].setModerator(_moderator);
+        allShipmentData[_shipmentUuid].setModerator(_shipmentUuid, _moderator);
     }
 
     /** @notice Updates the Shipment state to "In Progress".
@@ -259,7 +264,7 @@ contract LoadContract is Ownable {
         shipmentExists(_shipmentUuid)
         escrowHasState(_shipmentUuid, Escrow.State.FUNDED, "Escrow must be Funded")
     {
-        allShipmentData[_shipmentUuid].setInProgress();
+        allShipmentData[_shipmentUuid].setInProgress(_shipmentUuid);
     }
 
     /** @notice Updates the Shipment state to "Complete".
@@ -269,7 +274,7 @@ contract LoadContract is Ownable {
         public
         shipmentExists(_shipmentUuid)
     {
-        allShipmentData[_shipmentUuid].setComplete();
+        allShipmentData[_shipmentUuid].setComplete(_shipmentUuid);
     }
 
     /** @notice Updates the Shipment state to "Canceled".
@@ -279,7 +284,7 @@ contract LoadContract is Ownable {
         public
         shipmentExists(_shipmentUuid)
     {
-        allShipmentData[_shipmentUuid].setCanceled();
+        allShipmentData[_shipmentUuid].setCanceled(_shipmentUuid);
     }
 
     /** @notice Returns the Shipment Shipper.

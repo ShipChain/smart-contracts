@@ -2,6 +2,12 @@ pragma solidity 0.4.24;
 
 
 library Shipment {
+    event ShipmentCarrierSet(bytes16 shipmentUuid, address carrier);
+    event ShipmentModeratorSet(bytes16 shipmentUuid, address moderator);
+    event ShipmentInProgress(bytes16 shipmentUuid);
+    event ShipmentComplete(bytes16 shipmentUuid);
+    event ShipmentCanceled(bytes16 shipmentUuid);
+
     enum State {INITIATED, IN_PROGRESS, COMPLETE, CANCELED}
 
     struct Data {
@@ -19,23 +25,25 @@ library Shipment {
         _;
     }
 
-    function setCarrier(Data storage self, address _carrier)
+    function setCarrier(Data storage self, bytes16 _shipmentUuid, address _carrier)
         internal
         isShipper(self, "Only Shipper allowed to set Carrier")
     {
         require(self.state == State.INITIATED, "Carrier can only be modified in Initiated state");
         self.carrier = _carrier;
+        emit ShipmentCarrierSet(_shipmentUuid, _carrier);
     }
 
-    function setModerator(Data storage self, address _moderator)
+    function setModerator(Data storage self, bytes16 _shipmentUuid, address _moderator)
         internal
         isShipper(self, "Only Shipper allowed to set Moderator")
     {
         require(self.state == State.INITIATED, "Moderator can only be modified in Initiated state");
         self.moderator = _moderator;
+        emit ShipmentModeratorSet(_shipmentUuid, _moderator);
     }
 
-    function setInProgress(Data storage self)
+    function setInProgress(Data storage self, bytes16 _shipmentUuid)
         internal
     {
         require(self.carrier != address(0), "Carrier must exist before marking a shipment In Progress");
@@ -43,9 +51,10 @@ library Shipment {
             "Only Carrier or Moderator allowed to set In Progress");
         require(self.state == State.INITIATED, "Only Initiated shipments can be marked In Progress");
         self.state = State.IN_PROGRESS;
+        emit ShipmentInProgress(_shipmentUuid);
     }
 
-    function setComplete(Data storage self)
+    function setComplete(Data storage self, bytes16 _shipmentUuid)
         internal
     {
         require(msg.sender == self.shipper || msg.sender == self.moderator,
@@ -53,9 +62,10 @@ library Shipment {
         require(self.state == State.IN_PROGRESS,
             "Only In Progress shipments can be marked Complete");
         self.state = State.COMPLETE;
+        emit ShipmentComplete(_shipmentUuid);
     }
 
-    function setCanceled(Data storage self)
+    function setCanceled(Data storage self, bytes16 _shipmentUuid)
         internal
     {
         require(self.state != State.CANCELED, "Already canceled");
@@ -67,5 +77,6 @@ library Shipment {
         require(self.state != State.COMPLETE || msg.sender == self.moderator,
                 "Only moderator can cancel a Completed shipment");
         self.state = State.CANCELED;
+        emit ShipmentCanceled(_shipmentUuid);
     }
 }
