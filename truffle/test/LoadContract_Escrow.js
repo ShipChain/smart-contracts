@@ -126,6 +126,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = await createShipment(EscrowFundingType.SHIP);
 
         await truffleAssert.reverts(shipToken.approveAndCall(contract.address, -1, shipmentUuid, {from: SHIPPER}));
+        await truffleAssert.reverts(shipToken.approveAndCall(contract.address, web3.toWei(9999, "ether"), shipmentUuid, {from: SHIPPER}));
         await truffleAssert.reverts(shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), 0, {from: SHIPPER}), "Shipment does not exist");
         await truffleAssert.reverts(shipToken.approveAndCall(0, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER}));
     });

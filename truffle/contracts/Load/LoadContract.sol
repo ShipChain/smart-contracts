@@ -396,10 +396,7 @@ contract LoadContract is Ownable {
 
         allEscrowData[_shipmentUuid].trackFunding(_shipmentUuid, amount);
 
-        if (!ERC20(token).transferFrom(from, address(this), amount)) {
-            revert();
-        }
-
+        ERC20(token).transferFrom(from, address(this), amount);
     }
 
     /** @notice Releases the escrow to the carrier
