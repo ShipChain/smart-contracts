@@ -175,7 +175,7 @@ jobs: # a collection of steps
             sudo apt-get install moreutils
       - run:
           name: "Avoid hosts unknown for github"
-          command: mkdir ~/.ssh/ && echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+          command: echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
       - run:
           name: "Clone meta-contracts"
           command: |
