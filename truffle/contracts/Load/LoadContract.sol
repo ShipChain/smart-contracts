@@ -36,10 +36,11 @@ contract LoadContract is Ownable {
 
     // Escrow Events
     event EscrowCreated(bytes16 shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
-    event EscrowFunded(bytes16 _shipmentUuid, uint256 amount, uint256 total);
-    event EscrowReleased(bytes16 _shipmentUuid, uint256 amount);
-    event EscrowRefunded(bytes16 _shipmentUuid, uint256 amount);
-    event EscrowWithdrawn(bytes16 _shipmentUuid, uint256 amount);
+    event EscrowDeposited(bytes16 shipmentUuid, uint256 amount);
+    event EscrowFunded(bytes16 shipmentUuid, uint256 funded, uint256 contracted);
+    event EscrowReleased(bytes16 shipmentUuid, uint256 amount);
+    event EscrowRefunded(bytes16 shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(bytes16 shipmentUuid, uint256 amount);
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes

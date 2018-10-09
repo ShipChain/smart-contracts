@@ -52,7 +52,6 @@ contract('LoadContract with Escrow', async (accounts) => {
     before(async () => {
         shipToken = await createShipToken(accounts);
         contract = await LoadContract.deployed();
-        await contract.setShipTokenContractAddress(shipToken.address);
     });
 
     it("should create a LoadShipment", async () => {
@@ -60,6 +59,9 @@ contract('LoadContract with Escrow', async (accounts) => {
         const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.SHIP, web3.toWei(1, "ether"), {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
+            return ev.shipmentUuid === shipmentUuid;
+        });
+        await truffleAssert.eventEmitted(newShipmentTx, "EscrowCreated", ev => {
             return ev.shipmentUuid === shipmentUuid;
         });
         assert.equal(await contract.getShipper(shipmentUuid), SHIPPER);
@@ -76,6 +78,17 @@ contract('LoadContract with Escrow', async (accounts) => {
     });
 
     //#region SHIP
+    it("should set the shipTokenContractAddress", async () => {
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: CARRIER}));
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: MODERATOR}));
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: INVALID}));
+        let tokenContractTx = await contract.setShipTokenContractAddress(shipToken.address, {from: OWNER});
+        await truffleAssert.eventEmitted(tokenContractTx, "TokenContractAddressSet", ev => {
+            return ev.tokenContractAddress === shipToken.address;
+        });
+    });
+
     it("should only allow token address to be set once", async () => {
         await truffleAssert.reverts(contract.setShipTokenContractAddress(0), "Token address already set");
     });
@@ -218,7 +231,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
 
         const amount = web3.toWei(1, "ether");
-        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: amount});
+        let ethTx = await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: amount});
+        await truffleAssert.eventEmitted(ethTx, "EscrowFunded", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.funded == amount && ev.contracted == amount;
+        });
 
         assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
@@ -227,13 +243,25 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("should handle partial ETH funding", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
 
-        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.5, "ether")});
+        let fundTx = await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.5, "ether")});
+        await truffleAssert.eventEmitted(fundTx, "EscrowDeposited", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(0.5, "ether");
+        });
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.49, "ether")});
+        fundTx = await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.49, "ether")});
+        await truffleAssert.eventEmitted(fundTx, "EscrowDeposited", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(0.49, "ether");
+        });
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
-        await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.01, "ether")});
+        fundTx = await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.01, "ether")});
+        await truffleAssert.eventEmitted(fundTx, "EscrowDeposited", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(0.01, "ether");
+        });
+        await truffleAssert.eventEmitted(fundTx, "EscrowFunded", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.funded == web3.toWei(1, "ether") && ev.contracted == web3.toWei(1, "ether");
+        });
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
@@ -250,7 +278,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
         await contract.setComplete(shipmentUuid, {from: SHIPPER});
 
-        await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        let releaseTx = await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+        await truffleAssert.eventEmitted(releaseTx, "EscrowReleased", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(1, "ether");
+        });
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.RELEASED);
     });
 
@@ -270,6 +301,10 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         let carrierBalance = await web3.eth.getBalance(CARRIER);
         let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        await truffleAssert.eventEmitted(withdrawTxReceipt, "EscrowWithdrawn", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(1, "ether");
+        });
+
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
@@ -287,6 +322,10 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         let carrierBalance = await web3.eth.getBalance(CARRIER);
         let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
+        await truffleAssert.eventEmitted(withdrawTxReceipt, "EscrowWithdrawn", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(2, "ether");
+        });
+
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
@@ -303,13 +342,20 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Refunds can only be issued to Canceled shipments by the Moderator");
 
-        await contract.refundEscrow(shipmentUuid, {from: MODERATOR});
+        let refundTx = await contract.refundEscrow(shipmentUuid, {from: MODERATOR});
+        await truffleAssert.eventEmitted(refundTx, "EscrowRefunded", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(1, "ether");
+        });
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
         let shipperBalance = await web3.eth.getBalance(SHIPPER);
         let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
+        await truffleAssert.eventEmitted(withdrawTxReceipt, "EscrowWithdrawn", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(1, "ether");
+        });
+
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);
@@ -324,7 +370,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: CARRIER}));
         await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: MODERATOR}));
         await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: INVALID}));
-        await contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: OWNER});
+        let refundAddressTx = await contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: OWNER});
+        await truffleAssert.eventEmitted(refundAddressTx, "EscrowRefundAddressSet", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.refundAddress === MODERATOR;
+        });
     });
 
     it("owner should be able to rescue partially funded ETH escrow", async () => {
@@ -338,6 +387,10 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         let shipperBalance = await web3.eth.getBalance(SHIPPER);
         let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
+        await truffleAssert.eventEmitted(withdrawTxReceipt, "EscrowWithdrawn", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.amount == web3.toWei(0.5, "ether");
+        });
+
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = withdrawTx.gasPrice.mul(withdrawTxReceipt.receipt.gasUsed);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.WITHDRAWN);

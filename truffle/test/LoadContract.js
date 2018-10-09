@@ -48,7 +48,11 @@ contract('LoadContract', async (accounts) => {
 
         await truffleAssert.reverts(contract.setCarrier(shipmentUuid, CARRIER, {from: MODERATOR}), "Only Shipper allowed to set Carrier");
 
-        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        let setCarrierTx = await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(setCarrierTx, "ShipmentCarrierSet", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.carrier === CARRIER;
+        });
+
         assert.equal(await contract.getCarrier(shipmentUuid), CARRIER);
     });
 
@@ -60,7 +64,11 @@ contract('LoadContract', async (accounts) => {
 
         await truffleAssert.reverts(contract.setModerator(shipmentUuid, MODERATOR, {from: CARRIER}), "Only Shipper allowed to set Moderator");
 
-        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        let setModeratorTx = await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await truffleAssert.eventEmitted(setModeratorTx, "ShipmentModeratorSet", ev => {
+            return ev.shipmentUuid === shipmentUuid && ev.moderator === MODERATOR;
+        });
+
         assert.equal(await contract.getModerator(shipmentUuid), MODERATOR);
     });
 
@@ -112,7 +120,10 @@ contract('LoadContract', async (accounts) => {
 
         assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
 
-        await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        let inProgressTx = await contract.setInProgress(shipmentUuid, {from: CARRIER});
+        await truffleAssert.eventEmitted(inProgressTx, "ShipmentInProgress", ev => {
+            return ev.shipmentUuid === shipmentUuid;
+        });
 
         assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.IN_PROGRESS);
     });
@@ -125,7 +136,10 @@ contract('LoadContract', async (accounts) => {
 
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
 
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        let completeTx = await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await truffleAssert.eventEmitted(completeTx, "ShipmentComplete", ev => {
+            return ev.shipmentUuid === shipmentUuid;
+        });
 
         assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.COMPLETE);
     });
@@ -166,8 +180,11 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: CARRIER}), "Only moderator can cancel a Completed shipment");
 
         //Moderator can cancel a completed shipment
-        await contract.setCanceled(shipmentUuid, {from: MODERATOR});
+        let canceledTx = await contract.setCanceled(shipmentUuid, {from: MODERATOR});
         assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CANCELED);
+        await truffleAssert.eventEmitted(canceledTx, "ShipmentCanceled", ev => {
+            return ev.shipmentUuid === shipmentUuid;
+        });
     });
 
     it("should not fund NO_FUNDING Escrow with Ether", async () => {
