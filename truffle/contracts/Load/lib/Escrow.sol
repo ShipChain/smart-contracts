@@ -7,11 +7,11 @@ library Escrow {
     using SafeMath for uint256;
     using Escrow for Data;
 
-    event EscrowDeposited(bytes16 shipmentUuid, uint256 amount);
-    event EscrowFunded(bytes16 shipmentUuid, uint256 funded, uint256 contracted);
-    event EscrowReleased(bytes16 shipmentUuid, uint256 amount);
-    event EscrowRefunded(bytes16 shipmentUuid, uint256 amount);
-    event EscrowWithdrawn(bytes16 shipmentUuid, uint256 amount);
+    event EscrowDeposited(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowFunded(bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
+    event EscrowReleased(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowRefunded(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(bytes16 indexed shipmentUuid, uint256 amount);
 
     enum FundingType {NO_FUNDING, SHIP, ETHER}
     enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, REFUNDED, WITHDRAWN}

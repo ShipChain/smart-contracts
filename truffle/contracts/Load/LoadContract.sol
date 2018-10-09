@@ -20,27 +20,27 @@ contract LoadContract is Ownable {
 
     // Registry Events
     event TokenContractAddressSet(address tokenContractAddress);
-    event EscrowRefundAddressSet(bytes16 shipmentUuid, address refundAddress);
+    event EscrowRefundAddressSet(bytes16 indexed shipmentUuid, address refundAddress);
 
     // Shipment Events
-    event ShipmentCreated(bytes16 shipmentUuid);
-    event ShipmentCarrierSet(bytes16 shipmentUuid, address carrier);
-    event ShipmentModeratorSet(bytes16 shipmentUuid, address moderator);
-    event ShipmentInProgress(bytes16 shipmentUuid);
-    event ShipmentComplete(bytes16 shipmentUuid);
-    event ShipmentCanceled(bytes16 shipmentUuid);
+    event ShipmentCreated(bytes16 indexed shipmentUuid);
+    event ShipmentCarrierSet(bytes16 indexed shipmentUuid, address carrier);
+    event ShipmentModeratorSet(bytes16 indexed shipmentUuid, address moderator);
+    event ShipmentInProgress(bytes16 indexed shipmentUuid);
+    event ShipmentComplete(bytes16 indexed shipmentUuid);
+    event ShipmentCanceled(bytes16 indexed shipmentUuid);
 
     // Vault Events
-    event VaultUri(bytes16 shipmentUuid, string vaultUri);
-    event VaultHash(bytes16 shipmentUuid, string vaultHash);
+    event VaultUri(bytes16 indexed shipmentUuid, string vaultUri);
+    event VaultHash(bytes16 indexed shipmentUuid, string vaultHash);
 
     // Escrow Events
-    event EscrowCreated(bytes16 shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
-    event EscrowDeposited(bytes16 shipmentUuid, uint256 amount);
-    event EscrowFunded(bytes16 shipmentUuid, uint256 funded, uint256 contracted);
-    event EscrowReleased(bytes16 shipmentUuid, uint256 amount);
-    event EscrowRefunded(bytes16 shipmentUuid, uint256 amount);
-    event EscrowWithdrawn(bytes16 shipmentUuid, uint256 amount);
+    event EscrowCreated(bytes16 indexed shipmentUuid, Escrow.FundingType fundingType, uint256 contractedAmount);
+    event EscrowDeposited(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowFunded(bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
+    event EscrowReleased(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowRefunded(bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowWithdrawn(bytes16 indexed shipmentUuid, uint256 amount);
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes

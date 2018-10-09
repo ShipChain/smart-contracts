@@ -5,8 +5,8 @@ import {Shipment} from "./Shipment.sol";
 
 
 library Vault {
-    event VaultUri(bytes16 shipmentUuid, string vaultUri);
-    event VaultHash(bytes16 shipmentUuid, string vaultHash);
+    event VaultUri(bytes16 indexed shipmentUuid, string vaultUri);
+    event VaultHash(bytes16 indexed shipmentUuid, string vaultHash);
 
     function setVaultUri(Shipment.Data storage self, bytes16 _shipmentUuid, string _vaultUri)
         internal

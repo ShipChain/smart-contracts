@@ -2,11 +2,11 @@ pragma solidity 0.4.24;
 
 
 library Shipment {
-    event ShipmentCarrierSet(bytes16 shipmentUuid, address carrier);
-    event ShipmentModeratorSet(bytes16 shipmentUuid, address moderator);
-    event ShipmentInProgress(bytes16 shipmentUuid);
-    event ShipmentComplete(bytes16 shipmentUuid);
-    event ShipmentCanceled(bytes16 shipmentUuid);
+    event ShipmentCarrierSet(bytes16 indexed shipmentUuid, address carrier);
+    event ShipmentModeratorSet(bytes16 indexed shipmentUuid, address moderator);
+    event ShipmentInProgress(bytes16 indexed shipmentUuid);
+    event ShipmentComplete(bytes16 indexed shipmentUuid);
+    event ShipmentCanceled(bytes16 indexed shipmentUuid);
 
     enum State {INITIATED, IN_PROGRESS, COMPLETE, CANCELED}
 
