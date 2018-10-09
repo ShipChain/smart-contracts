@@ -58,6 +58,7 @@ activate L
 L -->> SL: setCarrier(Carrier)
 activate SL
 deactivate SL
+note over L: emit ShipmentCarrierSet
 deactivate L
 
 opt Moderated Shipment
@@ -66,15 +67,16 @@ activate L
 L -->> SL: setModerator(Moderator)
 activate SL
 deactivate SL
+note over L: emit ShipmentModeratorSet
 deactivate L
 end
 
-S ->> L: setVaultUrl()
+S ->> L: setVaultUri()
 activate L
-L -->> SL: setVaultUrl(url)
+L -->> SL: setVaultUri(uri)
 activate SL
 deactivate SL
-note over L: emit VaultUrl
+note over L: emit VaultUri
 deactivate L
 
 opt Escrowed Shipment
@@ -90,7 +92,7 @@ deactivate SL
 L -->> T: transferFrom(Shipper, LoadContract)
 T -->> L: $SHIP
 deactivate T
-note over L: emit EscrowFunded
+note over L: emit EscrowDeposited
 deactivate L
 else ETH
 S ->> L: fundEscrowEther() $
@@ -98,12 +100,13 @@ activate L
 L -->> SL: trackFunding(amount)
 activate SL
 deactivate SL
-note over L: emit EscrowFunded
+note over L: emit EscrowDeposited
 deactivate L
 end
 end
 activate L
 L -->> E: setState(FUNDED)
+note over L: emit EscrowFunded
 deactivate L
 end
 
@@ -114,6 +117,7 @@ activate L
 L -->> SL: setState(CANCELED)
 activate SL
 deactivate SL
+note over L: emit ShipmentCanceled
 deactivate L
 else Carrier
 C ->> L: cancel()
@@ -121,6 +125,7 @@ activate L
 L -->> SL: setState(CANCELED)
 activate SL
 deactivate SL
+note over L: emit ShipmentCanceled
 deactivate L
 else Moderator
 M ->> L: cancel()
@@ -128,6 +133,7 @@ activate L
 L -->> SL: setState(CANCELED)
 activate SL
 deactivate SL
+note over L: emit ShipmentCanceled
 deactivate L
 end
 end
@@ -138,6 +144,7 @@ activate L
 L -->> SL: setState(IN_PROGRESS)
 activate SL
 deactivate SL
+note over L: emit ShipmentInProgress
 deactivate L
 else Moderator
 M ->> L: setInProgress
@@ -145,6 +152,7 @@ activate L
 L -->> SL: setState(IN_PROGRESS)
 activate SL
 deactivate SL
+note over L: emit ShipmentInProgress
 deactivate L
 end
 
@@ -165,6 +173,7 @@ activate L
 L -->> SL: setState(CANCELED)
 activate SL
 deactivate SL
+note over L: emit ShipmentCanceled
 deactivate L
 else Moderator
 M ->> L: cancel()
@@ -172,6 +181,7 @@ activate L
 L -->> SL: setState(CANCELED)
 activate SL
 deactivate SL
+note over L: emit ShipmentCanceled
 deactivate L
 end
 end
@@ -182,6 +192,7 @@ activate L
 L -->> SL: setState(COMPLETE)
 activate SL
 deactivate SL
+note over L: emit ShipmentComplete
 deactivate L
 else Moderator
 M ->> L: setComplete()
@@ -189,6 +200,7 @@ activate L
 L -->> SL: setState(COMPLETE)
 activate SL
 deactivate SL
+note over L: emit ShipmentComplete
 deactivate L
 end
 
@@ -198,6 +210,7 @@ activate L
 L -->> SL: setState(CANCELED)
 activate SL
 deactivate SL
+note over L: emit ShipmentCanceled
 deactivate L
 end
 
@@ -207,6 +220,7 @@ activate L
 L -->> E: setState(RELEASED)
 activate E
 deactivate E
+note over L: emit EscrowReleased
 deactivate L
 else Moderator
 M ->> L: releaseEscrow()
@@ -214,6 +228,7 @@ activate L
 L -->> E: setState(RELEASED)
 activate E
 deactivate E
+note over L: emit EscrowReleased
 deactivate L
 end
 
@@ -223,6 +238,7 @@ activate L
 L -->> E: setState(REFUNDED)
 activate E
 deactivate E
+note over L: emit EscrowRefunded
 deactivate L
 end
 
@@ -232,6 +248,7 @@ activate L
 L -->> E: setState(WITHDRAWN)
 activate E
 deactivate E
+note over L: emit EscrowWithdrawn
 deactivate L
 else Refunded Escrow
 S ->> L: withdrawEscrow()
@@ -239,6 +256,7 @@ activate L
 L -->> E: setState(WITHDRAWN)
 activate E
 deactivate E
+note over L: emit EscrowWithdrawn
 deactivate L
 end
 
