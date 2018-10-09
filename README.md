@@ -21,13 +21,13 @@ See the official Docker documentation for installation information:
 
 If you want to visualize the blockchain as you're developing the contracts, download [Ganache](https://truffleframework.com/ganache).  I had issues getting the AppImage to work properly un Ubunutu Bionic.  The solution was to create portable AppImage directories next to the executable.
 
-```
+```shell
 wget -O ganache.AppImage https://github.com/trufflesuite/ganache/releases/download/v1.2.2/ganache-1.2.2-x86_64.AppImage
 chmod a+x ganache.AppImage
 mkdir ganache.AppImage.home
 mkdir ganache.AppImage.config
 ./ganache.AppImage
-``` 
+```
 
 ## Scripts
 
@@ -124,6 +124,7 @@ Error: sender doesn't have enough funds to send tx.
 The upfront cost is: 672197500000000000 and the
 sender's account only has: 663666560000000000
 ```
+
 then you need to restart your Ganache as you have run out of ETH.  If you are testing with `bin/truffle` then use `bin/dc down`.  If you are testing with `bin/truffle-gui` then restart the Ganache application.
 
 ## Documentation
