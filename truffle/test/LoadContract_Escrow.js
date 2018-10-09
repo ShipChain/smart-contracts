@@ -5,7 +5,7 @@ const uuidToHex = require('uuid-to-hex');
 const LoadContract = artifacts.require("LoadContract");
 const SHIPToken = artifacts.require("./utils/SHIPToken.sol");
 
-const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3};
+const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
 const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2};
 
@@ -72,7 +72,7 @@ contract('LoadContract with Escrow', async (accounts) => {
 
         await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: CARRIER}), "Escrow must be Funded");
 
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
         assert.equal(await contract.getEscrowFundingType(shipmentUuid), EscrowFundingType.SHIP);
     });
@@ -237,7 +237,7 @@ contract('LoadContract with Escrow', async (accounts) => {
             return ev.msgSender === SHIPPER && ev.shipmentUuid === shipmentUuid && ev.funded == amount && ev.contracted == amount;
         });
 
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
     });
 
@@ -380,7 +380,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("owner should be able to rescue partially funded ETH escrow", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(0.5, "ether")});
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.CREATED);
 
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: SHIPPER}), "Refunds can only be issued to Canceled shipments by the Moderator");
@@ -401,7 +401,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("owner should be able to rescue funded ETH escrow", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1.0, "ether")});
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
 
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: SHIPPER}), "Refunds can only be issued to Canceled shipments by the Moderator");
@@ -418,7 +418,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("owner should be able to rescue to a different address", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1.0, "ether")});
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
 
         await contract.setEscrowRefundAddress(shipmentUuid, INVALID, {from: OWNER});
@@ -439,7 +439,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("shipper should be able to issue refunds after 90 days", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1.0, "ether")});
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: SHIPPER}), "Refunds can only be issued to Canceled shipments by the Moderator");
 
@@ -460,7 +460,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("carrier should be able to issue refunds after 90 days", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1.0, "ether")});
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: CARRIER}), "Refunds can only be issued to Canceled shipments by the Moderator");
 
@@ -481,7 +481,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("moderator should be able to issue refunds after 90 days", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1.0, "ether")});
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.FUNDED);
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: MODERATOR}), "Refunds can only be issued to Canceled shipments by the Moderator");
 

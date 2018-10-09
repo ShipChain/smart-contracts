@@ -36,7 +36,7 @@ participant M as Moderator
 
 S ->> L: createNewShipment(funding arguments)
 activate L
-L -->> SL: setState(INITIATED)
+L -->> SL: setState(CREATED)
 activate SL
 L -->> SL: setShipper(Shipper)
 deactivate SL
@@ -265,7 +265,7 @@ end
 <div class="mermaid" id="EscrowState" style="display: none">
 graph TB
 
-S_I -. " " .-> E_N
+S_CR -. " " .-> E_N
 E_F -. " " .-> S_P
 S_C -. " " .-> E_R
 S_X -. " " .-> E_X
@@ -280,7 +280,7 @@ subgraph Escrow State
     E_X((Refunded))
 
     %% Normal State Transitions
-    E_N -- "createNewShipment() <br/> [fundingType != NO_FUNDING] <br/> [fundingType in (SHIP, ETH)]" --> E_C
+    E_N -- "[fundingType != NO_FUNDING] <br/> [fundingType in (SHIP, ETH)]" --> E_C
     E_C -- "trackFunds() <br/> [fundedAmount < contractedAmount]" --> E_C
     E_C -- "[fundedAmount >= contractedAmount]" --> E_F
     E_F -- "releaseEscrow() <br/> [shipper || moderator] <br/> Shipment[Complete]" --> E_R
@@ -298,17 +298,19 @@ end
 
 subgraph Shipment State
     %% Actor definitions
-    S_I((Initiated))
+    S_NC((Not Created))
+    S_CR((Created))
     S_P((In Progress))
     S_C((Complete))
     S_X((Canceled))
 
     %% Normal State Transitions
-    S_I -- "setInProgress() <br/> [carrier != 0x0] <br/> [carrier || moderator] <br/> Escrow[Not Created || Funded]" --> S_P
+    S_NC -- "createNewShipment()" --> S_CR
+    S_CR -- "setInProgress() <br/> [carrier != 0x0] <br/> [carrier || moderator] <br/> Escrow[Not Created || Funded]" --> S_P
     S_P -- "setComplete() <br/> [carrier || moderator]" --> S_C
 
     %% Cancellation States
-    S_I -- "cancelShipment() <br/> [shipper || carrier || moderator]" --> S_X
+    S_CR -- "cancelShipment() <br/> [shipper || carrier || moderator]" --> S_X
     S_P -- "cancelShipment() <br/> [carrier || moderator]" --> S_X
     S_C -- "cancelShipment() <br/> [moderator]" --> S_X
 

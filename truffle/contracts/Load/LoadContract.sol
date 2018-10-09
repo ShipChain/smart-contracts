@@ -195,8 +195,9 @@ contract LoadContract is Ownable {
         }
 
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
-        require(shipment.shipper == address(0x0), "Shipment already exists");
+        require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");
 
+        shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
@@ -477,7 +478,7 @@ contract LoadContract is Ownable {
         private
         view
     {
-        require(allShipmentData[_shipmentUuid].shipper != address(0x0), "Shipment does not exist");
+        require(allShipmentData[_shipmentUuid].state != Shipment.State.NOT_CREATED, "Shipment does not exist");
     }
 
     /** @dev Revert if shipment does not have escrow

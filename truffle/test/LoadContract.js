@@ -4,7 +4,7 @@ const uuidToHex = require('uuid-to-hex');
 
 const LoadContract = artifacts.require("LoadContract");
 
-const ShipmentState = {INITIATED: 0, IN_PROGRESS: 1, COMPLETE: 2, CANCELED: 3 };
+const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
 const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2 };
 
@@ -36,8 +36,13 @@ contract('LoadContract', async (accounts) => {
             return ev.shipmentUuid === shipmentUuid;
         });
         assert.equal(await contract.getShipper(shipmentUuid), SHIPPER);
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
         assert.equal(await contract.getEscrowState(shipmentUuid), EscrowState.NOT_CREATED);
+    });
+
+    it("should fail if shipment does not exist", async() => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+        await truffleAssert.reverts(contract.getShipmentState(shipmentUuid), "Shipment does not exist");
     });
 
     it("should only allow Shipper to set Carrier", async () => {
@@ -118,7 +123,7 @@ contract('LoadContract', async (accounts) => {
 
         await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: SHIPPER}), "Only Carrier or Moderator allowed to set In Progress");
 
-        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.INITIATED);
+        assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CREATED);
 
         let inProgressTx = await contract.setInProgress(shipmentUuid, {from: CARRIER});
         await truffleAssert.eventEmitted(inProgressTx, "ShipmentInProgress", ev => {
@@ -148,16 +153,16 @@ contract('LoadContract', async (accounts) => {
         let shipmentUuid = await createShipment();
 
         // No one else can cancel
-        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: INVALID}), "Only shipper, carrier, or moderator can cancel an Initiated shipment");
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: INVALID}), "Only shipper, carrier, or moderator can cancel an Created shipment");
 
-        //Shipper can cancel an initiated shipment
+        //Shipper can cancel an Created shipment
         await contract.setCanceled(shipmentUuid, {from: SHIPPER});
         assert.equal(await contract.getShipmentState(shipmentUuid), ShipmentState.CANCELED);
 
         //Can't cancel a canceled shipment
         await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: SHIPPER}), "Already canceled");
 
-        //Carrier and moderator can cancel an initiated shipment
+        //Carrier and moderator can cancel an Created shipment
         await contract.setCanceled(await createShipment(), {from: MODERATOR});
         await contract.setCanceled(await createShipment(), {from: CARRIER});
 

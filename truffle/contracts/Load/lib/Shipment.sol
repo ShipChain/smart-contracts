@@ -8,7 +8,7 @@ library Shipment {
     event ShipmentComplete(address indexed msgSender, bytes16 indexed shipmentUuid);
     event ShipmentCanceled(address indexed msgSender, bytes16 indexed shipmentUuid);
 
-    enum State {INITIATED, IN_PROGRESS, COMPLETE, CANCELED}
+    enum State {NOT_CREATED, CREATED, IN_PROGRESS, COMPLETE, CANCELED}
 
     struct Data {
         /* Slot 0 */
@@ -29,7 +29,7 @@ library Shipment {
         internal
         isShipper(self, "Only Shipper allowed to set Carrier")
     {
-        require(self.state == State.INITIATED, "Carrier can only be modified in Initiated state");
+        require(self.state == State.CREATED, "Carrier can only be modified in Created state");
         self.carrier = _carrier;
         emit ShipmentCarrierSet(msg.sender, _shipmentUuid, _carrier);
     }
@@ -38,7 +38,7 @@ library Shipment {
         internal
         isShipper(self, "Only Shipper allowed to set Moderator")
     {
-        require(self.state == State.INITIATED, "Moderator can only be modified in Initiated state");
+        require(self.state == State.CREATED, "Moderator can only be modified in Created state");
         self.moderator = _moderator;
         emit ShipmentModeratorSet(msg.sender, _shipmentUuid, _moderator);
     }
@@ -49,7 +49,7 @@ library Shipment {
         require(self.carrier != address(0), "Carrier must exist before marking a shipment In Progress");
         require(msg.sender == self.carrier || msg.sender == self.moderator,
             "Only Carrier or Moderator allowed to set In Progress");
-        require(self.state == State.INITIATED, "Only Initiated shipments can be marked In Progress");
+        require(self.state == State.CREATED, "Only Created shipments can be marked In Progress");
         self.state = State.IN_PROGRESS;
         emit ShipmentInProgress(msg.sender, _shipmentUuid);
     }
@@ -69,9 +69,9 @@ library Shipment {
         internal
     {
         require(self.state != State.CANCELED, "Already canceled");
-        require(self.state != State.INITIATED ||
+        require(self.state != State.CREATED ||
                 msg.sender == self.shipper || msg.sender == self.carrier || msg.sender == self.moderator,
-                "Only shipper, carrier, or moderator can cancel an Initiated shipment");
+                "Only shipper, carrier, or moderator can cancel an Created shipment");
         require(self.state != State.IN_PROGRESS || msg.sender == self.carrier || msg.sender == self.moderator,
                 "Only carrier or moderator can cancel an In Progress shipment");
         require(self.state != State.COMPLETE || msg.sender == self.moderator,
