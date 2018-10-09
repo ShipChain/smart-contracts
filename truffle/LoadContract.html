@@ -2,10 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <style type="text/css">
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
 
-<div class="mermaid" id="EscrowSequence">
+<div class="loader" id="loader"></div>
+
+<div class="mermaid" id="EscrowSequence" style="display: none">
 sequenceDiagram
 participant T as Token
 participant E as Escrow
@@ -28,12 +46,14 @@ L -->> E: setState(CREATED)
 activate E
 L -->> E: setFundingType(type)
 L -->> E: setContractedAmount(value)
+L -->> E: setCreatedAt(now)
+L -->> E: setRefundAddress(Shipper)
 deactivate E
 note over L: emit EscrowCreated
 deactivate L
 end
 
-S ->> L: setCarrier
+S ->> L: setCarrier()
 activate L
 L -->> SL: setCarrier(Carrier)
 activate SL
@@ -41,7 +61,7 @@ deactivate SL
 deactivate L
 
 opt Moderated Shipment
-S ->> L: setModerator
+S ->> L: setModerator()
 activate L
 L -->> SL: setModerator(Moderator)
 activate SL
@@ -49,7 +69,7 @@ deactivate SL
 deactivate L
 end
 
-S ->> L: setVaultUrl
+S ->> L: setVaultUrl()
 activate L
 L -->> SL: setVaultUrl(url)
 activate SL
@@ -70,6 +90,7 @@ deactivate SL
 L -->> T: transferFrom(Shipper, LoadContract)
 T -->> L: $SHIP
 deactivate T
+note over L: emit EscrowFunded
 deactivate L
 else ETH
 S ->> L: fundEscrowEther() $
@@ -77,8 +98,37 @@ activate L
 L -->> SL: trackFunding(amount)
 activate SL
 deactivate SL
+note over L: emit EscrowFunded
 deactivate L
 end
+end
+activate L
+L -->> E: setState(FUNDED)
+deactivate L
+end
+
+opt Cancel Shipment
+alt Shipper
+S ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+deactivate L
+else Carrier
+C ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+deactivate L
+else Moderator
+M ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+deactivate L
 end
 end
 
@@ -99,7 +149,7 @@ deactivate L
 end
 
 loop While in Progress
-C ->> L: setVaultHash
+C ->> L: setVaultHash()
 activate L
 L -->> SL: setVaultHash(hash)
 activate SL
@@ -108,25 +158,93 @@ note over L: emit VaultHash
 deactivate L
 end
 
+opt Cancel Shipment
 alt Carrier
-C ->> L: setComplete
+C ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+deactivate L
+else Moderator
+M ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+deactivate L
+end
+end
+
+alt Carrier
+C ->> L: setComplete()
 activate L
 L -->> SL: setState(COMPLETE)
 activate SL
 deactivate SL
 deactivate L
 else Moderator
-M ->> L: setComplete
+M ->> L: setComplete()
 activate L
 L -->> SL: setState(COMPLETE)
 activate SL
 deactivate SL
 deactivate L
 end
-note over T,M: ADD RELEASE/WITHDRAW/REFUND/CANCEL
+
+opt Cancel Shipment
+M ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+deactivate L
+end
+
+alt Shipper
+S ->> L: releaseEscrow()
+activate L
+L -->> E: setState(RELEASED)
+activate E
+deactivate E
+deactivate L
+else Moderator
+M ->> L: releaseEscrow()
+activate L
+L -->> E: setState(RELEASED)
+activate E
+deactivate E
+deactivate L
+end
+
+opt Refund Canceled Shipment
+M ->> L: refundEscrow()
+activate L
+L -->> E: setState(REFUNDED)
+activate E
+deactivate E
+deactivate L
+end
+
+alt Released Escrow
+C ->> L: withdrawEscrow()
+activate L
+L -->> E: setState(WITHDRAWN)
+activate E
+deactivate E
+deactivate L
+else Refunded Escrow
+S ->> L: withdrawEscrow()
+activate L
+L -->> E: setState(WITHDRAWN)
+activate E
+deactivate E
+deactivate L
+end
+
 </div>
 
-<div class="mermaid" id="EscrowState">
+<div class="mermaid" id="EscrowState" style="display: none">
 graph TB
 
 S_I -. " " .-> E_N
@@ -189,7 +307,7 @@ end
         .actor, .labelBox { fill: ${shipchain_orange}; }
         .loopLine { stroke: ${shipchain_orange}; }
         .cluster rect { stroke: ${shipchain_orange} !important; }
-        .node circle { fill: ${shipchain_orange} !important; }
+        .node circle { stroke: ${shipchain_orange} !important; fill: ${shipchain_orange} !important; }
         .edgeLabel { background-color: #dedede; }
         `,
         flowchart: {
@@ -208,6 +326,16 @@ end
         }
     };
     mermaid.initialize(config);
+
+    // Show diagrams
+    var EscrowSequence = document.getElementById("EscrowSequence");
+    var EscrowState = document.getElementById("EscrowState");
+    EscrowSequence.style.display = "block";
+    EscrowState.style.display = "block";
+
+    // Hide spinner
+    var loader = document.getElementById("loader");
+    loader.style.display = "none";
 </script>
 </body>
 </html>
