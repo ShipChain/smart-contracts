@@ -40,6 +40,7 @@ contract LoadContract is Ownable {
     event EscrowReleased(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
     event EscrowRefunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
     event EscrowWithdrawn(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+
     event EscrowCreated(address indexed msgSender, bytes16 indexed shipmentUuid, Escrow.FundingType fundingType,
                         uint256 contractedAmount);
 
