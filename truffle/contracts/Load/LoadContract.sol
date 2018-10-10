@@ -22,6 +22,7 @@ contract LoadContract is Ownable {
     using Escrow for Escrow.Data;
 
     // Registry Events
+    event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
     event TokenContractAddressSet(address indexed msgSender, address tokenContractAddress);
     event EscrowRefundAddressSet(address indexed msgSender, bytes16 indexed shipmentUuid, address refundAddress);
 
@@ -49,12 +50,20 @@ contract LoadContract is Ownable {
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes
+    bool private isDeprecated; //1 byte
 
     // Library data storage
     /* Slot 1 */
     mapping (bytes16 => Shipment.Data) private allShipmentData;
     /* Slot 2 */
     mapping (bytes16 => Escrow.Data) private allEscrowData;
+
+    /** @dev Revert if the contract has been deprecated
+      */
+    modifier notDeprecated() {
+        require(!isDeprecated, "This version of the LOAD contract has been deprecated");
+        _;
+    }
 
     /** @dev Revert if shipment state is not correct
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
@@ -150,6 +159,17 @@ contract LoadContract is Ownable {
         _;
     }
 
+    /** @notice Sets the contract isDeprecated flag. Shipment creation will be disabled if isDeprecated == True
+      * @dev Only Owner
+      */
+    function setDeprecated(bool _isDeprecated)
+        external
+        onlyOwner
+    {
+        isDeprecated = _isDeprecated;
+        emit ContractDeprecatedSet(msg.sender, isDeprecated);
+    }
+
     /** @notice Sets the SHIPToken Contract address.  Only tokens from this address will be accepted.
       * @dev Only Owner
       */
@@ -189,6 +209,7 @@ contract LoadContract is Ownable {
       */
     function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, uint256 _contractedAmount)
         external
+        notDeprecated
     {
         if (_fundingType != Escrow.FundingType.NO_FUNDING) {
             require(_fundingType == Escrow.FundingType.SHIP ||

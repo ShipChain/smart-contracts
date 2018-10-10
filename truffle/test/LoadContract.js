@@ -10,6 +10,7 @@ const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2 };
 
 
 contract('LoadContract', async (accounts) => {
+    const OWNER = accounts[0];
     const SHIPPER = accounts[1];
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
@@ -201,5 +202,22 @@ contract('LoadContract', async (accounts) => {
         const shipmentUuid = await createShipment();
 
         await truffleAssert.reverts(contract.fundEscrowEther(shipmentUuid, {from: SHIPPER}), "Shipment has no escrow");
+    });
+
+    it("should not create new shipments if the contract is deprecated", async () => {
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: INVALID}));
+        let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
+        await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
+            return ev.msgSender === OWNER && ev.isDeprecated == true;
+        });
+        await truffleAssert.reverts(createShipment(), "This version of the LOAD contract has been deprecated");
+        deprecationTx = await contract.setDeprecated(false, {from: OWNER});
+        await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
+            return ev.msgSender === OWNER && ev.isDeprecated == false;
+        });
+        await createShipment();
     });
 });
