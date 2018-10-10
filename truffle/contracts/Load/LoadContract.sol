@@ -157,6 +157,7 @@ contract LoadContract is Ownable {
         external
         onlyOwner
     {
+        require(_shipTokenAddress != address(0x0), "Must provide a token address");
         require(shipTokenContractAddress == address(0x0), "Token address already set");
 
         shipTokenContractAddress = _shipTokenAddress;
@@ -196,6 +197,8 @@ contract LoadContract is Ownable {
             require(_fundingType == Escrow.FundingType.SHIP && _contractedAmount < MAX_SHIP_SUPPLY ||
                     _fundingType == Escrow.FundingType.ETHER && _contractedAmount < MAX_ETH_SUPPLY,
                     "Escrow amount must be less than max supply");
+            require(_fundingType != Escrow.FundingType.SHIP || shipTokenContractAddress != address(0x0),
+                    "Token address must be set");
 
             Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
             require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
@@ -395,7 +398,7 @@ contract LoadContract is Ownable {
     {
         bytes16 _shipmentUuid = data.toBytes16();
         require(msg.sender == shipTokenContractAddress && token == shipTokenContractAddress,
-                "Ship Token address does not match");
+                "SHIP token address does not match");
         // Following require functions should match the modifiers on fundEscrowEther above
         requireShipmentExists(_shipmentUuid);
         requireHasEscrow(_shipmentUuid);
@@ -436,6 +439,7 @@ contract LoadContract is Ownable {
         if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.ETHER) {
             msg.sender.transfer(amount);
         } else if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.SHIP) {
+            require(shipTokenContractAddress != address(0x0), "Token address must be set");
             ERC20(shipTokenContractAddress).transfer(msg.sender, amount);
         }
     }
