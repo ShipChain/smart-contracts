@@ -202,6 +202,8 @@ contract LoadContract is Ownable {
 
             Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
             require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
+        } else {
+            require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
         }
 
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
