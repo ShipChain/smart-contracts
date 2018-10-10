@@ -323,6 +323,21 @@ contract LoadContract is Ownable {
         allShipmentData[_shipmentUuid].setCanceled(_shipmentUuid);
     }
 
+    /** @notice Returns the Shipment data.
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      */
+    function getShipmentData(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        returns(address shipper, address carrier, address moderator, Shipment.State state)
+    {
+        shipper = allShipmentData[_shipmentUuid].shipper;
+        carrier = allShipmentData[_shipmentUuid].carrier;
+        moderator = allShipmentData[_shipmentUuid].moderator;
+        state = allShipmentData[_shipmentUuid].state;
+    }
+
     /** @notice Returns the Shipment Shipper.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       */
@@ -366,9 +381,27 @@ contract LoadContract is Ownable {
         public
         view
         shipmentExists(_shipmentUuid)
-        returns(Shipment.State shipmentState)
+        returns(Shipment.State state)
     {
         return allShipmentData[_shipmentUuid].state;
+    }
+
+    /** @notice Returns the Escrow state.
+      * @param _shipmentUuid bytes16 Shipment's UUID
+      */
+    function getEscrowData(bytes16 _shipmentUuid)
+        public
+        view
+        shipmentExists(_shipmentUuid)
+        returns(uint256 contractedAmount, uint256 fundedAmount, uint256 createdAt, Escrow.FundingType fundingType,
+                Escrow.State state, address refundAddress)
+    {
+        contractedAmount = allEscrowData[_shipmentUuid].contractedAmount;
+        fundedAmount = allEscrowData[_shipmentUuid].fundedAmount;
+        createdAt = allEscrowData[_shipmentUuid].createdAt;
+        fundingType = allEscrowData[_shipmentUuid].fundingType;
+        state = allEscrowData[_shipmentUuid].state;
+        refundAddress = allEscrowData[_shipmentUuid].refundAddress;
     }
 
     /** @notice Returns the Escrow state.
@@ -378,7 +411,7 @@ contract LoadContract is Ownable {
         public
         view
         shipmentExists(_shipmentUuid)
-        returns(Escrow.State escrowState)
+        returns(Escrow.State state)
     {
         return allEscrowData[_shipmentUuid].state;
     }

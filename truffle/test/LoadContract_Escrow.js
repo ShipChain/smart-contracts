@@ -77,6 +77,17 @@ contract('LoadContract with Escrow', async (accounts) => {
         assert.equal(await contract.getEscrowFundingType(shipmentUuid), EscrowFundingType.ETHER);
     });
 
+    it("should have a getEscrowData function", async () => {
+        const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
+        let [contractedAmount, fundedAmount, createdAt, fundingType, state, refundAddress] = await contract.getEscrowData(shipmentUuid);
+        assert.equal(contractedAmount, web3.toWei(1, "ether"));
+        assert.equal(fundedAmount, web3.toWei(0, "ether"));
+        assert.equal(state, EscrowState.CREATED);
+        assert.equal(fundingType, EscrowFundingType.ETHER);
+        assert.equal(refundAddress, SHIPPER);
+        assert.isAbove(createdAt * 1000, 0);
+    });
+
     //#region ETH
     it("should not create a ETHER Escrow with contractedAmount greater than the max supply", async () => {
         await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.ETHER, web3.toWei(100000001, "ether"), {from: SHIPPER}));

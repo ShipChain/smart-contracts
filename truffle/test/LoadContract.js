@@ -99,6 +99,15 @@ contract('LoadContract', async (accounts) => {
         });
     });
 
+    it("should have a getShipmentData function", async () => {
+        const shipmentUuid = await createShipment();
+        let [shipper, carrier, moderator, state] = await contract.getShipmentData(shipmentUuid);
+        assert.equal(shipper, SHIPPER);
+        assert.equal(carrier, CARRIER);
+        assert.equal(moderator, MODERATOR);
+        assert.equal(state, ShipmentState.CREATED);
+    });
+
     it("should emit VaultHash", async () => {
         const vaultHash_shipper = "0x1234567890";
         const vaultHash_carrier = "0x1234567890";
