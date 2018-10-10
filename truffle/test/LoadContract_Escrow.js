@@ -78,6 +78,10 @@ contract('LoadContract with Escrow', async (accounts) => {
     });
 
     //#region SHIP
+    it("should not create a SHIP Escrow with contractedAmount greater than the max supply", async () => {
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.toWei(500000001, "ether"), {from: SHIPPER}));
+    });
+
     it("should set the shipTokenContractAddress", async () => {
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: CARRIER}));
@@ -207,6 +211,10 @@ contract('LoadContract with Escrow', async (accounts) => {
     //#endregion
 
     //#region ETH
+    it("should not create a ETHER Escrow with contractedAmount greater than the max supply", async () => {
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.ETHER, web3.toWei(100000001, "ether"), {from: SHIPPER}));
+    });
+
     it("should prevent accepting Eth via fallback function", async () => {
         const sender = SHIPPER;
         const receiver = contract.address;

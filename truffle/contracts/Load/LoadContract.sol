@@ -11,6 +11,9 @@ import {Converter} from "./lib/Converter.sol";
 
 /** @title Load Contract */
 contract LoadContract is Ownable {
+    // Constants
+    uint private constant MAX_SHIP_SUPPLY = 500000000 * (10 ** 18);
+    uint private constant MAX_ETH_SUPPLY = 100000000 * (10 ** 18); // Approximation of 100M maximum Ether
 
     // Library namespaces
     using Converter for bytes;
@@ -190,6 +193,9 @@ contract LoadContract is Ownable {
             require(_fundingType == Escrow.FundingType.SHIP ||
                     _fundingType == Escrow.FundingType.ETHER, "Invalid Funding Type");
             require(_contractedAmount > 0, "Escrow must have an amount");
+            require(_fundingType == Escrow.FundingType.SHIP && _contractedAmount < MAX_SHIP_SUPPLY ||
+                    _fundingType == Escrow.FundingType.ETHER && _contractedAmount < MAX_ETH_SUPPLY,
+                    "Escrow amount must be less than max supply");
 
             Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
             require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
