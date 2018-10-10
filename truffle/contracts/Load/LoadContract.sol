@@ -490,13 +490,16 @@ contract LoadContract is Ownable {
         hasEscrow(_shipmentUuid)
         canWithdraw(_shipmentUuid)
     {
-        uint amount = allEscrowData[_shipmentUuid].withdraw(_shipmentUuid);
+        require(allEscrowData[_shipmentUuid].fundingType != Escrow.FundingType.SHIP ||
+                shipTokenContractAddress != address(0x0), "Token address must be set");
 
+        uint amount = allEscrowData[_shipmentUuid].withdraw(_shipmentUuid);
         if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.ETHER) {
             msg.sender.transfer(amount);
         } else if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.SHIP) {
-            require(shipTokenContractAddress != address(0x0), "Token address must be set");
             ERC20(shipTokenContractAddress).transfer(msg.sender, amount);
+        } else {
+            revert("Cannot withdraw, unknown fundingType");
         }
     }
 
