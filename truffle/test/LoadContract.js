@@ -184,14 +184,14 @@ contract('LoadContract', async (accounts) => {
     it("should set Complete", async () => {
         const shipmentUuid = await createShipment();
 
-        await truffleAssert.reverts(contract.setComplete(shipmentUuid, {from: CARRIER}), "Only Shipper or Moderator allowed to set Complete");
-        await truffleAssert.reverts(contract.setComplete(shipmentUuid, {from: SHIPPER}), "Only In Progress shipments can be marked Complete");
+        await truffleAssert.reverts(contract.setComplete(shipmentUuid, {from: SHIPPER}), "Only Carrier or Moderator allowed to set Complete");
+        await truffleAssert.reverts(contract.setComplete(shipmentUuid, {from: CARRIER}), "Only In Progress shipments can be marked Complete");
 
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
 
-        let completeTx = await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        let completeTx = await contract.setComplete(shipmentUuid, {from: CARRIER});
         await truffleAssert.eventEmitted(completeTx, "ShipmentComplete", ev => {
-            return ev.msgSender === SHIPPER && ev.shipmentUuid === shipmentUuid;
+            return ev.msgSender === CARRIER && ev.shipmentUuid === shipmentUuid;
         });
 
         let data = await getShipmentEscrowData(shipmentUuid);

@@ -188,7 +188,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
 
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setComplete(shipmentUuid, {from: CARRIER});
 
         let releaseTx = await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
         await truffleAssert.eventEmitted(releaseTx, "EscrowReleased", ev => {
@@ -203,7 +203,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(1, "ether")});
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setComplete(shipmentUuid, {from: CARRIER});
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
@@ -232,7 +232,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
         await contract.fundEscrowEther(shipmentUuid, {from: SHIPPER, value: web3.toWei(2, "ether")});
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setComplete(shipmentUuid, {from: CARRIER});
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
 
         let carrierBalance = await web3.eth.getBalance(CARRIER);
@@ -518,7 +518,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.releaseEscrow(shipmentUuid, {from: MODERATOR}), "Shipment must be Complete");
 
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setComplete(shipmentUuid, {from: CARRIER});
 
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
         let data = await getShipmentEscrowData(shipmentUuid);
@@ -529,7 +529,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = await createShipment(EscrowFundingType.SHIP);
         await shipToken.approveAndCall(contract.address, web3.toWei(1, "ether"), shipmentUuid, {from: SHIPPER});
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setComplete(shipmentUuid, {from: CARRIER});
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
@@ -552,7 +552,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         const shipmentUuid = await createShipment(EscrowFundingType.SHIP);
         await shipToken.approveAndCall(contract.address, web3.toWei(2, "ether"), shipmentUuid, {from: SHIPPER});
         await contract.setInProgress(shipmentUuid, {from: CARRIER});
-        await contract.setComplete(shipmentUuid, {from: SHIPPER});
+        await contract.setComplete(shipmentUuid, {from: CARRIER});
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
         let carrierBalance = await shipToken.balanceOf(CARRIER);
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});

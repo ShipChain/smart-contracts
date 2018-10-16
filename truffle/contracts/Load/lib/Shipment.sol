@@ -57,8 +57,8 @@ library Shipment {
     function setComplete(Data storage self, bytes16 _shipmentUuid)
         internal
     {
-        require(msg.sender == self.shipper || msg.sender == self.moderator,
-            "Only Shipper or Moderator allowed to set Complete");
+        require(msg.sender == self.carrier || msg.sender == self.moderator,
+            "Only Carrier or Moderator allowed to set Complete");
         require(self.state == State.IN_PROGRESS,
             "Only In Progress shipments can be marked Complete");
         self.state = State.COMPLETE;
