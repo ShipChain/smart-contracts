@@ -329,7 +329,6 @@ contract LoadContract is Ownable {
     function getShipmentData(bytes16 _shipmentUuid)
         public
         view
-        shipmentExists(_shipmentUuid)
         returns(address shipper, address carrier, address moderator, Shipment.State state)
     {
         shipper = allShipmentData[_shipmentUuid].shipper;
@@ -338,61 +337,12 @@ contract LoadContract is Ownable {
         state = allShipmentData[_shipmentUuid].state;
     }
 
-    /** @notice Returns the Shipment Shipper.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      */
-    function getShipper(bytes16 _shipmentUuid)
-        public
-        view
-        shipmentExists(_shipmentUuid)
-        returns(address shipper)
-    {
-        return allShipmentData[_shipmentUuid].shipper;
-    }
-
-    /** @notice Returns the Shipment Carrier.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      */
-    function getCarrier(bytes16 _shipmentUuid)
-        public
-        view
-        shipmentExists(_shipmentUuid)
-        returns(address carrier)
-    {
-        return allShipmentData[_shipmentUuid].carrier;
-    }
-
-    /** @notice Returns the Shipment Moderator.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      */
-    function getModerator(bytes16 _shipmentUuid)
-        public
-        view
-        shipmentExists(_shipmentUuid)
-        returns(address moderator)
-    {
-        return allShipmentData[_shipmentUuid].moderator;
-    }
-
-    /** @notice Returns the Shipment state.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      */
-    function getShipmentState(bytes16 _shipmentUuid)
-        public
-        view
-        shipmentExists(_shipmentUuid)
-        returns(Shipment.State state)
-    {
-        return allShipmentData[_shipmentUuid].state;
-    }
-
     /** @notice Returns the Escrow state.
       * @param _shipmentUuid bytes16 Shipment's UUID
       */
     function getEscrowData(bytes16 _shipmentUuid)
         public
         view
-        shipmentExists(_shipmentUuid)
         returns(uint256 contractedAmount, uint256 fundedAmount, uint256 createdAt, Escrow.FundingType fundingType,
                 Escrow.State state, address refundAddress)
     {
@@ -402,30 +352,6 @@ contract LoadContract is Ownable {
         fundingType = allEscrowData[_shipmentUuid].fundingType;
         state = allEscrowData[_shipmentUuid].state;
         refundAddress = allEscrowData[_shipmentUuid].refundAddress;
-    }
-
-    /** @notice Returns the Escrow state.
-      * @param _shipmentUuid bytes16 Shipment's UUID
-      */
-    function getEscrowState(bytes16 _shipmentUuid)
-        public
-        view
-        shipmentExists(_shipmentUuid)
-        returns(Escrow.State state)
-    {
-        return allEscrowData[_shipmentUuid].state;
-    }
-
-    /** @notice Returns the Escrow funding type.
-      * @param _shipmentUuid bytes16 Shipment's UUID
-      */
-    function getEscrowFundingType(bytes16 _shipmentUuid)
-        public
-        view
-        shipmentExists(_shipmentUuid)
-        returns(Escrow.FundingType escrowFundingType)
-    {
-        return allEscrowData[_shipmentUuid].fundingType;
     }
 
     /** @notice Returns the Escrow funding type.
