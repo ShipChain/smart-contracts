@@ -1,0 +1,243 @@
+version: 2 # use CircleCI 2.0
+
+jobs: # a collection of steps
+  solhint:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - run:
+          name: "Solhint"
+          command: |
+            sudo npm install -g solhint
+            mkdir truffle/test-results && solhint truffle/**/**/*.sol -f junit > truffle/test-results/solhint.xml
+      - store_test_results:
+          path: truffle/test-results
+
+  truffle-compile:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - run:
+          name: "Compile Truffle"
+          command: |
+            cd truffle
+            npm install
+            npm run truffle -- compile --all
+      - run:
+          name: "Flatten solidity for static analysis"
+          command: |
+            cd truffle
+            npm run flatten
+            npm run combine
+      - persist_to_workspace:
+          root: truffle
+          paths:
+            - build
+            - node_modules
+            - flat-sol
+            - combined-sol
+
+  mythril:
+    docker:
+      - image: mythril/myth:0.18.11
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Run Mythril"
+          command: |
+            cd truffle
+            myth --truffle
+
+  truffle-tests:
+    docker:
+      - image: circleci/node:10.10-stretch
+      - image: trufflesuite/ganache-cli:v6.1.8
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Truffle Tests"
+          command: |
+            cd truffle
+            npm run truffle -- test --network circleci
+      - store_test_results:
+          path: truffle/test-results
+
+  solidity-coverage:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Solidity test coverage"
+          command: |
+            cd truffle
+            npm run coverage || true
+      - store_artifacts:
+          path: truffle/coverage
+
+  slither:
+    docker:
+      - image: shipchain/slither:0.4.24
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Slither analysis"
+          command: |
+            cd truffle
+            mkdir slither || true
+            slither flat-sol/Load.LoadContract.sol --json slither/output.json || true
+            slither flat-sol/Load.LoadContract.sol --printer-inheritance
+            dot -Tpng flat-sol/Load.LoadContract.sol.dot > slither/LoadContract.png
+      - store_artifacts:
+          path: truffle/slither
+
+#  manticore:
+#    docker:
+#      - image: shipchain/manticore:0.2.1.1
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Manticore analysis"
+#          no_output_timeout: 30m
+#          command: |
+#            cd truffle
+#            manticore --no-testcases --detect-all ./combined-sol/Load.LoadContract.sol --contract LoadContract --workspace ./manticore
+#      - store_artifacts:
+#          path: truffle/manticore
+
+#  echidna:
+#    docker:
+#      - image: shipchain/echidna:latest
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Echidna tests"
+#          command: |
+#            cd truffle
+#            echidna-test flat-sol/*.sol
+
+  oyente:
+    docker:
+      - image: shipchain/oyente:0.4.24
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Oyente tests"
+          command: |
+            cd truffle
+            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadContract.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Escrow.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Shipment.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Vault.sol
+            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Converter.sol
+
+#  securify:
+#    docker:
+#      - image: shipchain/securify:0.4.24
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Securify tests"
+#          command: |
+#            rm /contracts/example.sol
+#            cp -r "$(realpath truffle/flat-sol)/." /contracts
+#            cd /
+#            /docker_run_securify
+
+  deploy-version:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Install sponge"
+          command: |
+            sudo apt-get install moreutils
+      - run:
+          name: "Configure Git"
+          command: |
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+            git config --global user.email ahodges+shippy@shipchain.io
+            git config --global user.name MrShippy
+
+      - run:
+          name: "Clone meta-contracts"
+          command: |
+            git clone git@github.com:shipchain/meta-contracts.git
+      - run:
+          name: "Update meta-contracts repo with new LOAD version"
+          command: |
+            export VERSION=$(cat truffle/contracts/Load/VERSION)
+            export ABI=$(jq -rc .abi truffle/build/contracts/LoadContract.json)
+            export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/LoadContract.json)
+            jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/meta.json || { echo "Current version is already deployed"; exit 1; }
+            jq -r '.contracts.LOAD.versions[env.VERSION].abi=env.ABI | .contracts.LOAD.versions[env.VERSION].bin=env.BYTECODE | .contracts.LOAD.versions[env.VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.LOAD.latest=env.VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
+            git -C meta-contracts commit -a -m "Published LOAD $VERSION to meta-contracts"
+            git -C meta-contracts push
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - solhint
+      - truffle-compile:
+          requires:
+            - solhint
+      - mythril:
+          requires:
+            - truffle-compile
+      - truffle-tests:
+          requires:
+            - truffle-compile
+      - solidity-coverage:
+          requires:
+            - truffle-compile
+#      - manticore:
+#          requires:
+#            - truffle-compile
+#      - echidna:
+#          requires:
+#            - truffle-compile
+      - oyente:
+          requires:
+            - truffle-compile
+      - slither:
+          requires:
+            - truffle-compile
+#      - securify:
+#          requires:
+#            - truffle-compile
+      - hold-deploy:
+          type: approval
+          filters:
+            branches:
+              only: master
+          requires:
+            - truffle-tests
+            - mythril
+      - deploy-version:
+          filters:
+            branches:
+              only: master
+          requires:
+            - hold-deploy

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <style type="text/css">
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="loader" id="loader"></div>
+
+<div class="mermaid" id="EscrowSequence" style="display: none">
+sequenceDiagram
+participant T as Token
+participant E as Escrow
+participant SL as Shipment
+participant L as LoadContract
+participant S as Shipper
+participant C as Carrier
+participant M as Moderator
+
+
+S ->> L: createNewShipment(funding arguments)
+activate L
+L -->> SL: setState(CREATED)
+activate SL
+L -->> SL: setShipper(Shipper)
+deactivate SL
+note over L: emit ShipmentCreated
+opt Escrowed Shipment
+L -->> E: setState(CREATED)
+activate E
+L -->> E: setFundingType(type)
+L -->> E: setContractedAmount(value)
+L -->> E: setCreatedAt(now)
+L -->> E: setRefundAddress(Shipper)
+deactivate E
+note over L: emit EscrowCreated
+deactivate L
+end
+
+S ->> L: setCarrier()
+activate L
+L -->> SL: setCarrier(Carrier)
+activate SL
+deactivate SL
+note over L: emit ShipmentCarrierSet
+deactivate L
+
+opt Moderated Shipment
+S ->> L: setModerator()
+activate L
+L -->> SL: setModerator(Moderator)
+activate SL
+deactivate SL
+note over L: emit ShipmentModeratorSet
+deactivate L
+end
+
+S ->> L: setVaultUri()
+activate L
+L -->> SL: setVaultUri(uri)
+activate SL
+deactivate SL
+note over L: emit VaultUri
+deactivate L
+
+opt Escrowed Shipment
+loop While fundedAmount < contractedAmount
+alt SHIP Token
+S ->> T: approveAndCall(Shipment, amount)
+activate T
+T -->> L: receiveApproval(Shipper, amount, Shipment)
+activate L
+L -->> SL: trackFunding(amount)
+activate SL
+deactivate SL
+L -->> T: transferFrom(Shipper, LoadContract)
+T -->> L: $SHIP
+deactivate T
+note over L: emit EscrowDeposited
+deactivate L
+else ETH
+S ->> L: fundEscrowEther() $
+activate L
+L -->> SL: trackFunding(amount)
+activate SL
+deactivate SL
+note over L: emit EscrowDeposited
+deactivate L
+end
+end
+activate L
+L -->> E: setState(FUNDED)
+note over L: emit EscrowFunded
+deactivate L
+end
+
+opt Cancel Shipment
+alt Shipper
+S ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+note over L: emit ShipmentCanceled
+deactivate L
+else Carrier
+C ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+note over L: emit ShipmentCanceled
+deactivate L
+else Moderator
+M ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+note over L: emit ShipmentCanceled
+deactivate L
+end
+end
+
+alt Carrier
+C ->> L: setInProgress
+activate L
+L -->> SL: setState(IN_PROGRESS)
+activate SL
+deactivate SL
+note over L: emit ShipmentInProgress
+deactivate L
+else Moderator
+M ->> L: setInProgress
+activate L
+L -->> SL: setState(IN_PROGRESS)
+activate SL
+deactivate SL
+note over L: emit ShipmentInProgress
+deactivate L
+end
+
+loop While in Progress
+C ->> L: setVaultHash()
+activate L
+L -->> SL: setVaultHash(hash)
+activate SL
+deactivate SL
+note over L: emit VaultHash
+deactivate L
+end
+
+opt Cancel Shipment
+alt Carrier
+C ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+note over L: emit ShipmentCanceled
+deactivate L
+else Moderator
+M ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+note over L: emit ShipmentCanceled
+deactivate L
+end
+end
+
+alt Carrier
+C ->> L: setComplete()
+activate L
+L -->> SL: setState(COMPLETE)
+activate SL
+deactivate SL
+note over L: emit ShipmentComplete
+deactivate L
+else Moderator
+M ->> L: setComplete()
+activate L
+L -->> SL: setState(COMPLETE)
+activate SL
+deactivate SL
+note over L: emit ShipmentComplete
+deactivate L
+end
+
+opt Cancel Shipment
+M ->> L: cancel()
+activate L
+L -->> SL: setState(CANCELED)
+activate SL
+deactivate SL
+note over L: emit ShipmentCanceled
+deactivate L
+end
+
+alt Shipper
+S ->> L: releaseEscrow()
+activate L
+L -->> E: setState(RELEASED)
+activate E
+deactivate E
+note over L: emit EscrowReleased
+deactivate L
+else Moderator
+M ->> L: releaseEscrow()
+activate L
+L -->> E: setState(RELEASED)
+activate E
+deactivate E
+note over L: emit EscrowReleased
+deactivate L
+end
+
+opt Refund Canceled Shipment
+M ->> L: refundEscrow()
+activate L
+L -->> E: setState(REFUNDED)
+activate E
+deactivate E
+note over L: emit EscrowRefunded
+deactivate L
+end
+
+alt Released Escrow
+C ->> L: withdrawEscrow()
+activate L
+L -->> E: setState(WITHDRAWN)
+activate E
+deactivate E
+note over L: emit EscrowWithdrawn
+deactivate L
+else Refunded Escrow
+S ->> L: withdrawEscrow()
+activate L
+L -->> E: setState(WITHDRAWN)
+activate E
+deactivate E
+note over L: emit EscrowWithdrawn
+deactivate L
+end
+
+</div>
+
+<div class="mermaid" id="EscrowState" style="display: none">
+graph TB
+
+S_CR -. " " .-> E_N
+E_F -. " " .-> S_P
+S_C -. " " .-> E_R
+S_X -. " " .-> E_X
+
+subgraph Escrow State
+    %% Actor definitions
+    E_N((Not Created))
+    E_C((Created))
+    E_F((Funded))
+    E_R((Released))
+    E_W((Withdrawn))
+    E_X((Refunded))
+
+    %% Normal State Transitions
+    E_N -- "[fundingType != NO_FUNDING] <br/> [fundingType in (SHIP, ETH)]" --> E_C
+    E_C -- "trackFunds() <br/> [fundedAmount < contractedAmount]" --> E_C
+    E_C -- "[fundedAmount >= contractedAmount]" --> E_F
+    E_F -- "releaseEscrow() <br/> [shipper || moderator] <br/> Shipment[Complete]" --> E_R
+    E_R -- "withdrawEscrow() <br/> [carrier]" --> E_W
+
+    %% Refund State Transitions
+    E_F -- "refundEscrow() <br/> [moderator] <br/> Shipment[Canceled]
+        <br/> <br/> OR <br/> <br/>
+        refundEscrow() <br/> [shipper || carrier] <br/> now > created + 90 days
+        <br/> <br/> OR <br/> <br/>
+        refundEscrow(refundAddress) <br/> [owner]" --> E_X
+    E_X -- "withdrawEscrow() <br/> [refundAddress]" --> E_W
+
+end
+
+subgraph Shipment State
+    %% Actor definitions
+    S_NC((Not Created))
+    S_CR((Created))
+    S_P((In Progress))
+    S_C((Complete))
+    S_X((Canceled))
+
+    %% Normal State Transitions
+    S_NC -- "createNewShipment()" --> S_CR
+    S_CR -- "setInProgress() <br/> [carrier != 0x0] <br/> [carrier || moderator] <br/> Escrow[Not Created || Funded]" --> S_P
+    S_P -- "setComplete() <br/> [carrier || moderator]" --> S_C
+
+    %% Cancellation States
+    S_CR -- "cancelShipment() <br/> [shipper || carrier || moderator]" --> S_X
+    S_P -- "cancelShipment() <br/> [carrier || moderator]" --> S_X
+    S_C -- "cancelShipment() <br/> [moderator]" --> S_X
+
+end
+</div>
+
+<script src="https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js"></script>
+<script>
+    var shipchain_orange = '#EC7241';
+    var config = {
+        startOnLoad: true,
+        // theme: "forest",
+        themeCSS: `
+        .actor, .labelBox { fill: ${shipchain_orange}; }
+        .loopLine { stroke: ${shipchain_orange}; }
+        .cluster rect { stroke: ${shipchain_orange} !important; }
+        .node circle { stroke: ${shipchain_orange} !important; fill: ${shipchain_orange} !important; }
+        .edgeLabel { background-color: #dedede; }
+        `,
+        flowchart: {
+            curve: 'basis',
+            useMaxWidth: true,
+            htmlLabels: true
+        },
+        sequence: {
+            diagramMarginX:50,
+            diagramMarginY:10,
+            boxMargin: 20,
+            boxTextMargin:5,
+            noteMargin:10,
+            messageMargin:35,
+            mirrorActors:true
+        }
+    };
+    mermaid.initialize(config);
+
+    // Show diagrams
+    var EscrowSequence = document.getElementById("EscrowSequence");
+    var EscrowState = document.getElementById("EscrowState");
+    EscrowSequence.style.display = "block";
+    EscrowState.style.display = "block";
+
+    // Hide spinner
+    var loader = document.getElementById("loader");
+    loader.style.display = "none";
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "reporterEnabled": "mocha-junit-reporter, eth-gas-reporter",
+  "mochaJunitReporterReporterOptions": {
+    "mochaFile": "./test-results/truffle.xml"
+  },
+  "ethGasReporterReporterOptions": {
+    "currency": "USD",
+    "onlyCalledMethods": true,
+    "showTimeSpent": true
+  }
+}

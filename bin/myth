@@ -1,5 +1,5 @@
 #!/bin/bash
 
 bin/truffle compile
-docker run -v $(pwd)/truffle:/tmp -w "/tmp/" mythril/myth --truffle
+docker run -v $(pwd)/truffle:/tmp -w "/tmp/" mythril/myth:0.18.11 --truffle
 
