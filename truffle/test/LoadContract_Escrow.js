@@ -83,8 +83,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === shipmentUuid;
         });
+
+        let block = web3.eth.getBlock(newShipmentTx.receipt.blockHash);
         await truffleAssert.eventEmitted(newShipmentTx, "EscrowCreated", ev => {
-            return ev.shipmentUuid === shipmentUuid;
+            return ev.shipmentUuid === shipmentUuid && ev.createdAt == block.timestamp;
         });
 
         let data = await getShipmentEscrowData(shipmentUuid);

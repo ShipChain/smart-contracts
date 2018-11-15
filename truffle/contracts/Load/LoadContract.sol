@@ -46,7 +46,7 @@ contract LoadContract is Ownable {
     event EscrowWithdrawn(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
 
     event EscrowCreated(address indexed msgSender, bytes16 indexed shipmentUuid, Escrow.FundingType fundingType,
-                        uint256 contractedAmount);
+                        uint256 contractedAmount, uint256 createdAt);
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes
@@ -242,7 +242,7 @@ contract LoadContract is Ownable {
             escrow.createdAt = now;
             escrow.refundAddress = shipment.shipper;
 
-            emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount);
+            emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount, escrow.createdAt);
         }
     }
 
