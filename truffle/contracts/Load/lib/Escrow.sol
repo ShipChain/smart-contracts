@@ -7,11 +7,11 @@ library Escrow {
     using SafeMath for uint256;
     using Escrow for Data;
 
-    event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount, uint256 funded);
     event EscrowFunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded, uint256 contracted);
-    event EscrowReleased(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowRefunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
-    event EscrowWithdrawn(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount);
+    event EscrowReleased(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded);
+    event EscrowRefunded(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded);
+    event EscrowWithdrawn(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 funded);
 
     enum FundingType {NO_FUNDING, SHIP, ETHER}
     enum State {NOT_CREATED, CREATED, FUNDED, RELEASED, REFUNDED, WITHDRAWN}
@@ -47,7 +47,7 @@ library Escrow {
 
         self.fundedAmount = self.fundedAmount.add(amount);
 
-        emit EscrowDeposited(msg.sender, _shipmentUuid, amount);
+        emit EscrowDeposited(msg.sender, _shipmentUuid, amount, self.fundedAmount);
 
         if (self.fundedAmount >= self.contractedAmount) {
             self.state = State.FUNDED;
