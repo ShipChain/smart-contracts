@@ -1,8 +1,8 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 
 library Converter {
-    function toBytes16(bytes self) internal pure returns (bytes16 output) {
+    function toBytes16(bytes memory self) internal pure returns (bytes16 output) {
         require(self.length <= 32, "It should have a length == 32");
 
         assembly {

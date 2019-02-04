@@ -15,14 +15,14 @@
     "eth-gas-reporter": "^0.1.12",
     "mocha-junit-reporter": "^1.18.0",
     "mocha-multi-reporters": "^1.1.7",
-    "openzeppelin-solidity": "^1.12.0",
+    "openzeppelin-solidity": "^2.1.2",
+    "solc": "^0.5.3",
     "solhint": "^1.2.1",
     "solidity-coverage": "^0.5.11",
     "soljitsu": "^1.0.0",
     "surya": "^0.2.7",
-    "truffle": "^4.1.14",
-    "solc": "0.4.24",
-    "truffle-assertions": "^0.5.0",
+    "truffle": "^5.0.3",
+    "truffle-assertions": "^0.7.2",
     "uuid": "^3.3.2",
     "uuid-to-hex": "^1.0.3"
   }

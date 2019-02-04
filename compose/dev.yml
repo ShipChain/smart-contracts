@@ -2,7 +2,7 @@ version: '3.2'
 
 services:
   ganache:
-    image: trufflesuite/ganache-cli
+    image: trufflesuite/ganache-cli:v6.3.0
     expose:
       - "8545"
 

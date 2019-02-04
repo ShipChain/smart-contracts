@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.0;
 
 
 library Shipment {
@@ -20,7 +20,7 @@ library Shipment {
         State state; //1 byte
     }
 
-    modifier isShipper(Data storage self, string message) {
+    modifier isShipper(Data storage self, string memory message) {
         require(msg.sender == self.shipper, message);
         _;
     }
