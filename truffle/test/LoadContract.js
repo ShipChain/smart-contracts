@@ -8,6 +8,10 @@ const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, 
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
 const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2 };
 
+function uuidToHex32(uuid) {
+    return uuid + '00000000000000000000000000000000'
+}
+
 
 contract('LoadContract', async (accounts) => {
     const OWNER = accounts[0];
@@ -30,24 +34,11 @@ contract('LoadContract', async (accounts) => {
     }
 
     async function getShipmentEscrowData(shipmentUuid){
-        const [shipper, carrier, moderator, shipment_state] = await contract.getShipmentData(shipmentUuid);
-        const [contractedAmount, fundedAmount, createdAt, fundingType, escrow_state, refundAddress] = await contract.getEscrowData(shipmentUuid);
-
+        const shipmentData = await contract.getShipmentData(shipmentUuid);
+        const escrowData = await contract.getEscrowData(shipmentUuid);
         return {
-            shipment: {
-                shipper: shipper,
-                carrier: carrier,
-                moderator: moderator,
-                state: shipment_state,
-            },
-            escrow: {
-                contractedAmount: contractedAmount,
-                fundedAmount: fundedAmount,
-                createdAt: createdAt,
-                fundingType: fundingType,
-                state: escrow_state,
-                refundAddress: refundAddress,
-            },
+            shipment: shipmentData,
+            escrow: escrowData,
         };
     }
 
@@ -56,7 +47,7 @@ contract('LoadContract', async (accounts) => {
         const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
-            return ev.shipmentUuid === shipmentUuid;
+            return ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
 
         const data = await getShipmentEscrowData(shipmentUuid);
@@ -89,7 +80,7 @@ contract('LoadContract', async (accounts) => {
 
         let setCarrierTx = await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
         await truffleAssert.eventEmitted(setCarrierTx, "ShipmentCarrierSet", ev => {
-            return ev.msgSender === SHIPPER && ev.shipmentUuid === shipmentUuid && ev.carrier === CARRIER;
+            return ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.carrier === CARRIER;
         });
 
         data = await getShipmentEscrowData(shipmentUuid);
@@ -107,7 +98,7 @@ contract('LoadContract', async (accounts) => {
 
         let setModeratorTx = await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         await truffleAssert.eventEmitted(setModeratorTx, "ShipmentModeratorSet", ev => {
-            return ev.msgSender === SHIPPER && ev.shipmentUuid === shipmentUuid && ev.moderator === MODERATOR;
+            return ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.moderator === MODERATOR;
         });
 
         data = await getShipmentEscrowData(shipmentUuid);
@@ -126,7 +117,7 @@ contract('LoadContract', async (accounts) => {
         const setVaultTx = await contract.setVaultUri(shipmentUuid, vaultUri, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(setVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === vaultUri && ev.msgSender === SHIPPER && ev.shipmentUuid === shipmentUuid;
+            return ev.vaultUri === vaultUri && ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
     });
 
@@ -174,7 +165,7 @@ contract('LoadContract', async (accounts) => {
 
         let inProgressTx = await contract.setInProgress(shipmentUuid, {from: CARRIER});
         await truffleAssert.eventEmitted(inProgressTx, "ShipmentInProgress", ev => {
-            return ev.msgSender === CARRIER && ev.shipmentUuid === shipmentUuid;
+            return ev.msgSender === CARRIER && ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
 
         data = await getShipmentEscrowData(shipmentUuid);
@@ -191,7 +182,7 @@ contract('LoadContract', async (accounts) => {
 
         let completeTx = await contract.setComplete(shipmentUuid, {from: CARRIER});
         await truffleAssert.eventEmitted(completeTx, "ShipmentComplete", ev => {
-            return ev.msgSender === CARRIER && ev.shipmentUuid === shipmentUuid;
+            return ev.msgSender === CARRIER && ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
 
         let data = await getShipmentEscrowData(shipmentUuid);
@@ -241,7 +232,7 @@ contract('LoadContract', async (accounts) => {
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.shipment.state, ShipmentState.CANCELED);
         await truffleAssert.eventEmitted(canceledTx, "ShipmentCanceled", ev => {
-            return ev.msgSender === MODERATOR && ev.shipmentUuid === shipmentUuid;
+            return ev.msgSender === MODERATOR && ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
     });
 

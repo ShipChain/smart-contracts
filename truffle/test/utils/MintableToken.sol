@@ -1,7 +1,7 @@
 pragma solidity 0.5.0;
 
 
-import {ERC20Mintable} from "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
+import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
@@ -9,7 +9,7 @@ import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
  * @title Mintable token
  * @dev Simple ERC20 Token example, with mintable token creation and update of max supply
  */
-contract MintableToken is ERC20Mintable, Ownable {
+contract MintableToken is ERC20, Ownable {
     event Mint(address indexed to, uint256 amount);
     event MintFinished();
 

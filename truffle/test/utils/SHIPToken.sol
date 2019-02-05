@@ -2,8 +2,6 @@ pragma solidity 0.5.0;
 
 
 import {MintableToken} from "./MintableToken.sol";
-import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import {ERC20Pausable} from "openzeppelin-solidity/contracts/token/ERC20/ERC20Pausable.sol";
 
 
 // ----------------------------------------------------------------------------
@@ -17,7 +15,7 @@ contract ApproveAndCallFallBack {
 /**
  * @title SHIPToken
  */
-contract SHIPToken is ERC20, ERC20Pausable, MintableToken {
+contract SHIPToken is MintableToken {
     string public constant NAME = "ShipChain SHIP";
     string public constant SYMBOL = "SHIP";
     uint8 public constant DECIMALS = 18;

@@ -1,4 +1,4 @@
 #!/bin/bash
 
-bin/ddo truffle $*
+bin/ddo npm run truffle -- $*
 

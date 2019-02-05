@@ -12,6 +12,8 @@
     "surya:mdreport": "./node_modules/.bin/surya mdreport AllContracts.md contracts/**/*.sol"
   },
   "dependencies": {
+    "bn-chai": "^1.0.1",
+    "chai": "^4.2.0",
     "eth-gas-reporter": "^0.1.12",
     "mocha-junit-reporter": "^1.18.0",
     "mocha-multi-reporters": "^1.1.7",
