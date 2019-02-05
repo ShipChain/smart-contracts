@@ -10,7 +10,7 @@ import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
  * @dev Simple ERC20 Token example, with mintable token creation and update of max supply
  */
 contract MintableToken is ERC20, Ownable {
-    event Mint(address indexed to, uint256 amount);
+    event Minted(address indexed to, uint256 amount);
     event MintFinished();
 
     bool public mintingFinished = false;
@@ -34,7 +34,7 @@ contract MintableToken is ERC20, Ownable {
         }
 
         _mint(to, value);
-        emit Mint(to, value);
+        emit Minted(to, value);
         return true;
     }
 

@@ -41,7 +41,7 @@ jobs: # a collection of steps
 
   mythril:
     docker:
-      - image: mythril/myth:0.18.11
+      - image: mythril/myth:0.20.0
     steps:
       - checkout
       - attach_workspace:
@@ -55,7 +55,7 @@ jobs: # a collection of steps
   truffle-tests:
     docker:
       - image: circleci/node:10.10-stretch
-      - image: trufflesuite/ganache-cli:v6.1.8
+      - image: trufflesuite/ganache-cli:v6.3.0
     steps:
       - checkout
       - attach_workspace:
@@ -68,38 +68,38 @@ jobs: # a collection of steps
       - store_test_results:
           path: truffle/test-results
 
-  solidity-coverage:
-    docker:
-      - image: circleci/node:10.10-stretch
-    steps:
-      - checkout
-      - attach_workspace:
-          at: truffle
-      - run:
-          name: "Solidity test coverage"
-          command: |
-            cd truffle
-            npm run coverage || true
-      - store_artifacts:
-          path: truffle/coverage
+#  solidity-coverage:
+#    docker:
+#      - image: circleci/node:10.10-stretch
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Solidity test coverage"
+#          command: |
+#            cd truffle
+#            npm run coverage || true
+#      - store_artifacts:
+#          path: truffle/coverage
 
-  slither:
-    docker:
-      - image: shipchain/slither:0.4.24
-    steps:
-      - checkout
-      - attach_workspace:
-          at: truffle
-      - run:
-          name: "Slither analysis"
-          command: |
-            cd truffle
-            mkdir slither || true
-            slither flat-sol/Load.LoadContract.sol --json slither/output.json || true
-            slither flat-sol/Load.LoadContract.sol --printer-inheritance
-            dot -Tpng flat-sol/Load.LoadContract.sol.dot > slither/LoadContract.png
-      - store_artifacts:
-          path: truffle/slither
+#  slither:
+#    docker:
+#      - image: trailofbits/eth-security-toolbox
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Slither analysis"
+#          command: |
+#            solc-select 0.5.0
+#            cd truffle
+#            mkdir slither || true
+#            slither flat-sol/Load.LoadContract.sol --json slither/output.json || true
+#            dot -Tpng flat-sol/Load.LoadContract.sol.dot > slither/LoadContract.png
+#      - store_artifacts:
+#          path: truffle/slither
 
 #  manticore:
 #    docker:
@@ -130,22 +130,22 @@ jobs: # a collection of steps
 #            cd truffle
 #            echidna-test flat-sol/*.sol
 
-  oyente:
-    docker:
-      - image: shipchain/oyente:0.4.24
-    steps:
-      - checkout
-      - attach_workspace:
-          at: truffle
-      - run:
-          name: "Oyente tests"
-          command: |
-            cd truffle
-            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadContract.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Escrow.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Shipment.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Vault.sol
-            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Converter.sol
+#  oyente:
+#    docker:
+#      - image: shipchain/oyente:0.4.24
+#    steps:
+#      - checkout
+#      - attach_workspace:
+#          at: truffle
+#      - run:
+#          name: "Oyente tests"
+#          command: |
+#            cd truffle
+#            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadContract.sol
+#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Escrow.sol
+#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Shipment.sol
+#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Vault.sol
+#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Converter.sol
 
 #  securify:
 #    docker:
