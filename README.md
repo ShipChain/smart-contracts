@@ -2,6 +2,11 @@
   <img src="https://shipchain.io/img/logo.png" alt="ShipChain"/>
 </p>
 
+[![CircleCI](https://img.shields.io/circleci/project/github/ShipChain/smart-contracts/master.svg)](https://circleci.com/gh/ShipChain/smart-contracts/tree/master)
+[![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+[![Code style: solhint](https://img.shields.io/badge/code_style-solhint-ff69b4.svg?style=svg)](https://github.com/protofire/solhint)
+[![Chat](https://img.shields.io/badge/gitter-ShipChain/lobby-green.svg)](https://gitter.im/ShipChain/Lobby)
+
 # ShipChain Smart Contracts
 
 A Truffle + Ganache environment for developing, testing, deploying smart contracts.
@@ -22,7 +27,7 @@ See the official Docker documentation for installation information:
 If you want to visualize the blockchain as you're developing the contracts, download [Ganache](https://truffleframework.com/ganache).  I had issues getting the AppImage to work properly un Ubunutu Bionic.  The solution was to create portable AppImage directories next to the executable.
 
 ```shell
-wget -O ganache.AppImage https://github.com/trufflesuite/ganache/releases/download/v1.2.2/ganache-1.2.2-x86_64.AppImage
+wget -O ganache.AppImage https://github.com/trufflesuite/ganache/releases/download/v1.3.0/ganache-1.3.0-x86_64.AppImage
 chmod a+x ganache.AppImage
 mkdir ganache.AppImage.home
 mkdir ganache.AppImage.config
