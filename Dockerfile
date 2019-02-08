@@ -12,8 +12,6 @@ RUN apk add --no-cache \
     graphviz \
     font-bitstream-type1
 
-RUN npm install -g truffle@5.0.3
-
 COPY compose/truffle/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 

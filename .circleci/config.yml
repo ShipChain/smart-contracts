@@ -10,7 +10,8 @@ jobs: # a collection of steps
           name: "Solhint"
           command: |
             sudo npm install -g solhint
-            mkdir truffle/test-results && solhint truffle/**/**/*.sol -f junit > truffle/test-results/solhint.xml
+            cd truffle
+            mkdir -p test-results/solhint && solhint ./**/**/*.sol -f junit > test-results/solhint/results.xml
       - store_test_results:
           path: truffle/test-results
 
@@ -68,7 +69,7 @@ jobs: # a collection of steps
       - store_test_results:
           path: truffle/test-results
 
-#  solidity-coverage:
+#  solidity-coverage:  # Disabled due to incompatibility with Truffle 5/Sol 0.5.0
 #    docker:
 #      - image: circleci/node:10.10-stretch
 #    steps:
@@ -83,84 +84,37 @@ jobs: # a collection of steps
 #      - store_artifacts:
 #          path: truffle/coverage
 
-#  slither:
-#    docker:
-#      - image: trailofbits/eth-security-toolbox
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Slither analysis"
-#          command: |
-#            solc-select 0.5.0
-#            cd truffle
-#            mkdir slither || true
-#            slither flat-sol/Load.LoadContract.sol --json slither/output.json || true
-#            dot -Tpng flat-sol/Load.LoadContract.sol.dot > slither/LoadContract.png
-#      - store_artifacts:
-#          path: truffle/slither
+  slither:
+    docker:
+      - image: shipchain/slither:0.5.2
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Slither analysis"
+          command: |
+            cd truffle
+            mkdir slither || true
+            slither . --print inheritance-graph --json slither/output.json || true
+            dot -Tpng export.dot > slither/LoadContract.png
+      - store_artifacts:
+          path: truffle/slither
 
-#  manticore:
-#    docker:
-#      - image: shipchain/manticore:0.2.1.1
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Manticore analysis"
-#          no_output_timeout: 30m
-#          command: |
-#            cd truffle
-#            manticore --no-testcases --detect-all ./combined-sol/Load.LoadContract.sol --contract LoadContract --workspace ./manticore
-#      - store_artifacts:
-#          path: truffle/manticore
-
-#  echidna:
-#    docker:
-#      - image: shipchain/echidna:latest
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Echidna tests"
-#          command: |
-#            cd truffle
-#            echidna-test flat-sol/*.sol
-
-#  oyente:
-#    docker:
-#      - image: shipchain/oyente:0.4.24
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Oyente tests"
-#          command: |
-#            cd truffle
-#            python /oyente/oyente/oyente.py -s flat-sol/Load.LoadContract.sol
-#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Escrow.sol
-#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Shipment.sol
-#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Vault.sol
-#            python /oyente/oyente/oyente.py -s flat-sol/Load.lib.Converter.sol
-
-#  securify:
-#    docker:
-#      - image: shipchain/securify:0.4.24
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Securify tests"
-#          command: |
-#            rm /contracts/example.sol
-#            cp -r "$(realpath truffle/flat-sol)/." /contracts
-#            cd /
-#            /docker_run_securify
+  securify:
+    docker:
+      - image: shipchain/securify:cb097c3
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Securify tests"
+          command: |
+            rm /project/example.sol
+            cp -r "$(realpath truffle/flat-sol)/." /project
+            cd /sec
+            python3 docker_run_securify.py -p /project
 
   deploy-version:
     docker:
@@ -209,24 +163,15 @@ workflows:
       - truffle-tests:
           requires:
             - truffle-compile
-      - solidity-coverage:
-          requires:
-            - truffle-compile
-#      - manticore:
+#      - solidity-coverage:
 #          requires:
 #            - truffle-compile
-#      - echidna:
-#          requires:
-#            - truffle-compile
-      - oyente:
-          requires:
-            - truffle-compile
       - slither:
           requires:
             - truffle-compile
-#      - securify:
-#          requires:
-#            - truffle-compile
+      - securify:
+          requires:
+            - truffle-compile
       - hold-deploy:
           type: approval
           filters:
