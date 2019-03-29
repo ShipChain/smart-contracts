@@ -1,4 +1,4 @@
-FROM node:alpine
+FROM node:10.5-alpine
 
 RUN apk add --no-cache \
     libc6-compat \
@@ -15,7 +15,7 @@ RUN apk add --no-cache \
 COPY compose/truffle/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-WORKDIR /srv/truffle
+WORKDIR /src/truffle
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 

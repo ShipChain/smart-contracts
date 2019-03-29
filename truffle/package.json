@@ -9,12 +9,15 @@
     "surya:describe": "./node_modules/.bin/surya describe contracts/**/*.sol",
     "surya:inheritance": "./node_modules/.bin/surya inheritance contracts/**/*.sol | dot -Tpng > ContractInheritance.png",
     "surya:graph": "./node_modules/.bin/surya graph contracts/**/*.sol | dot -Tpng > ContractGraph.png",
-    "surya:mdreport": "./node_modules/.bin/surya mdreport AllContracts.md contracts/**/*.sol"
+    "surya:mdreport": "./node_modules/.bin/surya mdreport AllContracts.md contracts/**/*.sol",
+    "clean": "rm -rf build coverage flat-sol combined-sol test-results coverage.json"
   },
   "dependencies": {
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "eth-gas-reporter": "^0.1.12",
+    "loom-js": "1.38.0",
+    "loom-truffle-provider": "^0.11.0",
     "mocha-junit-reporter": "^1.18.0",
     "mocha-multi-reporters": "^1.1.7",
     "openzeppelin-solidity": "^2.1.2",

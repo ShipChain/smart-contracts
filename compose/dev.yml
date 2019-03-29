@@ -16,4 +16,4 @@ services:
     depends_on:
       - ganache
     volumes:
-      - ../truffle:/srv/truffle:rw
+      - ../truffle:/src/truffle:rw
