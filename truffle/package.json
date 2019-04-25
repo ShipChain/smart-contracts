@@ -16,7 +16,7 @@
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "eth-gas-reporter": "^0.1.12",
-    "loom-js": "1.38.0",
+    "loom-js": "1.49.4",
     "loom-truffle-provider": "^0.11.0",
     "mocha-junit-reporter": "^1.18.0",
     "mocha-multi-reporters": "^1.1.7",

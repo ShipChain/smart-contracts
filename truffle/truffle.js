@@ -14,10 +14,9 @@ module.exports = {
       provider: function() {
         const privateKey = readFileSync(path.join(__dirname, 'private_key'), 'utf-8')
         const chainId = 'default'
-        const writeUrl = 'http://172.17.0.1:46658/rpc'
-        const readUrl = 'http://172.17.0.1:46658/query'
+        const writeUrl = 'https://shipchain-testnet-beta.network.shipchain.io:46658/rpc'
+        const readUrl = 'https://shipchain-testnet-beta.network.shipchain.io:46658/query'
         const loomTruffleProvider = new LoomTruffleProvider(chainId, writeUrl, readUrl, privateKey)
-        loomTruffleProvider.createExtraAccountsFromMnemonic("gravity top burden flip student usage spell purchase hundred improve check genre", 10)
         return loomTruffleProvider
       },
       network_id: '*'
