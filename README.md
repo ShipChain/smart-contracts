@@ -48,27 +48,34 @@ mkdir ganache.AppImage.config
 
 ## Startup
 
-### CLI
+1. Run `bin/dc build`.
 
-Run dockerized ganache in daemon mode
+2. Run `bin/ddo yarn` to install the required packages.
 
-`bin/dc up -d ganache`
+3. Run a ganache instance.
 
-Then your Truffle commands will be run with 
++ CLI
 
-`bin/truffle <migrate|console|test>`
+    Run dockerized ganache in daemon mode
 
-### GUI
+    `bin/dc up -d ganache`
 
-Run Ganache locally on your host computer.  In the settings, listen for connections on all interfaces.
+    Then your Truffle commands will be run with 
 
-Then your Truffle commands will be run with
+    `bin/truffle <migrate|console|test>`
 
-`bin/truffle --network gui <migrate/console/test>`
++ GUI
 
-Or the shortcut script
+    Run Ganache locally on your host computer.  In the settings, listen for connections on all interfaces.
 
-`bin/truffle-gui <migrate/console/test>`
+    Then your Truffle commands will be run with
+
+    `bin/truffle --network gui <migrate/console/test>`
+
+    Or the shortcut script
+
+    `bin/truffle-gui <migrate/console/test>`
+    
 
 ## Compile
 
@@ -164,6 +171,7 @@ then you need to restart your Ganache as you have run out of ETH.  If you are te
 * **Lucas Clay** - [mlclay](https://github.com/mlclay)
 * **Adam Hodges** - [ajhodges](https://github.com/ajhodges)
 * **Leeward Bound** - [leewardbound](https://github.com/leewardbound)
+* **Jianwei Liu** - [jianwel](https://github.com/jianwel)
 
 
 
