@@ -1,4 +1,8 @@
-FROM node:alpine
+FROM ethereum/solc:0.5.0 as solc
+
+FROM node:10.15.0-alpine
+
+COPY --from=solc /usr/bin/solc /usr/bin/
 
 RUN apk add --no-cache \
     libc6-compat \

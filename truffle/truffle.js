@@ -1,8 +1,13 @@
 module.exports = {
-  solc: {
-    optimizer: {
-      enabled: true,
-      runs: 999999
+  compilers: {
+    solc: {
+      version: "native",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 999999
+        }
+      }
     }
   },
   networks: {
