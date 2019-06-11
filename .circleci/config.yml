@@ -9,7 +9,7 @@ jobs: # a collection of steps
       - run:
           name: "Solhint"
           command: |
-            sudo npm install -g solhint
+            sudo npm install -g solhint@^1.5.1
             cd truffle
             mkdir -p test-results/solhint && solhint ./**/**/*.sol -f junit > test-results/solhint/results.xml
       - store_test_results:
