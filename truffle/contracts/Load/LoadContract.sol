@@ -201,6 +201,40 @@ contract LoadContract is Ownable {
         emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
+   /** @notice Overloaded function to provide default values for createNewShipment
+     */
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
+    _fundingType, uint256 _contractedAmount)
+        external
+        notDeprecated
+    {
+      createNewShipment(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
+    }
+
+    /** @notice Associates a Vault URL with this Shipment.
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      * @param _vaultUri string URI of the external vault.
+      * @dev Emits VaultUri on success
+      */
+    function setVaultUri(bytes16 _shipmentUuid, string calldata _vaultUri)
+        external
+        shipmentExists(_shipmentUuid)
+    {
+        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
+    }
+
+    /** @notice Associates a Vault Hash with this Shipment.
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      * @param _vaultHash string Hash of the external vault.
+      * @dev Emits VaultHash on success.
+      */
+    function setVaultHash(bytes16 _shipmentUuid, string calldata _vaultHash)
+        external
+        shipmentExists(_shipmentUuid)
+    {
+        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
+    }
+
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
@@ -253,40 +287,7 @@ contract LoadContract is Ownable {
             emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount, escrow.createdAt);
         }
     }
-    /** @notice Overloaded function to provide default values for createNewShipment
-     */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount)
-        external
-        notDeprecated
-    {
-      createNewShipment(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
-    }
-
-    /** @notice Associates a Vault URL with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultUri string URI of the external vault.
-      * @dev Emits VaultUri on success
-      */
-    function setVaultUri(bytes16 _shipmentUuid, string calldata _vaultUri)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
-    }
-
-    /** @notice Associates a Vault Hash with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultHash string Hash of the external vault.
-      * @dev Emits VaultHash on success.
-      */
-    function setVaultHash(bytes16 _shipmentUuid, string calldata _vaultHash)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
-    }
-
+ 
     /** @notice Defines the Carrier for this Shipment.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       * @param _carrier address Wallet of the Carrier.
