@@ -213,8 +213,8 @@ contract LoadContract is Ownable {
       */
     function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
     _fundingType, uint256 _contractedAmount,  string
-    calldata _vaultUri, string calldata _vaultHash, address _carrierAddress)
-        external
+    memory _vaultUri, memory _vaultHash, address _carrierAddress)
+       public 
         notDeprecated
     {
         Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
