@@ -18,6 +18,8 @@ library Shipment {
         /* Slot 2 */
         address moderator; //20 bytes
         State state; //1 byte
+        string vaultUri;
+        string vaultHash;
     }
 
     modifier isShipper(Data storage self, string memory message) {

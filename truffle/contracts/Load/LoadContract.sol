@@ -204,10 +204,16 @@ contract LoadContract is Ownable {
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
-      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is defined.
+      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
+      defined.
+      * @param _vaultUri string The Uri of Vault
+      * @param _vaultHash string The hash of Vault
+      * @param _carrierAddress address The addres of the carrier for this shipment
       * @dev Emits ShipmentCreated on success.
       */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, uint256 _contractedAmount)
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
+    _fundingType, uint256 _contractedAmount,  string
+    calldata _vaultUri, string calldata _vaultHash, address _carrierAddress)
         external
         notDeprecated
     {
@@ -231,6 +237,9 @@ contract LoadContract is Ownable {
 
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
+        shipment.vaultUri = _vaultUri;
+        shipment.vaultHash = _vaultHash;
+        shipment.carrier = _carrierAddress;
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
 
@@ -243,6 +252,15 @@ contract LoadContract is Ownable {
 
             emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount, escrow.createdAt);
         }
+    }
+    /** @notice Overloaded function to provide default values for createNewShipment
+     */
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
+    _fundingType, uint256 _contractedAmount)
+        external
+        notDeprecated
+    {
+      createNewShipment(_shipmentUuid, _fundingType, _contractedAmount, "", "", 0x0);
     }
 
     /** @notice Associates a Vault URL with this Shipment.
