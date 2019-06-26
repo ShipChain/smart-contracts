@@ -42,7 +42,7 @@ contract('LoadContract', async (accounts) => {
         };
     }
 
-    it("should create a LoadShipment", async () => {
+    it("should create a LoadShipment without Uri, Hash and carrier address", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
         const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
 
@@ -54,6 +54,9 @@ contract('LoadContract', async (accounts) => {
 
         assert.equal(data.shipment.shipper, SHIPPER);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
+        assert.equal(data.shipment.vaultHash, "");
+        assert.equal(data.shipment.vaultUri, "");
+        assert.equal(data.shipment.carrier, 0x0);
         assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
     });
 

@@ -347,12 +347,15 @@ contract LoadContract is Ownable {
     function getShipmentData(bytes16 _shipmentUuid)
         public
         view
-        returns(address shipper, address carrier, address moderator, Shipment.State state)
+        returns(address shipper, address carrier, address moderator,
+        Shipment.State state, string memory vaultUri, string memory vaultHash)
     {
         shipper = allShipmentData[_shipmentUuid].shipper;
         carrier = allShipmentData[_shipmentUuid].carrier;
         moderator = allShipmentData[_shipmentUuid].moderator;
         state = allShipmentData[_shipmentUuid].state;
+        vaultUri = allShipmentData[_shipmentUuid].vaultUri;
+        vaultHash = allShipmentData[_shipmentUuid].vaultHash;
     }
 
     /** @notice Returns the Escrow state.
