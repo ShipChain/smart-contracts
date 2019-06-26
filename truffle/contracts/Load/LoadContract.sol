@@ -213,7 +213,7 @@ contract LoadContract is Ownable {
       */
     function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
     _fundingType, uint256 _contractedAmount,  string
-    memory _vaultUri, memory _vaultHash, address _carrierAddress)
+    memory _vaultUri, string memory _vaultHash, address _carrierAddress)
        public 
         notDeprecated
     {
@@ -260,7 +260,7 @@ contract LoadContract is Ownable {
         external
         notDeprecated
     {
-      createNewShipment(_shipmentUuid, _fundingType, _contractedAmount, "", "", 0x0);
+      createNewShipment(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
     }
 
     /** @notice Associates a Vault URL with this Shipment.
