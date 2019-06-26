@@ -246,8 +246,8 @@ contract LoadContract is Ownable {
       * @dev Emits ShipmentCreated on success.
       */
     function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount,  string
-    memory _vaultUri, string memory _vaultHash, address _carrierAddress)
+    _fundingType, uint256 _contractedAmount, string memory _vaultUri, string
+    memory _vaultHash, address _carrierAddress)
        public 
         notDeprecated
     {
