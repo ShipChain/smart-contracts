@@ -208,7 +208,7 @@ contract LoadContract is Ownable {
         external
         notDeprecated
     {
-        createNewShipment(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
+        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
     }
 
     /** @notice Associates a Vault URL with this Shipment.
@@ -245,7 +245,7 @@ contract LoadContract is Ownable {
       * @param _carrierAddress address The addres of the carrier for this shipment
       * @dev Emits ShipmentCreated on success.
       */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
+    function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
     _fundingType, uint256 _contractedAmount, string memory _vaultUri, string
     memory _vaultHash, address _carrierAddress)
         public 

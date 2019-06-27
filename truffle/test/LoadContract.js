@@ -60,6 +60,24 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
     });
 
+    it("should create a LoadShipment with Uri, Hash and carrier address", async () => {
+        const shipmentUuid = uuidToHex(uuidv4(), true);
+
+        const newShipmentTx = await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
+
+        await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
+            return ev.shipmentUuid === uuidToHex32(shipmentUuid);
+        });
+
+        const data = await getShipmentEscrowData(shipmentUuid);
+
+        assert.equal(data.shipment.shipper, SHIPPER);
+        assert.equal(data.shipment.state, ShipmentState.CREATED);
+        assert.equal(data.shipment.vaultHash, "hash");
+        assert.equal(data.shipment.vaultUri, "uri");
+        assert.equal(data.shipment.carrier, CARRIER);
+        assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
+    });
 
     it("should not allow a shipment to be created with a contractedAmount", async() => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
