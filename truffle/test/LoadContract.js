@@ -60,6 +60,7 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
     });
 
+
     it("should not allow a shipment to be created with a contractedAmount", async() => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await truffleAssert.reverts(contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 1, {from: SHIPPER}), "Cannot specify a contracted amount for a shipment with no escrow");
