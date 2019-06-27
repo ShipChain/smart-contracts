@@ -12,6 +12,7 @@ library Vault {
         internal
     {
         require(msg.sender == self.shipper, "Only Shipper allowed to set VaultUri");
+        self.vaultUri = _vaultUri;
         emit VaultUri(msg.sender, _shipmentUuid, _vaultUri);
     }
 
@@ -20,6 +21,7 @@ library Vault {
     {
         require(msg.sender == self.shipper || msg.sender == self.carrier,
                 "Only Shipper or Carrier allowed to set VaultHash");
+        self.vaultHash = _vaultHash;
         emit VaultHash(msg.sender, _shipmentUuid, _vaultHash);
     }
 }
