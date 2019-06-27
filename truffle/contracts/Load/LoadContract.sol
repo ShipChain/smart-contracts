@@ -201,7 +201,12 @@ contract LoadContract is Ownable {
         emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
-   /** @notice Overloaded function to provide default values for createNewShipment
+   /** @notice createNewShipment function to provide backward compantibility. 
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
+      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
+      defined.
+      * @dev Emits ShipmentCreated on success     
      */
     function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
     _fundingType, uint256 _contractedAmount)
