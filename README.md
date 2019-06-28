@@ -125,7 +125,9 @@ Exit the truffle console with `.exit`
 
 ## Testing
 
-Unit test with `bin/truffle test`
+
+Unit test with `bin/truffle test` (no need to run the compile and deploy
+commands first. They are included in the test.)
 
 Static Code Analysis with `bin/myth`
 
@@ -138,6 +140,11 @@ sender's account only has: 663666560000000000
 ```
 
 then you need to restart your Ganache as you have run out of ETH.  If you are testing with `bin/truffle` then use `bin/dc down`.  If you are testing with `bin/truffle-gui` then restart the Ganache application.
+
+
+Before testing or pushing your revisions to the git repository, you may want to
+run the linter by `bin/ddo npm run lint`, or `circleci local execute --job
+solhint`, to prevent the linter breaking your build.
 
 ## Documentation
 
