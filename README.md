@@ -147,6 +147,8 @@ run the linter by `bin/ddo npm run lint`, or `circleci local execute --job
 solhint`, to prevent the linter breaking your build in circleci build. Or, if you
 lint in your mind, skip this step. : )
 
+If you need to test with a single test file, you can do that by `bin/truffle test test/TEST_FILE_NAME.js`
+
 ## Documentation
 
 [Mermaid](https://mermaidjs.github.io/) charts in development in `truffle/LoadContract.html`.
