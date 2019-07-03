@@ -276,9 +276,12 @@ contract LoadContract is Ownable {
 
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
-        shipment.vaultUri = _vaultUri;
-        shipment.vaultHash = _vaultHash;
-        shipment.carrier = _carrierAddress;
+
+        //use the set functions here to make sure events are emitted even when
+        //creating a new shipment
+        shipment.setVaultUri(_shipmentUuid, _vaultUri);
+        shipment.setVaultHash(_shipmentUuid, _vaultHash);
+        shipment.setCarrier(_shipmentUuid, _carrierAddress);
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
 
