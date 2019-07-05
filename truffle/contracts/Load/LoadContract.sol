@@ -201,48 +201,19 @@ contract LoadContract is Ownable {
         emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
-    /** @notice Creates a new Shipment and stores it in the Load Registry.
+   /** @notice createNewShipment function to provide backward compantibility. 
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
-      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is defined.
-      * @dev Emits ShipmentCreated on success.
-      */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, uint256 _contractedAmount)
+      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
+      defined.
+      * @dev Emits ShipmentCreated on success     
+     */
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
+    _fundingType, uint256 _contractedAmount)
         external
         notDeprecated
     {
-        Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
-        if (_fundingType != Escrow.FundingType.NO_FUNDING) {
-            require(_fundingType == Escrow.FundingType.SHIP ||
-                    _fundingType == Escrow.FundingType.ETHER, "Invalid Funding Type");
-            require(_contractedAmount > 0, "Escrow must have an amount");
-            require(_fundingType == Escrow.FundingType.SHIP && _contractedAmount < MAX_SHIP_SUPPLY ||
-                    _fundingType == Escrow.FundingType.ETHER && _contractedAmount < MAX_ETH_SUPPLY,
-                    "Escrow amount must be less than max supply");
-            require(_fundingType != Escrow.FundingType.SHIP || shipTokenContractAddress != address(0x0),
-                    "Token address must be set");
-            require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
-        } else {
-            require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
-        }
-
-        Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
-        require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");
-
-        shipment.state = Shipment.State.CREATED;
-        shipment.shipper = msg.sender;
-
-        emit ShipmentCreated(msg.sender, _shipmentUuid);
-
-        if (_fundingType != Escrow.FundingType.NO_FUNDING) {
-            escrow.state = Escrow.State.CREATED;
-            escrow.fundingType = _fundingType;
-            escrow.contractedAmount = _contractedAmount;
-            escrow.createdAt = now;
-            escrow.refundAddress = shipment.shipper;
-
-            emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount, escrow.createdAt);
-        }
+        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
     }
 
     /** @notice Associates a Vault URL with this Shipment.
@@ -269,6 +240,62 @@ contract LoadContract is Ownable {
         allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
     }
 
+    /** @notice Creates a new Shipment and stores it in the Load Registry.
+      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
+      * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
+      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
+      defined.
+      * @param _vaultUri string The Uri of Vault
+      * @param _vaultHash string The hash of Vault
+      * @param _carrierAddress address The addres of the carrier for this shipment
+      * @dev Emits ShipmentCreated on success.
+      */
+    function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
+    _fundingType, uint256 _contractedAmount, string memory _vaultUri, string
+    memory _vaultHash, address _carrierAddress)
+        public 
+        notDeprecated
+    {
+        Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
+        if (_fundingType != Escrow.FundingType.NO_FUNDING) {
+            require(_fundingType == Escrow.FundingType.SHIP ||
+                    _fundingType == Escrow.FundingType.ETHER, "Invalid Funding Type");
+            require(_contractedAmount > 0, "Escrow must have an amount");
+            require(_fundingType == Escrow.FundingType.SHIP && _contractedAmount < MAX_SHIP_SUPPLY ||
+                    _fundingType == Escrow.FundingType.ETHER && _contractedAmount < MAX_ETH_SUPPLY,
+                    "Escrow amount must be less than max supply");
+            require(_fundingType != Escrow.FundingType.SHIP || shipTokenContractAddress != address(0x0),
+                    "Token address must be set");
+            require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
+        } else {
+            require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
+        }
+
+        Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
+        require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");
+
+        shipment.state = Shipment.State.CREATED;
+        shipment.shipper = msg.sender;
+
+        //use the set functions here to make sure events are emitted even when
+        //creating a new shipment
+        shipment.setVaultUri(_shipmentUuid, _vaultUri);
+        shipment.setVaultHash(_shipmentUuid, _vaultHash);
+        shipment.setCarrier(_shipmentUuid, _carrierAddress);
+
+        emit ShipmentCreated(msg.sender, _shipmentUuid);
+
+        if (_fundingType != Escrow.FundingType.NO_FUNDING) {
+            escrow.state = Escrow.State.CREATED;
+            escrow.fundingType = _fundingType;
+            escrow.contractedAmount = _contractedAmount;
+            escrow.createdAt = now;
+            escrow.refundAddress = shipment.shipper;
+
+            emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount, escrow.createdAt);
+        }
+    }
+ 
     /** @notice Defines the Carrier for this Shipment.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       * @param _carrier address Wallet of the Carrier.
@@ -328,12 +355,15 @@ contract LoadContract is Ownable {
     function getShipmentData(bytes16 _shipmentUuid)
         public
         view
-        returns(address shipper, address carrier, address moderator, Shipment.State state)
+        returns(address shipper, address carrier, address moderator,
+        Shipment.State state, string memory vaultUri, string memory vaultHash)
     {
         shipper = allShipmentData[_shipmentUuid].shipper;
         carrier = allShipmentData[_shipmentUuid].carrier;
         moderator = allShipmentData[_shipmentUuid].moderator;
         state = allShipmentData[_shipmentUuid].state;
+        vaultUri = allShipmentData[_shipmentUuid].vaultUri;
+        vaultHash = allShipmentData[_shipmentUuid].vaultHash;
     }
 
     /** @notice Returns the Escrow state.
