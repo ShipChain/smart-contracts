@@ -149,6 +149,18 @@ lint in your mind, skip this step. : )
 
 If you need to test with a single test file, you can do that by `bin/truffle test test/TEST_FILE_NAME.js`
 
+##Local Security Check
+To run securify locally, you can run this command,
+```bash
+bin/ddo npm run flatten
+docker run -v $(pwd)/truffle/flat-sol:/project shipchain/securify:aef12a32
+```
+
+If you want to run myth, you can run,
+```bash
+circleci local execute --job mythril
+```
+
 ## Documentation
 
 [Mermaid](https://mermaidjs.github.io/) charts in development in `truffle/LoadContract.html`.
