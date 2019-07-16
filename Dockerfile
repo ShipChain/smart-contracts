@@ -1,4 +1,4 @@
-FROM ethereum/solc:0.5.0 as solc
+FROM ethereum/solc:0.4.24 as solc
 
 FROM node:10.15.0-alpine
 

@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity 0.4.24;
 
 
 library Shipment {
@@ -18,11 +18,9 @@ library Shipment {
         /* Slot 2 */
         address moderator; //20 bytes
         State state; //1 byte
-        string vaultUri;
-        string vaultHash;
     }
 
-    modifier isShipper(Data storage self, string memory message) {
+    modifier isShipper(Data storage self, string message) {
         require(msg.sender == self.shipper, message);
         _;
     }

@@ -1,17 +1,19 @@
-pragma solidity 0.5.0;
+pragma solidity 0.4.24;
 
 
-import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
+import {StandardToken} from "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import {Claimable} from "openzeppelin-solidity/contracts/ownership/Claimable.sol";
 
 
 /**
  * @title Mintable token
  * @dev Simple ERC20 Token example, with mintable token creation and update of max supply
  */
-contract MintableToken is ERC20, Ownable {
-    event Minted(address indexed to, uint256 amount);
+contract MintableToken is StandardToken, Ownable, Claimable {
+    event Mint(address indexed to, uint256 amount);
     event MintFinished();
+
 
     bool public mintingFinished = false;
     uint public maxSupply = 500000000 * (10 ** 18);//Max 500 M Tokens
@@ -23,18 +25,20 @@ contract MintableToken is ERC20, Ownable {
 
     /**
      * @dev Function to mint tokens
-     * @param to The address that will receive the minted tokens.
-     * @param value The amount of tokens to mint.
+     * @param _to The address that will receive the minted tokens.
+     * @param _amount The amount of tokens to mint.
      * @return A boolean that indicates if the operation was successful.
      */
-    function mint(address to, uint256 value) public onlyOwner canMint returns (bool) {
-        if (maxSupply < totalSupply().add(value)) {
+    function mint(address _to, uint256 _amount) public onlyOwner canMint returns (bool) {
+        if (maxSupply < totalSupply_.add(_amount)) {
             revert();
             //Hard cap of 500M mintable tokens
         }
 
-        _mint(to, value);
-        emit Minted(to, value);
+        totalSupply_ = totalSupply_.add(_amount);
+        balances[_to] = balances[_to].add(_amount);
+        emit Mint(_to, _amount);
+        emit Transfer(address(0), _to, _amount);
         return true;
     }
 

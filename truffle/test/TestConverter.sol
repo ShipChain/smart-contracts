@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity 0.4.24;
 
 import "truffle/Assert.sol";
 import { Converter } from "../contracts/Load/lib/Converter.sol";
@@ -18,7 +18,7 @@ contract TestContract {
         emit Bytes16Event(value);
     }
 
-    function setBytes(bytes calldata _value) external {
+    function setBytes(bytes _value) external {
         emit BytesEvent(_value);
         value = _value.toBytes16();
         emit Bytes16Event(value);

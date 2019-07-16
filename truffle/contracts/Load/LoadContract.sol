@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity 0.4.24;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
@@ -70,7 +70,7 @@ contract LoadContract is Ownable {
       * @param _state Shipment.State required state.
       * @param _message string Revert message.
       */
-    modifier shipmentHasState(bytes16 _shipmentUuid, Shipment.State _state, string memory _message) {
+    modifier shipmentHasState(bytes16 _shipmentUuid, Shipment.State _state, string _message) {
         require(allShipmentData[_shipmentUuid].state == _state, _message);
         _;
     }
@@ -80,7 +80,7 @@ contract LoadContract is Ownable {
       * @param _state Escrow.State required state if escrow exists.
       * @param _message string Revert message.
       */
-    modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string memory _message) {
+    modifier escrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string _message) {
         requireEscrowHasState(_shipmentUuid, _state, _message);
         _;
     }
@@ -90,7 +90,7 @@ contract LoadContract is Ownable {
       * @param _fundingType Escrow.FundingType required funding type if escrow exists.
       * @param _message string Revert message.
       */
-    modifier escrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string memory _message) {
+    modifier escrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string _message) {
         requireEscrowHasType(_shipmentUuid, _fundingType, _message);
         _;
     }
@@ -135,11 +135,11 @@ contract LoadContract is Ownable {
       */
     modifier canRefund(bytes16 _shipmentUuid) {
         if (now < allEscrowData[_shipmentUuid].getTimeoutDate()) {
-            require(msg.sender == owner() || (msg.sender == allShipmentData[_shipmentUuid].moderator &&
+            require(msg.sender == owner || (msg.sender == allShipmentData[_shipmentUuid].moderator &&
                                             allShipmentData[_shipmentUuid].state == Shipment.State.CANCELED),
                     "Refunds can only be issued to Canceled shipments by the Moderator");
         } else {
-            require(msg.sender == owner() || msg.sender == allShipmentData[_shipmentUuid].shipper ||
+            require(msg.sender == owner || msg.sender == allShipmentData[_shipmentUuid].shipper ||
                     msg.sender == allShipmentData[_shipmentUuid].carrier ||
                     msg.sender == allShipmentData[_shipmentUuid].moderator,
                     "Only the members of the shipment can refund escrow");
@@ -201,62 +201,16 @@ contract LoadContract is Ownable {
         emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
-   /** @notice createNewShipment function to provide backward compantibility. 
-      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
-      * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
-      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
-      defined.
-      * @dev Emits ShipmentCreated on success     
-     */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount)
-        external
-        notDeprecated
-    {
-        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
-    }
-
-    /** @notice Associates a Vault URL with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultUri string URI of the external vault.
-      * @dev Emits VaultUri on success
-      */
-    function setVaultUri(bytes16 _shipmentUuid, string calldata _vaultUri)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
-    }
-
-    /** @notice Associates a Vault Hash with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultHash string Hash of the external vault.
-      * @dev Emits VaultHash on success.
-      */
-    function setVaultHash(bytes16 _shipmentUuid, string calldata _vaultHash)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
-    }
-
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
-      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
-      defined.
-      * @param _vaultUri string The Uri of Vault
-      * @param _vaultHash string The hash of Vault
-      * @param _carrierAddress address The addres of the carrier for this shipment
+      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is defined.
       * @dev Emits ShipmentCreated on success.
       */
-    function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount, string memory _vaultUri, string
-    memory _vaultHash, address _carrierAddress)
-        public 
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, uint256 _contractedAmount)
+        external
         notDeprecated
     {
-        Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
         if (_fundingType != Escrow.FundingType.NO_FUNDING) {
             require(_fundingType == Escrow.FundingType.SHIP ||
                     _fundingType == Escrow.FundingType.ETHER, "Invalid Funding Type");
@@ -266,6 +220,8 @@ contract LoadContract is Ownable {
                     "Escrow amount must be less than max supply");
             require(_fundingType != Escrow.FundingType.SHIP || shipTokenContractAddress != address(0x0),
                     "Token address must be set");
+
+            Escrow.Data storage escrow = allEscrowData[_shipmentUuid];
             require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
         } else {
             require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
@@ -276,12 +232,6 @@ contract LoadContract is Ownable {
 
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
-
-        //use the set functions here to make sure events are emitted even when
-        //creating a new shipment
-        shipment.setVaultUri(_shipmentUuid, _vaultUri);
-        shipment.setVaultHash(_shipmentUuid, _vaultHash);
-        shipment.setCarrier(_shipmentUuid, _carrierAddress);
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
 
@@ -295,7 +245,31 @@ contract LoadContract is Ownable {
             emit EscrowCreated(msg.sender, _shipmentUuid, _fundingType, _contractedAmount, escrow.createdAt);
         }
     }
- 
+
+    /** @notice Associates a Vault URL with this Shipment.
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      * @param _vaultUri string URI of the external vault.
+      * @dev Emits VaultUri on success
+      */
+    function setVaultUri(bytes16 _shipmentUuid, string _vaultUri)
+        external
+        shipmentExists(_shipmentUuid)
+    {
+        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
+    }
+
+    /** @notice Associates a Vault Hash with this Shipment.
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      * @param _vaultHash string Hash of the external vault.
+      * @dev Emits VaultHash on success.
+      */
+    function setVaultHash(bytes16 _shipmentUuid, string _vaultHash)
+        external
+        shipmentExists(_shipmentUuid)
+    {
+        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
+    }
+
     /** @notice Defines the Carrier for this Shipment.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       * @param _carrier address Wallet of the Carrier.
@@ -355,15 +329,12 @@ contract LoadContract is Ownable {
     function getShipmentData(bytes16 _shipmentUuid)
         public
         view
-        returns(address shipper, address carrier, address moderator,
-        Shipment.State state, string memory vaultUri, string memory vaultHash)
+        returns(address shipper, address carrier, address moderator, Shipment.State state)
     {
         shipper = allShipmentData[_shipmentUuid].shipper;
         carrier = allShipmentData[_shipmentUuid].carrier;
         moderator = allShipmentData[_shipmentUuid].moderator;
         state = allShipmentData[_shipmentUuid].state;
-        vaultUri = allShipmentData[_shipmentUuid].vaultUri;
-        vaultHash = allShipmentData[_shipmentUuid].vaultHash;
     }
 
     /** @notice Returns the Escrow state.
@@ -404,7 +375,7 @@ contract LoadContract is Ownable {
       * @param token address SHIPToken address
       * @param data bytes Extra data containing the bytes16 shipmentUuid
       */
-    function receiveApproval(address from, uint256 amount, address token, bytes memory data)
+    function receiveApproval(address from, uint256 amount, address token, bytes data)
         public
     {
         bytes16 _shipmentUuid = data.toBytes16();
@@ -475,7 +446,7 @@ contract LoadContract is Ownable {
       * @param _state Escrow.State required state if escrow exists.
       * @param _message string Revert message.
       */
-    function requireEscrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string memory _message)
+    function requireEscrowHasState(bytes16 _shipmentUuid, Escrow.State _state, string _message)
         private
         view
     {
@@ -488,7 +459,7 @@ contract LoadContract is Ownable {
       * @param _fundingType Escrow.FundingType required funding type if escrow exists.
       * @param _message string Revert message.
       */
-    function requireEscrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string memory _message)
+    function requireEscrowHasType(bytes16 _shipmentUuid, Escrow.FundingType _fundingType, string _message)
         private
         view
     {

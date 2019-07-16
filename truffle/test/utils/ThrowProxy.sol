@@ -1,4 +1,4 @@
-pragma solidity 0.5.0;
+pragma solidity 0.4.24;
 
 
 contract ThrowProxy {
@@ -9,13 +9,12 @@ contract ThrowProxy {
         target = _target;
     }
     // solhint-disable-next-line
-    function() external {
+    function() public {
         data = msg.data;
     }
 
     function execute() public returns (bool) {
         // solhint-disable-next-line
-        (bool success, ) = target.call(data);
-        return success;
+        return target.call(data);
     }
 }
