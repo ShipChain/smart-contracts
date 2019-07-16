@@ -54,42 +54,10 @@ contract('LoadContract', async (accounts) => {
 
         assert.equal(data.shipment.shipper, SHIPPER);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultHash, "");
-        assert.equal(data.shipment.vaultUri, "");
         assert.equal(data.shipment.carrier, 0x0);
         assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
     });
 
-    it("should create a LoadShipment with Uri, Hash and carrier address", async () => {
-        const shipmentUuid = uuidToHex(uuidv4(), true);
-
-        const newShipmentTx = await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
-
-        await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
-            return ev.shipmentUuid === uuidToHex32(shipmentUuid);
-        });
-        await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCarrierSet", ev => {
-            return ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.carrier === CARRIER;
-        });
-
-        await truffleAssert.eventEmitted(newShipmentTx, "VaultUri", ev => {
-            return ev.msgSender === SHIPPER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultUri === "uri";
-        });
-
-        await truffleAssert.eventEmitted(newShipmentTx, "VaultHash", ev => {
-            return ev.msgSender === SHIPPER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultHash === "hash";
-        });
-
-
-        const data = await getShipmentEscrowData(shipmentUuid);
-
-        assert.equal(data.shipment.shipper, SHIPPER);
-        assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultHash, "hash");
-        assert.equal(data.shipment.vaultUri, "uri");
-        assert.equal(data.shipment.carrier, CARRIER);
-        assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
-    });
 
     it("should not allow a shipment to be created with a contractedAmount", async() => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
@@ -153,8 +121,6 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.eventEmitted(setVaultTx, "VaultUri", ev => {
             return ev.vaultUri === vaultUri && ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
-        let data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.vaultUri, vaultUri);
     });
 
     it("should have a getShipmentData function, and return the correct shipment attributes", async () => {
@@ -164,22 +130,9 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.shipment.carrier, CARRIER);
         assert.equal(data.shipment.moderator, MODERATOR);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultUri, "");
-        assert.equal(data.shipment.vaultHash, "");
     });
 
-    it("should have a getShipmentData function, and work with createNewShipment2", async () => {
-        const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
-        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
-        let data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.shipper, SHIPPER);
-        assert.equal(data.shipment.carrier, CARRIER);
-        assert.equal(data.shipment.moderator, MODERATOR);
-        assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultUri, "uri");
-        assert.equal(data.shipment.vaultHash, "hash");
-    })
+
 
     it("should emit VaultHash and set the vaultHash value in the shipment data", async () => {
         const vaultHash_shipper = "0x1234567890";
@@ -193,16 +146,12 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.eventEmitted(setVaultTx_shipper, "VaultHash", ev => {
             return ev.msgSender === SHIPPER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultHash === vaultHash_shipper;
         });
-        let data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.vaultHash, vaultHash_shipper);
 
         const setVaultTx_carrier = await contract.setVaultHash(shipmentUuid, vaultHash_carrier, {from: CARRIER});
 
         await truffleAssert.eventEmitted(setVaultTx_carrier, "VaultHash", ev => {
             return  ev.msgSender === CARRIER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultHash === vaultHash_carrier;
         });
-        data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.vaultHash, vaultHash_carrier);
 
     });
 
