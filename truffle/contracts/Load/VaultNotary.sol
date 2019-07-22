@@ -6,15 +6,13 @@ import {SingleNotary} from "./lib/SingleNotary.sol";
 
 
 contract VaultNotary is Ownable {
-   // using SingleNotary for SingleNotary.Data;
+    // using SingleNotary for SingleNotary.Data;
     //using SingleNotary for SingleNotary.singleAclMapping;
 
-    mapping(bytes16 => SingleNotary) private notaryMapping;
+    mapping(bytes16 => SingleNotary.Data) private notaryMapping;
 //    mapping(bytes16 => SingleNotary.singleAclMapping) private aclMapping;
 
     bool private isDeprecated; //1 byte
-
-
 
     // Notary Events
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
@@ -46,6 +44,7 @@ contract VaultNotary is Ownable {
 
     function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
     external {
+        require(!isRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
         notaryMapping[vaultId].aclMapping[msg.sender] = true;
         setVaultUri(vaultId, vaultUri);
@@ -55,27 +54,35 @@ contract VaultNotary is Ownable {
     function grantUpdatePermission(bytes16 vaultId, address anotherAddress)
     external
     vaultOwnerOnly(vaultId) {
-        notaryMapping[vaultId].aclMapping[msg.sender] = true;
+        notaryMapping[vaultId].aclMapping[anotherAddress] = true;
     }
 
     function revokeUpdatePermission(bytes16 vaultId, address anotherAddress)
     external
     vaultOwnerOnly(vaultId) {
-        notaryMapping[vaultId].aclMapping[msg.sender] = false;
+        notaryMapping[vaultId].aclMapping[anotherAddress] = false;
     }
 
     function setVaultUri(bytes16 vaultId, string memory vaultUri)
     public
     whitelistedOnly(vaultId) {
-        notaryMapping[vaultId].Data.vaultUri = vaultUri;
+        notaryMapping[vaultId].vaultUri = vaultUri;
         emit VaultUri(msg.sender, vaultId, vaultUri);
     }
 
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
     public
     whitelistedOnly(vaultId) {
-        notaryMapping[vaultId].Data.vaultHash = vaultHash;
+        notaryMapping[vaultId].vaultHash = vaultHash;
         emit VaultHash(msg.sender, vaultId, vaultHash);
+    }
+
+    function isRegistered(bytes16 vaultId)
+    internal
+    view
+    returns(bool)
+    {
+        return notaryMapping[vaultId].isRegistered;
     }
 
 }
