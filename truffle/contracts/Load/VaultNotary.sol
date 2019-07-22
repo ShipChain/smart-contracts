@@ -10,6 +10,10 @@ contract VaultNotary is Ownable {
     mapping(bytes16 => SingleNotary.Data) private notaryMapping;
     mapping(bytes16 => address[]) private aclMapping;
 
+        // Vault Events
+    event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
+    event VaultHash(address indexed msgSender, bytes16 indexed vaultId, string vaultHash);
+
 
     //if found return the index in the range of [0, addressList.length-1]
     //if not found, return addressList.length
@@ -40,10 +44,10 @@ contract VaultNotary is Ownable {
         _;
     }
 
-    function registerVault(bytes16 vaultId, string calldata vaultURI, string calldata vaultHash)
+    function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
     external {
         aclMapping[vaultId].push(address(msg.sender));
-        setVaultURI(vaultId, vaultURI);
+        setVaultUri(vaultId, vaultUri);
         setVaultHash(vaultId, vaultHash);
     }
 
@@ -60,16 +64,18 @@ contract VaultNotary is Ownable {
         deleteByValue(anotherAddress, aclMapping[vaultId]);
     }
 
-    function setVaultURI(bytes16 vaultId, string memory vaultURI)
+    function setVaultUri(bytes16 vaultId, string memory vaultUri)
     public
     whitelistedOnly(vaultId) {
-        notaryMapping[vaultId].vaultURI = vaultURI;
+        notaryMapping[vaultId].vaultUri = vaultUri;
+        emit VaultUri(msg.sender, vaultId, vaultUri);
     }
 
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
     public
     whitelistedOnly(vaultId) {
         notaryMapping[vaultId].vaultHash = vaultHash;
+        emit VaultHash(msg.sender, vaultId, vaultHash);
     }
 
 }
