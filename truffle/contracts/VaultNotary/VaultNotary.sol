@@ -12,7 +12,7 @@ contract VaultNotary is Ownable {
         mapping(address => bool) aclMapping;
     }
 
-    bool private isDeprecated; //1 byte
+    bool private isDeprecated;
 
     mapping(bytes16 => VaultNotary.Data) private notaryMapping;
 

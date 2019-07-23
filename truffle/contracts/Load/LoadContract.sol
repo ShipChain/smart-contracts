@@ -24,6 +24,7 @@ contract LoadContract is Ownable {
     // Registry Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
     event TokenContractAddressSet(address indexed msgSender, address tokenContractAddress);
+    event VaultNotaryContractAddressSet(address indexed msgSender, address vaultNotaryContractAddress);
     event EscrowRefundAddressSet(address indexed msgSender, bytes16 indexed shipmentUuid, address refundAddress);
 
     // Shipment Events
@@ -50,6 +51,7 @@ contract LoadContract is Ownable {
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes
+    address private vaultNotaryContractAddress; // 20 bytes
     bool private isDeprecated; //1 byte
 
     // Library data storage
@@ -183,6 +185,21 @@ contract LoadContract is Ownable {
         shipTokenContractAddress = _shipTokenAddress;
 
         emit TokenContractAddressSet(msg.sender, shipTokenContractAddress);
+    }
+
+    /** @notice Sets the VaultNotary Contract address.
+      * @dev Only Owner
+      */
+    function setVaultNotaryContractAddress(address _notaryContractAddress)
+        external
+        onlyOwner
+    {
+        require(_notaryContractAddress != address(0x0), "Must provide a valid notary address");
+        require(vaultNotaryContractAddress == address(0x0), "VaultNotary contract address already set");
+
+        vaultNotaryContractAddress = _notaryContractAddress;
+
+        emit VaultNotaryContractAddressSet(msg.sender, vaultNotaryContractAddress);
     }
 
     /** @notice Sets the shipment escrow refund address.  Refunds will be paid out to this address.
