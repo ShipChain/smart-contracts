@@ -2,6 +2,7 @@ pragma solidity 0.5.0;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
+
 contract VaultNotary is Ownable {
 
     struct Data {
@@ -36,15 +37,30 @@ contract VaultNotary is Ownable {
     }
 
     function setDeprecated(bool _isDeprecated)
-    external
-    onlyOwner
+        external
+        onlyOwner
     {
         isDeprecated = _isDeprecated;
         emit ContractDeprecatedSet(msg.sender, isDeprecated);
     }
 
-    function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
-    external {
+    function grantUpdatePermission(bytes16 vaultId, address anotherAddress)
+        external
+        vaultOwnerOnly(vaultId)
+    {
+        notaryMapping[vaultId].aclMapping[anotherAddress] = true;
+    }
+
+    function revokeUpdatePermission(bytes16 vaultId, address anotherAddress)
+        external
+        vaultOwnerOnly(vaultId)
+    {
+        notaryMapping[vaultId].aclMapping[anotherAddress] = false;
+    }
+
+    function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash)
+        public
+    {
         require(isNotRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
         notaryMapping[vaultId].aclMapping[msg.sender] = true;
@@ -52,36 +68,26 @@ contract VaultNotary is Ownable {
         setVaultHash(vaultId, vaultHash);
     }
 
-    function grantUpdatePermission(bytes16 vaultId, address anotherAddress)
-    external
-    vaultOwnerOnly(vaultId) {
-        notaryMapping[vaultId].aclMapping[anotherAddress] = true;
-    }
-
-    function revokeUpdatePermission(bytes16 vaultId, address anotherAddress)
-    external
-    vaultOwnerOnly(vaultId) {
-        notaryMapping[vaultId].aclMapping[anotherAddress] = false;
-    }
-
     function setVaultUri(bytes16 vaultId, string memory vaultUri)
-    public
-    whitelistedOnly(vaultId) {
+        public
+        whitelistedOnly(vaultId)
+    {
         notaryMapping[vaultId].vaultUri = vaultUri;
         emit VaultUri(msg.sender, vaultId, vaultUri);
     }
 
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
-    public
-    whitelistedOnly(vaultId) {
+        public
+        whitelistedOnly(vaultId)
+    {
         notaryMapping[vaultId].vaultHash = vaultHash;
         emit VaultHash(msg.sender, vaultId, vaultHash);
     }
 
     function isNotRegistered(bytes16 vaultId)
-    internal
-    view
-    returns(bool)
+        internal
+        view
+        returns(bool)
     {
         return notaryMapping[vaultId].vaultOwner == address(0x0);
     }
