@@ -1,9 +1,6 @@
 pragma solidity 0.5.0;
 
-
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import {SingleNotary} from "./lib/SingleNotary.sol";
-
 
 contract VaultNotary is Ownable {
 
