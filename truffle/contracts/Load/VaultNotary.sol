@@ -6,13 +6,17 @@ import {SingleNotary} from "./lib/SingleNotary.sol";
 
 
 contract VaultNotary is Ownable {
-    // using SingleNotary for SingleNotary.Data;
-    //using SingleNotary for SingleNotary.singleAclMapping;
 
-    mapping(bytes16 => SingleNotary.Data) private notaryMapping;
-//    mapping(bytes16 => SingleNotary.singleAclMapping) private aclMapping;
+    struct Data {
+        address vaultOwner;
+        string vaultHash;
+        string vaultUri;
+        mapping(address => bool) aclMapping;
+    }
 
     bool private isDeprecated; //1 byte
+
+    mapping(bytes16 => VaultNotary.Data) private notaryMapping;
 
     // Notary Events
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
