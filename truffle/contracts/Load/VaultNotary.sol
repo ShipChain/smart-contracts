@@ -44,7 +44,7 @@ contract VaultNotary is Ownable {
 
     function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
     external {
-        require(!isRegistered(vaultId));
+        require(isNotRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
         notaryMapping[vaultId].aclMapping[msg.sender] = true;
         setVaultUri(vaultId, vaultUri);
@@ -77,12 +77,12 @@ contract VaultNotary is Ownable {
         emit VaultHash(msg.sender, vaultId, vaultHash);
     }
 
-    function isRegistered(bytes16 vaultId)
+    function isNotRegistered(bytes16 vaultId)
     internal
     view
     returns(bool)
     {
-        return notaryMapping[vaultId].isRegistered;
+        return notaryMapping[vaultId].vaultOwner == address(0x0);
     }
 
 }
