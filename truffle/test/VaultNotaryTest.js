@@ -42,6 +42,8 @@ contract('VaultNotary', async (accounts) => {
         assert.equal(data.vaultUri, "uri");
     });
 
+
+    //this checks the vaultOwner assignment and the modifier vaultOwnerOnly works
     it("should revert the transaction if a vault notary exists", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
@@ -51,6 +53,8 @@ contract('VaultNotary', async (accounts) => {
         truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER}));
 
     });
+
+
 
 
 

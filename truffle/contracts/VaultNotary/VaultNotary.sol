@@ -51,6 +51,7 @@ contract VaultNotary is Ownable {
         external
         vaultOwnerOnly(vaultId)
     {
+        require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclMapping[anotherAddress] = true;
         emit UpdatePermissionGranted(msg.sender, anotherAddress);
     }
@@ -59,6 +60,7 @@ contract VaultNotary is Ownable {
         external
         vaultOwnerOnly(vaultId)
     {
+        require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclMapping[anotherAddress] = false;
         emit UpdatePermissionRevoked(msg.sender, anotherAddress);
     }
