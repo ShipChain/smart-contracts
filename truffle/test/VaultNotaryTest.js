@@ -35,8 +35,23 @@ contract('VaultNotary', async (accounts) => {
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
+
+        //since the setVaultHash and Uri works in the registerVault, it has
+        // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, "hash");
         assert.equal(data.vaultUri, "uri");
     });
+
+    it("should revert the transaction if a vault notary exists", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        const vaultUri = "uri";
+        const vaultHash = "hash";
+        await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+
+        truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER}));
+
+    });
+
+
 
 });
