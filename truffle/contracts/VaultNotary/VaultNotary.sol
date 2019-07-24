@@ -20,6 +20,9 @@ contract VaultNotary is Ownable {
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
     event VaultHash(address indexed msgSender, bytes16 indexed vaultId, string vaultHash);
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
+    event VaultRegistered(address indexed msgSender, bytes16 indexed vaultId);
+    event UpdatePermissionGranted(address indexed msgSender, address indexed anotherAddress);
+    event UpdatePermissionRevoked(address indexed msgSender, address indexed anotherAddress);
 
     modifier whitelistedOnly(bytes16 vaultId) {
         require(notaryMapping[vaultId].aclMapping[msg.sender]);
@@ -49,6 +52,7 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
     {
         notaryMapping[vaultId].aclMapping[anotherAddress] = true;
+        emit UpdatePermissionGranted(msg.sender, anotherAddress);
     }
 
     function revokeUpdatePermission(bytes16 vaultId, address anotherAddress)
@@ -56,6 +60,15 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
     {
         notaryMapping[vaultId].aclMapping[anotherAddress] = false;
+        emit UpdatePermissionRevoked(msg.sender, anotherAddress);
+    }
+
+    function getVaultNotaryDetails(bytes16 vaultId)
+        external
+        view
+        returns(string memory vaultUri, string memory vaultHash)
+    {
+        return (notaryMapping[vaultId].vaultUri, notaryMapping[vaultId].vaultHash);
     }
 
     function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash)
@@ -66,6 +79,7 @@ contract VaultNotary is Ownable {
         notaryMapping[vaultId].aclMapping[msg.sender] = true;
         setVaultUri(vaultId, vaultUri);
         setVaultHash(vaultId, vaultHash);
+        emit VaultRegistered(msg.sender, vaultId);
     }
 
     function setVaultUri(bytes16 vaultId, string memory vaultUri)
