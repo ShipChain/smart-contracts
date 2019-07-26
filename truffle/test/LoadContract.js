@@ -304,12 +304,12 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.reverts(contract.setDeprecated(true, {from: INVALID}));
         let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
-            return ev.msgSender === OWNER && ev.isDeprecated == true;
+            return ev.msgSender === OWNER && ev.isDeprecated === true;
         });
         await truffleAssert.reverts(createShipment(), "This version of the LOAD contract has been deprecated");
         deprecationTx = await contract.setDeprecated(false, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
-            return ev.msgSender === OWNER && ev.isDeprecated == false;
+            return ev.msgSender === OWNER && ev.isDeprecated === false;
         });
         await createShipment();
     });
