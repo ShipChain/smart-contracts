@@ -12,9 +12,9 @@ contract VaultNotary is Ownable {
         mapping(address => bool) aclMapping;
     }
 
-    bool private isDeprecated;
+    bool internal isDeprecated;
 
-    mapping(bytes16 => VaultNotary.Data) private notaryMapping;
+    mapping(bytes16 => VaultNotary.Data) internal notaryMapping;
 
     // Notary Events
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
