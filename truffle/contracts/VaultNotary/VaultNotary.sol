@@ -75,6 +75,7 @@ contract VaultNotary is Ownable {
 
     function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash)
         public
+        notDeprecated
     {
         require(isNotRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
