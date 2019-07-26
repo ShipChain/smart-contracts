@@ -103,7 +103,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
         const setUriTx = await contract.setVaultUri(vaultId, "new_uri",  {from: SHIPPER});
         await truffleAssert.eventEmitted(setUriTx, "VaultUri", ev => {
-            return ev.vaultUri === "new_uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultUri === "new_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -124,7 +124,7 @@ contract('VaultNotary', async (accounts) => {
 
         const setUriTx = await contract.setVaultUri(vaultId, "carrier_uri",  {from: CARRIER});
         await truffleAssert.eventEmitted(setUriTx, "VaultUri", ev => {
-            return ev.vaultUri === "carrier_uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === CARRIER;
+            return ev.vaultUri === "carrier_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === CARRIER;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -180,7 +180,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
         const setHashTx = await contract.setVaultHash(vaultId, "new_hash",  {from: SHIPPER});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
-            return ev.vaultHash === "new_hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultHash === "new_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -201,7 +201,7 @@ contract('VaultNotary', async (accounts) => {
 
         const setHashTx = await contract.setVaultHash(vaultId, "carrier_hash",  {from: CARRIER});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
-            return ev.vaultHash === "carrier_hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === CARRIER;
+            return ev.vaultHash === "carrier_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === CARRIER;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -262,14 +262,14 @@ contract('VaultNotary', async (accounts) => {
 
         let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
-            return ev.msgSender === OWNER && ev.isDeprecated == true;
+            return ev.msgSender === OWNER && ev.isDeprecated === true;
         });
         await truffleAssert.reverts(registerVault(), "This version of the VaultNotary contract has been deprecated");
 
         //call again to enable it
         deprecationTx = await contract.setDeprecated(false, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
-            return ev.msgSender === OWNER && ev.isDeprecated == false;
+            return ev.msgSender === OWNER && ev.isDeprecated === false;
         });
         await (registerVault());
     });
