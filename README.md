@@ -149,6 +149,10 @@ lint in your mind, skip this step. : )
 
 If you need to test with a single test file, you can do that by `bin/truffle test test/TEST_FILE_NAME.js`
 
+## Style Convention
+
+The inline documentation of the solidity source files in this project follows the [NATSpec Format](https://solidity.readthedocs.io/en/v0.5.10/natspec-format.html).
+
 ## Local Security Check
 To run `securify` locally, you can run this command,
 ```bash
