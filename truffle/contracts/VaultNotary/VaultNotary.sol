@@ -119,7 +119,7 @@ contract VaultNotary is Ownable {
         emit VaultHash(msg.sender, vaultId, vaultHash);
     }
 
-    /**@notice: This function is only used for testing whether a Vault has been registered yet
+    /** @notice This function is only used for testing whether a Vault has been registered yet
       */
     function isNotRegistered(bytes16 vaultId)
         internal
