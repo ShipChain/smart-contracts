@@ -250,5 +250,29 @@ contract('VaultNotary', async (accounts) => {
 
     });
 
+    //**********************testing the setDeprecated************************
+    it("should not allow users other than OWNER to setDeprecated", async () => {
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}));
+    });
+
+    it("should disable the registerVault function after setting deprecated, and enable it if called again", async () => {
+
+        let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
+        await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
+            return ev.msgSender === OWNER && ev.isDeprecated == true;
+        });
+        await truffleAssert.reverts(registerVault(), "This version of the VaultNotary contract has been deprecated");
+
+        //call again to enable it
+        deprecationTx = await contract.setDeprecated(false, {from: OWNER});
+        await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
+            return ev.msgSender === OWNER && ev.isDeprecated == false;
+        });
+        await (registerVault());
+    });
+
 
 });
