@@ -3,6 +3,7 @@ pragma solidity 0.5.0;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
+
 /** @notice The VaultNotary contract is the contract for reading/writing the
   * vault uri and hash, and controlling the permissions to those operations by vault
   * owner.
@@ -110,12 +111,13 @@ contract VaultNotary is Ownable {
         return (notaryMapping[vaultId].vaultUri, notaryMapping[vaultId].vaultHash);
     }
 
-    /** @notice This is function to register a vault, will only do the registration if a vaultId is not registered before
+    /** @notice This is function to register a vault, will only do the registration if a vaultId is not
+                registered before
       * @dev It sets the msg.sender to the vault owner and set the update permission of the owner to true
       * It calls the setVaultUir and setVaultHash to initialize those two records
-      * @param VaultId VaultID to create, is the same as shipment ID in our system
-      * @vaultUri Vault URI to set
-      * @vaultHash Vault hash to set
+      * @param vaultId VaultID to create, is the same as shipment ID in our system
+      * @param vaultUri Vault URI to set
+      * @param vaultHash Vault hash to set
       */
     function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash)
         public
@@ -143,7 +145,7 @@ contract VaultNotary is Ownable {
 
     /** @notice Function to set the vault hash
       * @param vaultId ID of the vault to set
-      * @param vaultUri The vault hash to set
+      * @param vaultHash The vault hash to set
       */
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
         public
