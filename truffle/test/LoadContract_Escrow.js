@@ -11,6 +11,7 @@ chai.use(bnChai(BN));
 
 const LoadContract = artifacts.require("LoadContract");
 const SHIPToken = artifacts.require("./utils/SHIPToken.sol");
+const VaultNotary = artifacts.require("VaultNotary");
 
 const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
@@ -30,6 +31,11 @@ const timeTravel = async seconds => {
   await send('evm_mine');
 };
 
+async function createNotary() {
+    const notaryContract = await VaultNotary.new();
+    return notaryContract;
+}
+
 async function createShipToken(accounts){
     const shipToken = await SHIPToken.new();
     await shipToken.mint(accounts[0], web3.utils.toWei("1000", "ether"));
@@ -45,12 +51,10 @@ contract('LoadContract with Escrow', async (accounts) => {
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
     const INVALID = accounts[9];
-    let shipToken;
 
+    let shipToken;
     let contract;
-    before(async () =>{
-        contract = await LoadContract.deployed();
-    });
+    let notary;
 
     async function createShipment(fundingType = EscrowFundingType.SHIP, fundingAmount = web3.utils.toWei("1", "ether")){
         const shipmentUuid = uuidToHex(uuidv4(), true);
@@ -69,9 +73,26 @@ contract('LoadContract with Escrow', async (accounts) => {
         };
     }
 
+    async function createNotary() {
+        const notaryContract = await VaultNotary.new();
+        return notaryContract;
+    }
+
     before(async () => {
+        notary = await createNotary();
         shipToken = await createShipToken(accounts);
         contract = await LoadContract.deployed();
+    });
+
+    it("should only be able to set notary address by owner", async () => {
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: INVALID}));
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: MODERATOR}));
+        let notaryAddressTx = await contract.setVaultNotaryContractAddress(notary.address, {from: OWNER});
+        await truffleAssert.eventEmitted(notaryAddressTx, "VaultNotaryContractAddressSet", ev => {
+            return ev.msgSender === OWNER && ev.vaultNotaryContractAddress === notary.address;
+        });
     });
 
     it("should create a LoadShipment", async () => {
