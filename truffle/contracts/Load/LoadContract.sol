@@ -49,7 +49,7 @@ contract LoadContract is Ownable {
     address private shipTokenContractAddress; // 20 bytes
     address private vaultNotaryContractAddress; // 20 bytes
     bool private isDeprecated; //1 byte
-    VaultNotary notary;
+    VaultNotary private notary;
 
     // Library data storage
     /* Slot 1 */
@@ -230,8 +230,6 @@ contract LoadContract is Ownable {
         createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
     }
 
-
-
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
@@ -263,7 +261,8 @@ contract LoadContract is Ownable {
             require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
         }
 
-        require(vaultNotaryContractAddress != address(0x0), "vaultNotaryContractAddress not set before calling createNewShipment2");
+        require(vaultNotaryContractAddress != address(0x0),
+                "vaultNotaryContractAddress not set before calling createNewShipment2");
         notary = VaultNotary(vaultNotaryContractAddress);
         notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash);
 
