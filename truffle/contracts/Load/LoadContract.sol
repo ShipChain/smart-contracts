@@ -4,9 +4,9 @@ import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 import {Shipment} from "./lib/Shipment.sol";
-import {Vault} from "./lib/Vault.sol";
 import {Escrow} from "./lib/Escrow.sol";
 import {Converter} from "./lib/Converter.sol";
+import {VaultNotary} from "../VaultNotary/VaultNotary.sol";
 
 
 /** @title Load Contract */
@@ -18,7 +18,6 @@ contract LoadContract is Ownable {
     // Library namespaces
     using Converter for bytes;
     using Shipment for Shipment.Data;
-    using Vault for Shipment.Data;
     using Escrow for Escrow.Data;
 
     // Registry Events
@@ -35,9 +34,6 @@ contract LoadContract is Ownable {
     event ShipmentComplete(address indexed msgSender, bytes16 indexed shipmentUuid);
     event ShipmentCanceled(address indexed msgSender, bytes16 indexed shipmentUuid);
 
-    // Vault Events
-    event VaultUri(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultUri);
-    event VaultHash(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultHash);
 
     // Escrow Events
     event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount, uint256 funded);
@@ -53,6 +49,7 @@ contract LoadContract is Ownable {
     address private shipTokenContractAddress; // 20 bytes
     address private vaultNotaryContractAddress; // 20 bytes
     bool private isDeprecated; //1 byte
+    VaultNotary notary;
 
     // Library data storage
     /* Slot 1 */
@@ -233,29 +230,7 @@ contract LoadContract is Ownable {
         createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
     }
 
-    /** @notice Associates a Vault URL with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultUri string URI of the external vault.
-      * @dev Emits VaultUri on success
-      */
-    function setVaultUri(bytes16 _shipmentUuid, string calldata _vaultUri)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
-    }
 
-    /** @notice Associates a Vault Hash with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultHash string Hash of the external vault.
-      * @dev Emits VaultHash on success.
-      */
-    function setVaultHash(bytes16 _shipmentUuid, string calldata _vaultHash)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
-    }
 
     /** @notice Creates a new Shipment and stores it in the Load Registry.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
@@ -288,16 +263,16 @@ contract LoadContract is Ownable {
             require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
         }
 
+        require(vaultNotaryContractAddress != address(0x0), "vaultNotaryContractAddress not set before calling createNewShipment2");
+        notary = VaultNotary(vaultNotaryContractAddress);
+        notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash);
+
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
         require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");
 
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
 
-        //use the set functions here to make sure events are emitted even when
-        //creating a new shipment
-        shipment.setVaultUri(_shipmentUuid, _vaultUri);
-        shipment.setVaultHash(_shipmentUuid, _vaultHash);
         shipment.setCarrier(_shipmentUuid, _carrierAddress);
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
