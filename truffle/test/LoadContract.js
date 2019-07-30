@@ -19,7 +19,7 @@ contract('LoadContract', async (accounts) => {
     const SHIPPER = accounts[1];
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
-    const INVALID = accounts[9];
+    const ATTACKER = accounts[9];
 
     async function createNotary() {
         const notaryContract = await VaultNotary.new();
@@ -57,13 +57,21 @@ contract('LoadContract', async (accounts) => {
     it("should only be able to set notary address by owner", async () => {
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: INVALID}));
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: MODERATOR}));
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: ATTACKER}));
         let notaryAddressTx = await contract.setVaultNotaryContractAddress(notary.address, {from: OWNER});
         await truffleAssert.eventEmitted(notaryAddressTx, "VaultNotaryContractAddressSet", ev => {
             return ev.msgSender === OWNER && ev.vaultNotaryContractAddress === notary.address;
         });
     });
+
+    it("should only allow notary address to be set once", async () => {
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: OWNER}), "VaultNotary contract address already set");
+    });
+
+    // it("should revert if the notary address set is 0x0", async () => {
+    //     await truffleAssert.reverts(contract.setVaultNotaryContractAddress(0x0000000000000000000000000000000000000000, {from: OWNER}), "Must provide a valid notary address");
+    // });
 
     it("should create a LoadShipment without Uri, Hash and carrier address", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
@@ -217,7 +225,7 @@ contract('LoadContract', async (accounts) => {
         let shipmentUuid = await createShipment();
 
         // No one else can cancel
-        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: INVALID}), "Only shipper, carrier, or moderator can cancel an Created shipment");
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: ATTACKER}), "Only shipper, carrier, or moderator can cancel an Created shipment");
 
         //Shipper can cancel an Created shipment
         await contract.setCanceled(shipmentUuid, {from: SHIPPER});
@@ -270,7 +278,7 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}));
         await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: INVALID}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}));
         let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
             return ev.msgSender === OWNER && ev.isDeprecated === true;
