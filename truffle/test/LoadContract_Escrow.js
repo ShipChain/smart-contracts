@@ -50,7 +50,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     const SHIPPER = accounts[1];
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
-    const INVALID = accounts[9];
+    const ATTACKER = accounts[9];
 
     let shipToken;
     let contract;
@@ -87,7 +87,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     it("should only be able to set notary address by owner", async () => {
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: INVALID}));
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: ATTACKER}));
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: MODERATOR}));
         let notaryAddressTx = await contract.setVaultNotaryContractAddress(notary.address, {from: OWNER});
         await truffleAssert.eventEmitted(notaryAddressTx, "VaultNotaryContractAddressSet", ev => {
@@ -299,7 +299,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: CARRIER}));
         await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: INVALID}));
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: ATTACKER}));
         let refundAddressTx = await contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: OWNER});
         await truffleAssert.eventEmitted(refundAddressTx, "EscrowRefundAddressSet", ev => {
             return ev.msgSender === OWNER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.refundAddress === MODERATOR;
@@ -355,20 +355,20 @@ contract('LoadContract with Escrow', async (accounts) => {
         assert.equal(data.shipment.state, ShipmentState.CREATED);
         assert.equal(data.escrow.state, EscrowState.FUNDED);
 
-        await contract.setEscrowRefundAddress(shipmentUuid, INVALID, {from: OWNER});
+        await contract.setEscrowRefundAddress(shipmentUuid, ATTACKER, {from: OWNER});
 
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: SHIPPER}), "Refunds can only be issued to Canceled shipments by the Moderator");
         await contract.refundEscrow(shipmentUuid, {from: OWNER});
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
-        let invalidBalance = web3.utils.toBN(await web3.eth.getBalance(INVALID));
-        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: INVALID});
+        let invalidBalance = web3.utils.toBN(await web3.eth.getBalance(ATTACKER));
+        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: ATTACKER});
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(INVALID))).to.eq.BN(invalidBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+        expect(web3.utils.toBN(await web3.eth.getBalance(ATTACKER))).to.eq.BN(invalidBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
     });
 
     it("shipper should be able to issue refunds after 90 days", async () => {
@@ -449,7 +449,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: CARRIER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: INVALID}));
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: ATTACKER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress('0x0000000000000000000000000000000000000000', {from: OWNER}), "Must provide a token address");
         let tokenContractTx = await contract.setShipTokenContractAddress(shipToken.address, {from: OWNER});
         await truffleAssert.eventEmitted(tokenContractTx, "TokenContractAddressSet", ev => {

@@ -30,8 +30,8 @@ contract VaultNotary is Ownable {
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
     event VaultHash(address indexed msgSender, bytes16 indexed vaultId, string vaultHash);
     event VaultRegistered(address indexed msgSender, bytes16 indexed vaultId);
-    event UpdatePermissionGranted(address indexed msgSender, address indexed anotherAddress);
-    event UpdatePermissionRevoked(address indexed msgSender, address indexed anotherAddress);
+    event UpdateHashPermissionGranted(address indexed msgSender, address indexed anotherAddress);
+    event UpdateHashPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
 
     // Contract Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
@@ -78,26 +78,26 @@ contract VaultNotary is Ownable {
       * @param vaultId bytes16 The ID of Vault to grant permission
       * @param anotherAddress address The address to grant permission
       */
-    function grantUpdatePermission(bytes16 vaultId, address anotherAddress)
+    function grantUpdateHashPermission(bytes16 vaultId, address anotherAddress)
         external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclMapping[anotherAddress] = true;
-        emit UpdatePermissionGranted(msg.sender, anotherAddress);
+        emit UpdateHashPermissionGranted(msg.sender, anotherAddress);
     }
 
     /** @notice Function to revoke update permission to both the uri and hash fields in one vault
       * @param vaultId The ID of Vault to revoke permission
       * @param anotherAddress address The address to revoke permission
       */
-    function revokeUpdatePermission(bytes16 vaultId, address anotherAddress)
+    function revokeUpdateHashPermission(bytes16 vaultId, address anotherAddress)
         external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclMapping[anotherAddress] = false;
-        emit UpdatePermissionRevoked(msg.sender, anotherAddress);
+        emit UpdateHashPermissionRevoked(msg.sender, anotherAddress);
     }
 
     /** @notice This is used in unit tests to verify the values are correct after using the setters

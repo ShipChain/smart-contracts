@@ -68,36 +68,36 @@ contract('VaultNotary', async (accounts) => {
 
     });
 
-    //****************partially testing grantUpdatePermission***********************
+    //****************partially testing grantUpdateHashPermission***********************
 
-    it("should revert the grantUpdatePermission transaction if vaultId is not registered", async () => {
+    it("should revert the grantUpdateHashPermission transaction if vaultId is not registered", async () => {
         //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdatePermission(vaultId, CARRIER, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER}));
     });
 
-    it("should revert the grantUpdatePermission not called from the vaultOwner", async () => {
+    it("should revert the grantUpdateHashPermission, if not called from the vaultOwner", async () => {
         //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdatePermission(vaultId, CARRIER, {from: ATTACKER}));
-    });
-
-
-    //*******************partially testing revokeUpdatePermission************************
-    it("should revert the revokeUpdatePermission transaction if vaultId is not registered", async () => {
-        //first create a vault
-        const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdatePermission(vaultId, CARRIER, {from: SHIPPER}));
-    });
-
-    it("should revert the revokeUpdatePermission not called from the vaultOwner", async () => {
-        //first create a vault
-        const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdatePermission(vaultId, CARRIER, {from: ATTACKER}));
+        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, CARRIER, {from: ATTACKER}));
     });
 
 
-    //**************Uri: testing setVaultUri and grantUpdatePermission**************
+    //*******************partially testing revokeUpdateHashPermission************************
+    it("should revert the revokeUpdateHashPermission transaction if vaultId is not registered", async () => {
+        //first create a vault
+        const vaultId = uuidToHex(uuidv4(), true);
+        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER}));
+    });
+
+    it("should revert the revokeUpdateHashPermission not called from the vaultOwner", async () => {
+        //first create a vault
+        const vaultId = uuidToHex(uuidv4(), true);
+        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: ATTACKER}));
+    });
+
+
+    //**************Uri: testing setVaultUri and grantUpdateHashPermission**************
 
     it("should set the uri, if the address is the SHIPPER, after registerVault", async () => {
         const vaultId = await registerVault();
@@ -117,8 +117,8 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(grantTx, "UpdatePermissionGranted", ev => {
+        const grantTx = await contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(grantTx, "UpdateHashPermissionGranted", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
@@ -144,14 +144,14 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(grantTx, "UpdatePermissionGranted", ev => {
+        const grantTx = await contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(grantTx, "UpdateHashPermissionGranted", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(revokeTx, "UpdatePermissionRevoked", ev => {
+        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(revokeTx, "UpdateHashPermissionRevoked", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
@@ -164,8 +164,8 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(revokeTx, "UpdatePermissionRevoked", ev => {
+        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(revokeTx, "UpdateHashPermissionRevoked", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
@@ -174,7 +174,7 @@ contract('VaultNotary', async (accounts) => {
     });
 
 
-    //**************Hash: testing setVaultHash and grantUpdatePermission**************
+    //**************Hash: testing setVaultHash and grantUpdateHashPermission**************
 
     it("should set the hash, if the address is the SHIPPER, after registerVault", async () => {
         const vaultId = await registerVault();
@@ -194,8 +194,8 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(grantTx, "UpdatePermissionGranted", ev => {
+        const grantTx = await contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(grantTx, "UpdateHashPermissionGranted", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
@@ -221,14 +221,14 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(grantTx, "UpdatePermissionGranted", ev => {
+        const grantTx = await contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(grantTx, "UpdateHashPermissionGranted", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(revokeTx, "UpdatePermissionRevoked", ev => {
+        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(revokeTx, "UpdateHashPermissionRevoked", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
@@ -241,8 +241,8 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdatePermission(vaultId, CARRIER, {from: SHIPPER});
-        await truffleAssert.eventEmitted(revokeTx, "UpdatePermissionRevoked", ev => {
+        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        await truffleAssert.eventEmitted(revokeTx, "UpdateHashPermissionRevoked", ev => {
             return ev.anotherAddress === CARRIER && ev.msgSender === SHIPPER;
         });
 
