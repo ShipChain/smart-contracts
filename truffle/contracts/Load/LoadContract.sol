@@ -270,7 +270,7 @@ contract LoadContract is Ownable {
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
 
-        shipment.setCarrier(_shipmentUuid, _carrierAddress);
+        shipment.setCarrierAndAllow(_shipmentUuid, _carrierAddress);
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
 
