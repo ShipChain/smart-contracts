@@ -235,8 +235,6 @@ contract LoadContract is Ownable {
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
       * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
       defined.
-      * @param _vaultUri string The Uri of Vault
-      * @param _vaultHash string The hash of Vault
       * @param _carrierAddress address The addres of the carrier for this shipment
       * @dev Emits ShipmentCreated on success.
       */
@@ -347,14 +345,12 @@ contract LoadContract is Ownable {
         public
         view
         returns(address shipper, address carrier, address moderator,
-        Shipment.State state, string memory vaultUri, string memory vaultHash)
+        Shipment.State state)
     {
         shipper = allShipmentData[_shipmentUuid].shipper;
         carrier = allShipmentData[_shipmentUuid].carrier;
         moderator = allShipmentData[_shipmentUuid].moderator;
         state = allShipmentData[_shipmentUuid].state;
-        vaultUri = allShipmentData[_shipmentUuid].vaultUri;
-        vaultHash = allShipmentData[_shipmentUuid].vaultHash;
     }
 
     /** @notice Returns the Escrow state.
