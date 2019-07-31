@@ -12,12 +12,14 @@ contract VaultNotary is Ownable {
     struct Data {
         // The address of the Vault owner
         address vaultOwner;
-
         string vaultHash;
         string vaultUri;
 
-        // The access control mapping to record whether an address can update the Uri and Hash of a Vault
-        mapping(address => bool) aclMapping;
+        // The access control mapping to record whether an address can update the Uri of a Vault
+        mapping(address => bool) aclUriMapping;
+
+        // The access control mapping to record whether an address can update the Hash of a Vault
+        mapping(address => bool) aclHashMapping;
     }
 
     // Boolean that controls whether this contract is deprecated or not
@@ -32,15 +34,24 @@ contract VaultNotary is Ownable {
     event VaultRegistered(address indexed msgSender, bytes16 indexed vaultId);
     event UpdateHashPermissionGranted(address indexed msgSender, address indexed anotherAddress);
     event UpdateHashPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
-
+    event UpdateUriPermissionGranted(address indexed msgSender, address indexed anotherAddress);
+    event UpdateUriPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
     // Contract Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
 
-    /** @dev Modifier for limiting the access to vaultUri and vaultHash update
+    /** @dev Modifier for limiting the access to vaultUri update
       * only whitelisted user can do the decorated operation
       */
-    modifier whitelistedOnly(bytes16 vaultId) {
-        require(notaryMapping[vaultId].aclMapping[msg.sender]);
+    modifier whitelistedOnlyForUri(bytes16 vaultId) {
+        require(notaryMapping[vaultId].aclUriMapping[msg.sender]);
+        _;
+    }
+
+        /** @dev Modifier for limiting the access to vaultHash update
+      * only whitelisted user can do the decorated operation
+      */
+    modifier whitelistedOnlyForHash(bytes16 vaultId) {
+        require(notaryMapping[vaultId].aclHashMapping[msg.sender]);
         _;
     }
 
@@ -74,7 +85,7 @@ contract VaultNotary is Ownable {
         emit ContractDeprecatedSet(msg.sender, isDeprecated);
     }
 
-    /** @notice Function to grant update permission to both the uri and hash fields in one vault
+    /** @notice Function to grant update permission to both Hash field in one vault
       * @param vaultId bytes16 The ID of Vault to grant permission
       * @param anotherAddress address The address to grant permission
       */
@@ -83,11 +94,11 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId));
-        notaryMapping[vaultId].aclMapping[anotherAddress] = true;
+        notaryMapping[vaultId].aclHashMapping[anotherAddress] = true;
         emit UpdateHashPermissionGranted(msg.sender, anotherAddress);
     }
 
-    /** @notice Function to revoke update permission to both the uri and hash fields in one vault
+    /** @notice Function to revoke update permission to both the Hash field in one vault
       * @param vaultId The ID of Vault to revoke permission
       * @param anotherAddress address The address to revoke permission
       */
@@ -96,8 +107,34 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId));
-        notaryMapping[vaultId].aclMapping[anotherAddress] = false;
+        notaryMapping[vaultId].aclHashMapping[anotherAddress] = false;
         emit UpdateHashPermissionRevoked(msg.sender, anotherAddress);
+    }
+
+    /** @notice Function to grant update permission to both Uri field in one vault
+      * @param vaultId bytes16 The ID of Vault to grant permission
+      * @param anotherAddress address The address to grant permission
+      */
+    function grantUpdateUriPermission(bytes16 vaultId, address anotherAddress)
+        external
+        vaultOwnerOnly(vaultId)
+    {
+        require(!isNotRegistered(vaultId));
+        notaryMapping[vaultId].aclUriMapping[anotherAddress] = true;
+        emit UpdateUriPermissionGranted(msg.sender, anotherAddress);
+    }
+
+    /** @notice Function to revoke update permission to both the Uri field in one vault
+      * @param vaultId The ID of Vault to revoke permission
+      * @param anotherAddress address The address to revoke permission
+      */
+    function revokeUpdateUriPermission(bytes16 vaultId, address anotherAddress)
+        external
+        vaultOwnerOnly(vaultId)
+    {
+        require(!isNotRegistered(vaultId));
+        notaryMapping[vaultId].aclUriMapping[anotherAddress] = false;
+        emit UpdateUriPermissionRevoked(msg.sender, anotherAddress);
     }
 
     /** @notice This is used in unit tests to verify the values are correct after using the setters
@@ -128,7 +165,11 @@ contract VaultNotary is Ownable {
     {
         require(isNotRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
-        notaryMapping[vaultId].aclMapping[msg.sender] = true;
+
+        //vault owner get access to both Uri and Hash
+        notaryMapping[vaultId].aclUriMapping[msg.sender] = true;
+        notaryMapping[vaultId].aclHashMapping[msg.sender] = true;
+
         setVaultUri(vaultId, vaultUri);
         setVaultHash(vaultId, vaultHash);
         emit VaultRegistered(msg.sender, vaultId);
@@ -140,7 +181,7 @@ contract VaultNotary is Ownable {
       */
     function setVaultUri(bytes16 vaultId, string memory vaultUri)
         public
-        whitelistedOnly(vaultId)
+        whitelistedOnlyForUri(vaultId)
     {
         notaryMapping[vaultId].vaultUri = vaultUri;
         emit VaultUri(msg.sender, vaultId, vaultUri);
@@ -152,7 +193,7 @@ contract VaultNotary is Ownable {
       */
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
         public
-        whitelistedOnly(vaultId)
+        whitelistedOnlyForHash(vaultId)
     {
         notaryMapping[vaultId].vaultHash = vaultHash;
         emit VaultHash(msg.sender, vaultId, vaultHash);
