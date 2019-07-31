@@ -69,9 +69,9 @@ contract('LoadContract', async (accounts) => {
         await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: OWNER}), "VaultNotary contract address already set");
     });
 
-    // it("should revert if the notary address set is 0x0", async () => {
-    //     await truffleAssert.reverts(contract.setVaultNotaryContractAddress(0x0000000000000000000000000000000000000000, {from: OWNER}), "Must provide a valid notary address");
-    // });
+    it("should revert if the notary address set is 0x0", async () => {
+        await truffleAssert.reverts(contract.setVaultNotaryContractAddress('0x0000000000000000000000000000000000000000', {from: OWNER}), "Must provide a valid notary address");
+    });
 
     it("should create a LoadShipment without Uri, Hash and carrier address", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
