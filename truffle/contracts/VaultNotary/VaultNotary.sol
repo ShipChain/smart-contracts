@@ -46,7 +46,7 @@ contract VaultNotary is Ownable {
       */
     modifier whitelistedOnlyForUri(bytes16 vaultId) {
         emit inside_whitelistedOnlyForUri(vaultId, msg.sender);
-        require(notaryMapping[vaultId].aclUriMapping[msg.sender]);
+        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclUriMapping[msg.sender]);
         _;
     }
 
@@ -54,7 +54,7 @@ contract VaultNotary is Ownable {
       * only whitelisted user can do the decorated operation
       */
     modifier whitelistedOnlyForHash(bytes16 vaultId) {
-        require(notaryMapping[vaultId].aclHashMapping[msg.sender]);
+        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclHashMapping[msg.sender]);
         _;
     }
 
@@ -168,10 +168,6 @@ contract VaultNotary is Ownable {
     {
         require(isNotRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
-
-        //vault owner get access to both Uri and Hash
-        grantUpdateUriPermission(vaultId, msg.sender);
-        grantUpdateHashPermission(vaultId, msg.sender);
 
         setVaultUri(vaultId, vaultUri);
         setVaultHash(vaultId, vaultHash);
