@@ -32,10 +32,10 @@ contract VaultNotary is Ownable {
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
     event VaultHash(address indexed msgSender, bytes16 indexed vaultId, string vaultHash);
     event VaultRegistered(address indexed msgSender, bytes16 indexed vaultId);
-    event UpdateHashPermissionGranted(address indexed msgSender, address indexed anotherAddress);
-    event UpdateHashPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
-    event UpdateUriPermissionGranted(address indexed msgSender, address indexed anotherAddress);
-    event UpdateUriPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
+    event UpdateHashPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
+    event UpdateHashPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
+    event UpdateUriPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
+    event UpdateUriPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
 
     event inside_whitelistedOnlyForUri(bytes16 indexed vaultId, address indexed msgSender);
     // Contract Events
@@ -98,7 +98,7 @@ contract VaultNotary is Ownable {
     {
         require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclHashMapping[anotherAddress] = true;
-        emit UpdateHashPermissionGranted(msg.sender, anotherAddress);
+        emit UpdateHashPermissionGranted(msg.sender, vaultId, anotherAddress);
     }
 
     /** @notice Function to revoke update permission to both the Hash field in one vault
@@ -111,7 +111,7 @@ contract VaultNotary is Ownable {
     {
         require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclHashMapping[anotherAddress] = false;
-        emit UpdateHashPermissionRevoked(msg.sender, anotherAddress);
+        emit UpdateHashPermissionRevoked(msg.sender, vaultId, anotherAddress);
     }
 
     /** @notice Function to grant update permission to both Uri field in one vault
@@ -124,7 +124,7 @@ contract VaultNotary is Ownable {
     {
         require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclUriMapping[anotherAddress] = true;
-        emit UpdateUriPermissionGranted(msg.sender, anotherAddress);
+        emit UpdateUriPermissionGranted(msg.sender, vaultId, anotherAddress);
     }
 
     /** @notice Function to revoke update permission to both the Uri field in one vault
@@ -137,7 +137,7 @@ contract VaultNotary is Ownable {
     {
         require(!isNotRegistered(vaultId));
         notaryMapping[vaultId].aclUriMapping[anotherAddress] = false;
-        emit UpdateUriPermissionRevoked(msg.sender, anotherAddress);
+        emit UpdateUriPermissionRevoked(msg.sender, vaultId, anotherAddress);
     }
 
     /** @notice This is used in unit tests to verify the values are correct after using the setters
