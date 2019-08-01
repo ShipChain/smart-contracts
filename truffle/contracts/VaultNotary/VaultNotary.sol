@@ -169,8 +169,15 @@ contract VaultNotary is Ownable {
         require(isNotRegistered(vaultId));
         notaryMapping[vaultId].vaultOwner = msg.sender;
 
-        setVaultUri(vaultId, vaultUri);
-        setVaultHash(vaultId, vaultHash);
+        //work around for if (vaultUri != "")
+        bytes memory tempStringBytes = bytes(vaultUri);
+        if (tempStringBytes.length !=0)
+            setVaultUri(vaultId, vaultUri);
+
+        tempStringBytes = bytes(vaultHash);
+        if (tempStringBytes.length !=0)
+            setVaultHash(vaultId, vaultHash);
+
         emit VaultRegistered(msg.sender, vaultId);
     }
 

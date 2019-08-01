@@ -59,6 +59,84 @@ contract('VaultNotary', async (accounts) => {
         assert.equal(data.vaultUri, "uri");
     });
 
+    it("should not emit VaultUri if uri is empty string", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        const vaultUri = "";
+        const vaultHash = "hash";
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+
+        await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        await truffleAssert.eventNotEmitted(newVaultTx, "VaultUri", ev => {
+            return ev.vaultUri === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
+            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        const data = await contract.getVaultNotaryDetails(vaultId);
+
+        //since the setVaultHash and Uri works in the registerVault, it has
+        // tested the aclMapping set to true in the registerVault works as expected
+        assert.equal(data.vaultHash, "hash");
+        assert.equal(data.vaultUri, "");
+    });
+
+    it("should not emit VaultHash if hash is empty string", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        const vaultUri = "uri";
+        const vaultHash = "";
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+
+        await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
+            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        await truffleAssert.eventNotEmitted(newVaultTx, "VaultHash", ev => {
+            return ev.vaultHash === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        const data = await contract.getVaultNotaryDetails(vaultId);
+
+        //since the setVaultHash and Uri works in the registerVault, it has
+        // tested the aclMapping set to true in the registerVault works as expected
+        assert.equal(data.vaultHash, "");
+        assert.equal(data.vaultUri, "uri");
+    });
+
+    it("should not emit VaultHash and VaultUri if both empty strings", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        const vaultUri = "";
+        const vaultHash = "";
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+
+        await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        await truffleAssert.eventNotEmitted(newVaultTx, "VaultUri", ev => {
+            return ev.vaultUri === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        await truffleAssert.eventNotEmitted(newVaultTx, "VaultHash", ev => {
+            return ev.vaultHash === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+        });
+
+        const data = await contract.getVaultNotaryDetails(vaultId);
+
+        //since the setVaultHash and Uri works in the registerVault, it has
+        // tested the aclMapping set to true in the registerVault works as expected
+        assert.equal(data.vaultHash, "");
+        assert.equal(data.vaultUri, "");
+    });
+
     //this checks the vaultOwner assignment and the modifier vaultOwnerOnly works
     it("should revert the transaction if a vault notary exists", async () => {
         const vaultId = await registerVault()
