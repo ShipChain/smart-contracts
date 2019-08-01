@@ -270,7 +270,7 @@ contract LoadContract is Ownable {
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
 
-        setCarrierAndAllow(_shipmentUuid, _carrierAddress);
+        setCarrier(_shipmentUuid, _carrierAddress);
 
         emit ShipmentCreated(msg.sender, _shipmentUuid);
 
@@ -294,19 +294,9 @@ contract LoadContract is Ownable {
         shipmentExists(_shipmentUuid)
     {
         allShipmentData[_shipmentUuid].setCarrier(_shipmentUuid, _carrier);
-    }
-
-    /** @notice Defines the Carrier for this Shipment, and allows she to update the hash.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _carrier address Wallet of the Carrier.
-      */
-    function setCarrierAndAllow(bytes16 _shipmentUuid, address _carrier)
-        public
-        shipmentExists(_shipmentUuid)
-    {
-        setCarrier(_shipmentUuid, _carrier);
         notary.grantUpdateHashPermission(_shipmentUuid, _carrier);
     }
+
 
     /** @notice Defines the Moderator for this Shipment.
       * @param _shipmentUuid bytes16 Shipment's UUID.
@@ -319,17 +309,6 @@ contract LoadContract is Ownable {
         allShipmentData[_shipmentUuid].setModerator(_shipmentUuid, _moderator);
     }
 
-    /** @notice Defines the Moderator for this Shipment, and allows she to update the hash.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _moderator address Wallet of the Moderator.
-      */
-    function setModeratorAndAllow(bytes16 _shipmentUuid, address _moderator)
-        public
-        shipmentExists(_shipmentUuid)
-    {
-        setModerator(_shipmentUuid, _moderator);
-        notary.grantUpdateHashPermission(_shipmentUuid, _moderator);
-    }
 
     /** @notice Updates the Shipment state to "In Progress".
       * @param _shipmentUuid bytes16 Shipment's UUID.

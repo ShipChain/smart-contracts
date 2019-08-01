@@ -29,10 +29,7 @@ contract('LoadContract', async (accounts) => {
     let contract;
     let notary;
 
-
-
     async function createShipment(){
-
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
         await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
@@ -179,7 +176,18 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.shipment.carrier, CARRIER);
         assert.equal(data.shipment.moderator, MODERATOR);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
-    })
+    });
+
+    it("should allow SHIPPER to update the uri and hash", async () => {
+        const shipmentUuid = await createShipment();
+        console.log("1 ##########################");
+        console.log(shipmentUuid);
+        await notary.setVaultUri(shipmentUuid, "uri", {from: SHIPPER});
+        console.log("2 #####################");
+        let data = await notary.getVaultNotaryDetails(shipmentUuid);
+        console.log("3 #####################");
+        assert.equal(data.vaultUri, "uri");
+    });
 
 
 

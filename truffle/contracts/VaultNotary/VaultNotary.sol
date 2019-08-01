@@ -36,6 +36,8 @@ contract VaultNotary is Ownable {
     event UpdateHashPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
     event UpdateUriPermissionGranted(address indexed msgSender, address indexed anotherAddress);
     event UpdateUriPermissionRevoked(address indexed msgSender, address indexed anotherAddress);
+
+    event inside_whitelistedOnlyForUri(bytes16 indexed vaultId, address indexed msgSender);
     // Contract Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
 
@@ -43,11 +45,12 @@ contract VaultNotary is Ownable {
       * only whitelisted user can do the decorated operation
       */
     modifier whitelistedOnlyForUri(bytes16 vaultId) {
+        emit inside_whitelistedOnlyForUri(vaultId, msg.sender);
         require(notaryMapping[vaultId].aclUriMapping[msg.sender]);
         _;
     }
 
-        /** @dev Modifier for limiting the access to vaultHash update
+    /** @dev Modifier for limiting the access to vaultHash update
       * only whitelisted user can do the decorated operation
       */
     modifier whitelistedOnlyForHash(bytes16 vaultId) {
@@ -90,7 +93,7 @@ contract VaultNotary is Ownable {
       * @param anotherAddress address The address to grant permission
       */
     function grantUpdateHashPermission(bytes16 vaultId, address anotherAddress)
-        external
+        public
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId));
@@ -116,7 +119,7 @@ contract VaultNotary is Ownable {
       * @param anotherAddress address The address to grant permission
       */
     function grantUpdateUriPermission(bytes16 vaultId, address anotherAddress)
-        external
+        public
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId));
@@ -167,8 +170,8 @@ contract VaultNotary is Ownable {
         notaryMapping[vaultId].vaultOwner = msg.sender;
 
         //vault owner get access to both Uri and Hash
-        notaryMapping[vaultId].aclUriMapping[msg.sender] = true;
-        notaryMapping[vaultId].aclHashMapping[msg.sender] = true;
+        grantUpdateUriPermission(vaultId, msg.sender);
+        grantUpdateHashPermission(vaultId, msg.sender);
 
         setVaultUri(vaultId, vaultUri);
         setVaultHash(vaultId, vaultHash);
