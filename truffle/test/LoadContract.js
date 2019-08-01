@@ -78,6 +78,11 @@ contract('LoadContract', async (accounts) => {
             return ev.shipmentUuid === uuidToHex32(shipmentUuid);
         });
 
+        //If carrier address is 0, do not call the setCarrier.
+        await truffleAssert.eventNotEmitted(newShipmentTx, "ShipmentCarrierSet", ev => {
+            return ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.carrier === CARRIER;
+        });
+
         const data = await getShipmentEscrowData(shipmentUuid);
 
         assert.equal(data.shipment.shipper, SHIPPER);
