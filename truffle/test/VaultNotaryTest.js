@@ -27,7 +27,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "hash";
-        await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        await contract.registerVault(vaultId, vaultUri, vaultHash, SHIPPER, {from: SHIPPER});
         return vaultId;
     }
 
@@ -37,7 +37,8 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "hash";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        console.log(SHIPPER);
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, SHIPPER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
             return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
@@ -63,7 +64,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "";
         const vaultHash = "hash";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, SHIPPER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
             return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
@@ -89,7 +90,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, SHIPPER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
             return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
@@ -115,7 +116,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "";
         const vaultHash = "";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, SHIPPER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
             return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
@@ -142,7 +143,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault()
         const vaultUri = "uri";
         const vaultHash = "hash";
-        await truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, SHIPPER, {from: SHIPPER}));
 
     });
 

@@ -235,7 +235,7 @@ contract LoadContract is Ownable {
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
       * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
       defined.
-      * @param _carrierAddress address The addres of the carrier for this shipment
+      * @param _carrierAddress address The address of the carrier for this shipment
       * @dev Emits ShipmentCreated on success.
       */
     function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
@@ -262,7 +262,7 @@ contract LoadContract is Ownable {
         require(vaultNotaryContractAddress != address(0x0),
                 "vaultNotaryContractAddress not set before calling createNewShipment2");
         notary = VaultNotary(vaultNotaryContractAddress);
-        notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash);
+        notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash, msg.sender);
 
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
         require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");

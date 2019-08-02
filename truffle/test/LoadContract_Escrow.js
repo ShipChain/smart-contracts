@@ -59,8 +59,8 @@ contract('LoadContract with Escrow', async (accounts) => {
     async function createShipment(fundingType = EscrowFundingType.SHIP, fundingAmount = web3.utils.toWei("1", "ether")){
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await contract.createNewShipment(shipmentUuid, fundingType, fundingAmount, {from: SHIPPER});
-        await contract.setCarrierAndAllow(shipmentUuid, CARRIER, {from: SHIPPER});
-        await contract.setModeratorAndAllow(shipmentUuid, MODERATOR, {from: SHIPPER});
+        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
 
