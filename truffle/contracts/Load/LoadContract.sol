@@ -23,7 +23,6 @@ contract LoadContract is Ownable {
     // Registry Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
     event TokenContractAddressSet(address indexed msgSender, address tokenContractAddress);
-    event VaultNotaryContractAddressSet(address indexed msgSender, address vaultNotaryContractAddress);
     event EscrowRefundAddressSet(address indexed msgSender, bytes16 indexed shipmentUuid, address refundAddress);
 
     // Shipment Events
@@ -47,9 +46,7 @@ contract LoadContract is Ownable {
 
     /* Slot 0 */
     address private shipTokenContractAddress; // 20 bytes
-    address private vaultNotaryContractAddress; // 20 bytes
     bool private isDeprecated; //1 byte
-    VaultNotary private notary;
 
     // Library data storage
     /* Slot 1 */
@@ -184,20 +181,6 @@ contract LoadContract is Ownable {
         emit TokenContractAddressSet(msg.sender, shipTokenContractAddress);
     }
 
-    /** @notice Sets the VaultNotary Contract address.
-      * @dev Only Owner
-      */
-    function setVaultNotaryContractAddress(address _notaryContractAddress)
-        external
-        onlyOwner
-    {
-        require(_notaryContractAddress != address(0x0), "Must provide a valid notary address");
-        require(vaultNotaryContractAddress == address(0x0), "VaultNotary contract address already set");
-
-        vaultNotaryContractAddress = _notaryContractAddress;
-
-        emit VaultNotaryContractAddressSet(msg.sender, vaultNotaryContractAddress);
-    }
 
     /** @notice Sets the shipment escrow refund address.  Refunds will be paid out to this address.
       * @dev Only Owner
@@ -227,7 +210,7 @@ contract LoadContract is Ownable {
         external
         notDeprecated
     {
-        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
+        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, address(0x0));
     }
 
     /** @notice Creates a new Shipment and stores it in the Load Registry.
@@ -239,8 +222,7 @@ contract LoadContract is Ownable {
       * @dev Emits ShipmentCreated on success.
       */
     function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount, string memory _vaultUri, string
-    memory _vaultHash, address _carrierAddress)
+    _fundingType, uint256 _contractedAmount, address _carrierAddress)
         public 
         notDeprecated
     {
@@ -258,11 +240,6 @@ contract LoadContract is Ownable {
         } else {
             require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
         }
-
-        require(vaultNotaryContractAddress != address(0x0),
-                "vaultNotaryContractAddress not set before calling createNewShipment2");
-        notary = VaultNotary(vaultNotaryContractAddress);
-        notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash);
 
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
         require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");
@@ -295,7 +272,6 @@ contract LoadContract is Ownable {
         shipmentExists(_shipmentUuid)
     {
         allShipmentData[_shipmentUuid].setCarrier(_shipmentUuid, _carrier);
-        notary.grantUpdateHashPermission(_shipmentUuid, _carrier);
     }
 
 
