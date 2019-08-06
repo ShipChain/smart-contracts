@@ -1,4 +1,4 @@
-/// @author Jianwei Liu ljw725@gmail.com
+/// @author Jianwei Liu jliu@shipchain.io
 pragma solidity 0.5.0;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -34,18 +34,16 @@ contract VaultNotary is Ownable {
     event VaultRegistered(address indexed msgSender, bytes16 indexed vaultId);
 
     event UpdateHashPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,
-                                                                    address indexed anotherAddress);
+                                                                    address indexed addressToGrant);
 
     event UpdateHashPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,
-                                                                    address indexed anotherAddress);
+                                                                    address indexed addressToRevoke);
 
     event UpdateUriPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,
-                                                                    address indexed anotherAddress);
+                                                                    address indexed addressToGrant);
 
     event UpdateUriPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,
-                                                                    address indexed anotherAddress);
-    //better to add this event when vaultOwner can be different from msgSender, do not need currently
-    //event VaultOwnerSet(address indexed msgSender, bytes16 indexed vaultId, address indexed vaultOwner);
+                                                                    address indexed addressToRevoke);
 
     // Contract Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
@@ -53,20 +51,18 @@ contract VaultNotary is Ownable {
     /** @dev Modifier for limiting the access to vaultUri update
       * only whitelisted user can do the decorated operation
       */
-    modifier whitelistedOnlyForUri(bytes16 vaultId) {
-        //emit inside_whitelistedOnlyForUri(vaultId, msg.sender, msg.sender, notaryMapping[vaultId].vaultOwner);
-        //require(true);
+    modifier canUpdateUri(bytes16 vaultId) {
         require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclUriMapping[msg.sender],
-            "whitelistedOnlyForUri, only allow vault owner or the whitelisted users to access");
+            "canUpdateUri, only allow vault owner or the whitelisted users to access");
         _;
     }
 
     /** @dev Modifier for limiting the access to vaultHash update
       * only whitelisted user can do the decorated operation
       */
-    modifier whitelistedOnlyForHash(bytes16 vaultId) {
+    modifier canUpdateHash(bytes16 vaultId) {
         require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclHashMapping[msg.sender],
-            "whitelistedOnlyForHash, only allow vault owner or the whitelisted users to access");
+            "canUpdateHash, only allow vault owner or the whitelisted users to access");
         _;
     }
 
@@ -75,7 +71,7 @@ contract VaultNotary is Ownable {
       * @param vaultId bytes16 ID of the vault to check
       */
     modifier vaultOwnerOnly(bytes16 vaultId) {
-        require(msg.sender == notaryMapping[vaultId].vaultOwner, "can only access by vault owner");
+        require(msg.sender == notaryMapping[vaultId].vaultOwner, "method only accessible to vault owner");
         _;
     }
 
@@ -88,8 +84,8 @@ contract VaultNotary is Ownable {
         _;
     }
 
-    /** @notice This is function to register a vault, will only do the registration if a vaultId is not
-                registered before
+    /** @notice This is function to register a vault, will only do the registration if a vaultId has not
+                been registered before
       * @dev It sets the msg.sender to the vault owner and set the update permission of the owner to true
       * It calls the setVaultUir and setVaultHash to initialize those two records
       * @param vaultId bytes16 VaultID to create, is the same as shipment ID in our system
@@ -100,16 +96,14 @@ contract VaultNotary is Ownable {
         external
         notDeprecated
     {
-        require(isNotRegistered(vaultId), "vault should not be registered, in registerVault");
+        require(isNotRegistered(vaultId), "vault ID already exists");
         notaryMapping[vaultId].vaultOwner = msg.sender;
 
         //work around for if (vaultUri != "")
-        bytes memory tempStringBytes = bytes(vaultUri);
-        if (tempStringBytes.length != 0)
+        if (bytes(vaultUri).length != 0)
             setVaultUri(vaultId, vaultUri);
 
-        tempStringBytes = bytes(vaultHash);
-        if (tempStringBytes.length != 0)
+        if (bytes(vaultHash).length != 0)
             setVaultHash(vaultId, vaultHash);
 
         emit VaultRegistered(msg.sender, vaultId);
@@ -129,54 +123,54 @@ contract VaultNotary is Ownable {
 
     /** @notice Function to grant update permission to both Hash field in one vault
       * @param vaultId bytes16 The ID of Vault to grant permission
-      * @param anotherAddress address The address to grant permission
+      * @param addressToGrant address The address to grant permission
       */
-    function grantUpdateHashPermission(bytes16 vaultId, address anotherAddress)
+    function grantUpdateHashPermission(bytes16 vaultId, address addressToGrant)
         external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId), "vaultId should be registered before grantUpdateHashPermission");
-        notaryMapping[vaultId].aclHashMapping[anotherAddress] = true;
-        emit UpdateHashPermissionGranted(msg.sender, vaultId, anotherAddress);
+        notaryMapping[vaultId].aclHashMapping[addressToGrant] = true;
+        emit UpdateHashPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
 
     /** @notice Function to revoke update permission to both the Hash field in one vault
       * @param vaultId The ID of Vault to revoke permission
-      * @param anotherAddress address The address to revoke permission
+      * @param addressToRevoke address The address to revoke permission
       */
-    function revokeUpdateHashPermission(bytes16 vaultId, address anotherAddress)
+    function revokeUpdateHashPermission(bytes16 vaultId, address addressToRevoke)
         external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId), "vaultId should be registered before revokeUpdateHashPermission");
-        notaryMapping[vaultId].aclHashMapping[anotherAddress] = false;
-        emit UpdateHashPermissionRevoked(msg.sender, vaultId, anotherAddress);
+        notaryMapping[vaultId].aclHashMapping[addressToRevoke] = false;
+        emit UpdateHashPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
 
     /** @notice Function to grant update permission to both Uri field in one vault
       * @param vaultId bytes16 The ID of Vault to grant permission
-      * @param anotherAddress address The address to grant permission
+      * @param addressToGrant address The address to grant permission
       */
-    function grantUpdateUriPermission(bytes16 vaultId, address anotherAddress)
+    function grantUpdateUriPermission(bytes16 vaultId, address addressToGrant)
         external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId), "vaultId should be registered before grantUpdateUriPermission");
-        notaryMapping[vaultId].aclUriMapping[anotherAddress] = true;
-        emit UpdateUriPermissionGranted(msg.sender, vaultId, anotherAddress);
+        notaryMapping[vaultId].aclUriMapping[addressToGrant] = true;
+        emit UpdateUriPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
 
     /** @notice Function to revoke update permission to both the Uri field in one vault
       * @param vaultId The ID of Vault to revoke permission
-      * @param anotherAddress address The address to revoke permission
+      * @param addressToRevoke address The address to revoke permission
       */
-    function revokeUpdateUriPermission(bytes16 vaultId, address anotherAddress)
+    function revokeUpdateUriPermission(bytes16 vaultId, address addressToRevoke)
         external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId), "vaultId should be registered before revokeUpdateUriPermission");
-        notaryMapping[vaultId].aclUriMapping[anotherAddress] = false;
-        emit UpdateUriPermissionRevoked(msg.sender, vaultId, anotherAddress);
+        notaryMapping[vaultId].aclUriMapping[addressToRevoke] = false;
+        emit UpdateUriPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
 
     /** @notice This is used in unit tests to verify the values are correct after using the setters
@@ -199,7 +193,7 @@ contract VaultNotary is Ownable {
       */
     function setVaultUri(bytes16 vaultId, string memory vaultUri)
         public
-        whitelistedOnlyForUri(vaultId)
+        canUpdateUri(vaultId)
     {
         notaryMapping[vaultId].vaultUri = vaultUri;
         emit VaultUri(msg.sender, vaultId, vaultUri);
@@ -211,7 +205,7 @@ contract VaultNotary is Ownable {
       */
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
         public
-        whitelistedOnlyForHash(vaultId)
+        canUpdateHash(vaultId)
     {
         notaryMapping[vaultId].vaultHash = vaultHash;
         emit VaultHash(msg.sender, vaultId, vaultHash);
@@ -224,7 +218,7 @@ contract VaultNotary is Ownable {
     function isNotRegistered(bytes16 vaultId)
         internal
         view
-        returns(bool isRegistered)
+        returns(bool _isNotRegistered)
     {
         return notaryMapping[vaultId].vaultOwner == address(0x0);
     }
