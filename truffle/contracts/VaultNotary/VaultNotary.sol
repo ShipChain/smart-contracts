@@ -36,7 +36,9 @@ contract VaultNotary is Ownable {
     event UpdateHashPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
     event UpdateUriPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
     event UpdateUriPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
-    event VaultOwnerSet(address indexed msgSender, bytes16 indexed vaultId, address indexed vaultOwner);
+
+    //better to add this event when vaultOwner can be different from msgSender, do not need currently
+    //event VaultOwnerSet(address indexed msgSender, bytes16 indexed vaultId, address indexed vaultOwner);
 
     event inside_whitelistedOnlyForUri(bytes16 indexed vaultId, address msgSender, address indexed txOrigin, address indexed vaultOwner);
     // Contract Events
@@ -46,9 +48,9 @@ contract VaultNotary is Ownable {
       * only whitelisted user can do the decorated operation
       */
     modifier whitelistedOnlyForUri(bytes16 vaultId) {
-        //emit inside_whitelistedOnlyForUri(vaultId, msg.sender, tx.origin, notaryMapping[vaultId].vaultOwner);
+        //emit inside_whitelistedOnlyForUri(vaultId, msg.sender, msg.sender, notaryMapping[vaultId].vaultOwner);
         //require(true);
-        require(tx.origin == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclUriMapping[tx.origin],
+        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclUriMapping[msg.sender],
             "whitelistedOnlyForUri, only allow vault owner or the whitelisted users to access");
         _;
     }
@@ -57,7 +59,7 @@ contract VaultNotary is Ownable {
       * only whitelisted user can do the decorated operation
       */
     modifier whitelistedOnlyForHash(bytes16 vaultId) {
-        require(tx.origin == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclHashMapping[tx.origin],
+        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclHashMapping[msg.sender],
             "whitelistedOnlyForHash, only allow vault owner or the whitelisted users to access");
         _;
     }
@@ -67,7 +69,7 @@ contract VaultNotary is Ownable {
       * @param vaultId bytes16 ID of the vault to check
       */
     modifier vaultOwnerOnly(bytes16 vaultId) {
-        require(tx.origin == notaryMapping[vaultId].vaultOwner, "can only access by vault owner");
+        require(msg.sender == notaryMapping[vaultId].vaultOwner, "can only access by vault owner");
         _;
     }
 
@@ -166,13 +168,12 @@ contract VaultNotary is Ownable {
       * @param vaultUri string Vault URI to set
       * @param vaultHash string  Vault hash to set
       */
-    function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash, address vaultOwner)
+    function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash)
         public
         notDeprecated
     {
         require(isNotRegistered(vaultId), "vault should not be registered, in registerVault");
-        notaryMapping[vaultId].vaultOwner = vaultOwner;
-        emit VaultOwnerSet(msg.sender, vaultId,  vaultOwner);
+        notaryMapping[vaultId].vaultOwner = msg.sender;
 
         //work around for if (vaultUri != "")
         bytes memory tempStringBytes = bytes(vaultUri);

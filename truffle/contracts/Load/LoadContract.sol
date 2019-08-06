@@ -262,7 +262,7 @@ contract LoadContract is Ownable {
         require(vaultNotaryContractAddress != address(0x0),
                 "vaultNotaryContractAddress not set before calling createNewShipment2");
         notary = VaultNotary(vaultNotaryContractAddress);
-        notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash, msg.sender);
+        notary.registerVault(_shipmentUuid, _vaultUri, _vaultHash);
 
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
         require(shipment.state == Shipment.State.NOT_CREATED, "Shipment already exists");
