@@ -32,6 +32,7 @@ contract('LoadContract', async (accounts) => {
     async function createShipment(){
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        await notary.registerVault(shipmentUuid, "", "", {from: SHIPPER});
         await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
@@ -39,7 +40,8 @@ contract('LoadContract', async (accounts) => {
 
     async function createShipment2(){
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
+        await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
+        await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -56,25 +58,6 @@ contract('LoadContract', async (accounts) => {
     before(async () =>{
         notary = await createNotary();
         contract = await LoadContract.deployed();
-    });
-
-    it("should only be able to set notary address by owner", async () => {
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: SHIPPER}));
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: ATTACKER}));
-        let notaryAddressTx = await contract.setVaultNotaryContractAddress(notary.address, {from: OWNER});
-        await truffleAssert.eventEmitted(notaryAddressTx, "VaultNotaryContractAddressSet", ev => {
-            return ev.msgSender === OWNER && ev.vaultNotaryContractAddress === notary.address;
-        });
-    });
-
-    it("should only allow notary address to be set once", async () => {
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress(notary.address, {from: OWNER}), "VaultNotary contract address already set");
-    });
-
-    it("should revert if the notary address set is 0x0", async () => {
-        await truffleAssert.reverts(contract.setVaultNotaryContractAddress('0x0000000000000000000000000000000000000000', {from: OWNER}), "Must provide a valid notary address");
     });
 
     it("should create a LoadShipment without Uri, Hash and carrier address", async () => {
@@ -100,7 +83,8 @@ contract('LoadContract', async (accounts) => {
 
     it("should create a LoadShipment with Uri, Hash and carrier address", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        const newShipmentTx = await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
+        const newShipmentTx = await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
+        await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === uuidToHex32(shipmentUuid);
@@ -181,7 +165,9 @@ contract('LoadContract', async (accounts) => {
 
     it("should have a getShipmentData function, and work with createNewShipment2", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
+        await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0,  CARRIER, {from: SHIPPER});
+        await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
+
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.shipment.shipper, SHIPPER);
@@ -203,9 +189,10 @@ contract('LoadContract', async (accounts) => {
     //
     it("should allow SHIPPER to update the uri and hash", async () => {
         const shipmentUuid = await createShipment2();
-        await notary.setVaultUri(shipmentUuid, "uri", {from: SHIPPER});
+
+        await notary.setVaultUri(shipmentUuid, "new_uri", {from: SHIPPER});
         let data = await notary.getVaultNotaryDetails(shipmentUuid);
-        assert.equal(data.vaultUri, "uri");
+        assert.equal(data.vaultUri, "new_uri");
     });
 
 
