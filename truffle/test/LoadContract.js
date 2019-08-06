@@ -34,6 +34,7 @@ contract('LoadContract', async (accounts) => {
         await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
         await notary.registerVault(shipmentUuid, "", "", {from: SHIPPER});
         await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await notary.grantUpdateHashPermission(shipmentUuid, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -42,6 +43,7 @@ contract('LoadContract', async (accounts) => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
         await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
+        await notary.grantUpdateHashPermission(shipmentUuid, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -176,26 +178,46 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.shipment.state, ShipmentState.CREATED);
     });
 
-    // it("should allow SHIPPER to update the uri and hash", async () => {
-    //     const shipmentUuid = await createShipment();
-    //     console.log("1 ##########################");
-    //     console.log(shipmentUuid);
-    //     await notary.setVaultUri(shipmentUuid, "uri", {from: SHIPPER});
-    //     console.log("2 #####################");
-    //     let data = await notary.getVaultNotaryDetails(shipmentUuid);
-    //     console.log("3 #####################");
-    //     assert.equal(data.vaultUri, "uri");
-    // });
-    //
-    it("should allow SHIPPER to update the uri and hash", async () => {
+    it("should allow SHIPPER to update the uri and hash if using createShipment2", async () => {
         const shipmentUuid = await createShipment2();
 
         await notary.setVaultUri(shipmentUuid, "new_uri", {from: SHIPPER});
+        await notary.setVaultHash(shipmentUuid, "new_hash", {from: SHIPPER});
+
         let data = await notary.getVaultNotaryDetails(shipmentUuid);
         assert.equal(data.vaultUri, "new_uri");
+        assert.equal(data.vaultHash, "new_hash");
     });
 
+    it("should allow SHIPPER to update the uri and hash if using createShipment", async () => {
+        const shipmentUuid = await createShipment();
+        await notary.setVaultUri(shipmentUuid, "new_uri", {from: SHIPPER});
+        await notary.setVaultHash(shipmentUuid, "new_hash", {from: SHIPPER});
 
+        let data = await notary.getVaultNotaryDetails(shipmentUuid);
+        assert.equal(data.vaultUri, "new_uri");
+        assert.equal(data.vaultHash, "new_hash");
+    });
+
+    it("should revert if setVaultUri without permission if using createShipment", async () => {
+        const shipmentUuid = await createShipment();
+        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: ATTACKER}));
+        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: CARRIER}));
+        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: MODERATOR}));
+    });
+
+    it("should allow carrier to update hash if using createShipment", async () => {
+        const shipmentUuid = await createShipment();
+        await notary.setVaultHash(shipmentUuid, "new_hash", {from: CARRIER});
+        let data = await notary.getVaultNotaryDetails(shipmentUuid);
+        assert.equal(data.vaultHash, "new_hash");
+    });
+
+    it("should revert if setVaultHash without permission if using createShipment", async () => {
+        const shipmentUuid = await createShipment();
+        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: ATTACKER}));
+        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: MODERATOR}));
+    });
 
     it("should set inProgress", async () => {
         let shipmentUuid = uuidToHex(uuidv4(), true);
