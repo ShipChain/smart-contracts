@@ -32,15 +32,21 @@ contract VaultNotary is Ownable {
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
     event VaultHash(address indexed msgSender, bytes16 indexed vaultId, string vaultHash);
     event VaultRegistered(address indexed msgSender, bytes16 indexed vaultId);
-    event UpdateHashPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
-    event UpdateHashPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
-    event UpdateUriPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
-    event UpdateUriPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,  address indexed anotherAddress);
 
+    event UpdateHashPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,
+                                                                    address indexed anotherAddress);
+
+    event UpdateHashPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,
+                                                                    address indexed anotherAddress);
+
+    event UpdateUriPermissionGranted(address indexed msgSender, bytes16 indexed vaultId,
+                                                                    address indexed anotherAddress);
+
+    event UpdateUriPermissionRevoked(address indexed msgSender, bytes16 indexed vaultId,
+                                                                    address indexed anotherAddress);
     //better to add this event when vaultOwner can be different from msgSender, do not need currently
     //event VaultOwnerSet(address indexed msgSender, bytes16 indexed vaultId, address indexed vaultOwner);
 
-    event inside_whitelistedOnlyForUri(bytes16 indexed vaultId, address msgSender, address indexed txOrigin, address indexed vaultOwner);
     // Contract Events
     event ContractDeprecatedSet(address indexed msgSender, bool isDeprecated);
 
@@ -82,6 +88,33 @@ contract VaultNotary is Ownable {
         _;
     }
 
+    /** @notice This is function to register a vault, will only do the registration if a vaultId is not
+                registered before
+      * @dev It sets the msg.sender to the vault owner and set the update permission of the owner to true
+      * It calls the setVaultUir and setVaultHash to initialize those two records
+      * @param vaultId bytes16 VaultID to create, is the same as shipment ID in our system
+      * @param vaultUri string Vault URI to set
+      * @param vaultHash string  Vault hash to set
+      */
+    function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
+        external
+        notDeprecated
+    {
+        require(isNotRegistered(vaultId), "vault should not be registered, in registerVault");
+        notaryMapping[vaultId].vaultOwner = msg.sender;
+
+        //work around for if (vaultUri != "")
+        bytes memory tempStringBytes = bytes(vaultUri);
+        if (tempStringBytes.length != 0)
+            setVaultUri(vaultId, vaultUri);
+
+        tempStringBytes = bytes(vaultHash);
+        if (tempStringBytes.length != 0)
+            setVaultHash(vaultId, vaultHash);
+
+        emit VaultRegistered(msg.sender, vaultId);
+    }
+
     /** @notice Sets the contract isDeprecated flag. Vault registration will be disabled if isDeprecated == True
       * Only contract owner can set this
       * @param _isDeprecated bool Boolean control variable
@@ -99,7 +132,7 @@ contract VaultNotary is Ownable {
       * @param anotherAddress address The address to grant permission
       */
     function grantUpdateHashPermission(bytes16 vaultId, address anotherAddress)
-        public
+        external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId), "vaultId should be registered before grantUpdateHashPermission");
@@ -125,7 +158,7 @@ contract VaultNotary is Ownable {
       * @param anotherAddress address The address to grant permission
       */
     function grantUpdateUriPermission(bytes16 vaultId, address anotherAddress)
-        public
+        external
         vaultOwnerOnly(vaultId)
     {
         require(!isNotRegistered(vaultId), "vaultId should be registered before grantUpdateUriPermission");
@@ -160,33 +193,6 @@ contract VaultNotary is Ownable {
         return (notaryMapping[vaultId].vaultUri, notaryMapping[vaultId].vaultHash);
     }
 
-    /** @notice This is function to register a vault, will only do the registration if a vaultId is not
-                registered before
-      * @dev It sets the msg.sender to the vault owner and set the update permission of the owner to true
-      * It calls the setVaultUir and setVaultHash to initialize those two records
-      * @param vaultId bytes16 VaultID to create, is the same as shipment ID in our system
-      * @param vaultUri string Vault URI to set
-      * @param vaultHash string  Vault hash to set
-      */
-    function registerVault(bytes16 vaultId, string memory vaultUri, string memory vaultHash)
-        public
-        notDeprecated
-    {
-        require(isNotRegistered(vaultId), "vault should not be registered, in registerVault");
-        notaryMapping[vaultId].vaultOwner = msg.sender;
-
-        //work around for if (vaultUri != "")
-        bytes memory tempStringBytes = bytes(vaultUri);
-        if (tempStringBytes.length !=0)
-            setVaultUri(vaultId, vaultUri);
-
-        tempStringBytes = bytes(vaultHash);
-        if (tempStringBytes.length !=0)
-            setVaultHash(vaultId, vaultHash);
-
-        emit VaultRegistered(msg.sender, vaultId);
-    }
-
     /** @notice Function to set the vault URI
       * @param vaultId bytes16 ID of the vault to set
       * @param vaultUri string The vault URI to set
@@ -210,17 +216,6 @@ contract VaultNotary is Ownable {
         notaryMapping[vaultId].vaultHash = vaultHash;
         emit VaultHash(msg.sender, vaultId, vaultHash);
     }
-
-//    //for testing
-//    /** @notice Function to get vault owner
-//      *
-//      */
-//    function getVaultOwner(bytes16 vaultId)
-//        public
-//        returns(address vaultOwner)
-//    {
-//        return notaryMapping[vaultId].vaultOwner;
-//    }
 
     /** @notice This function is only used for testing whether a Vault has been registered yet
       * @param vaultId bytes16 The ID of the vault to check

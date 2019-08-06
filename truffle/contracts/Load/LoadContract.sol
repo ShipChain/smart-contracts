@@ -181,7 +181,6 @@ contract LoadContract is Ownable {
         emit TokenContractAddressSet(msg.sender, shipTokenContractAddress);
     }
 
-
     /** @notice Sets the shipment escrow refund address.  Refunds will be paid out to this address.
       * @dev Only Owner
       */
@@ -274,7 +273,6 @@ contract LoadContract is Ownable {
         allShipmentData[_shipmentUuid].setCarrier(_shipmentUuid, _carrier);
     }
 
-
     /** @notice Defines the Moderator for this Shipment.
       * @param _shipmentUuid bytes16 Shipment's UUID.
       * @param _moderator address Wallet of the Moderator.
@@ -285,7 +283,6 @@ contract LoadContract is Ownable {
     {
         allShipmentData[_shipmentUuid].setModerator(_shipmentUuid, _moderator);
     }
-
 
     /** @notice Updates the Shipment state to "In Progress".
       * @param _shipmentUuid bytes16 Shipment's UUID.
