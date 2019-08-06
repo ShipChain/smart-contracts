@@ -37,7 +37,6 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "hash";
-        console.log(SHIPPER);
         const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
