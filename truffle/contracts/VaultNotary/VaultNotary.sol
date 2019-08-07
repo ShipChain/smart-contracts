@@ -75,6 +75,22 @@ contract VaultNotary is Ownable {
         _;
     }
 
+    /** @notice This modifier is for testing whether a Vault has been registered yet
+      * @param vaultId bytes16 The ID of the vault to check
+      */
+    modifier isNotRegistered(bytes16 vaultId) {
+        require(notaryMapping[vaultId].vaultOwner == address(0x0), "vault ID already exists");
+        _;
+    }
+
+    /** @notice This modifier is for testing whether a Vault has been registered yet
+      * @param vaultId bytes16 The ID of the vault to check
+      */
+    modifier isRegistered(bytes16 vaultId) {
+        require(notaryMapping[vaultId].vaultOwner != address(0x0), "vault ID does not exist");
+        _;
+    }
+
     /** @notice If we upgrade the version of the contract, the old contract
       *  will not be allowed to register new Vault anymore. However, the existing
       *  Vaults registered in that contract should still be able to be updated
@@ -94,9 +110,9 @@ contract VaultNotary is Ownable {
       */
     function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
         external
+        isNotRegistered(vaultId)
         notDeprecated
     {
-        require(isNotRegistered(vaultId), "vault ID already exists");
         notaryMapping[vaultId].vaultOwner = msg.sender;
 
         //work around for if (vaultUri != "")
@@ -128,8 +144,8 @@ contract VaultNotary is Ownable {
     function grantUpdateHashPermission(bytes16 vaultId, address addressToGrant)
         external
         vaultOwnerOnly(vaultId)
+        isRegistered(vaultId)
     {
-        require(!isNotRegistered(vaultId), "vaultId should be registered before grantUpdateHashPermission");
         notaryMapping[vaultId].aclHashMapping[addressToGrant] = true;
         emit UpdateHashPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
@@ -141,8 +157,8 @@ contract VaultNotary is Ownable {
     function revokeUpdateHashPermission(bytes16 vaultId, address addressToRevoke)
         external
         vaultOwnerOnly(vaultId)
+        isRegistered(vaultId)
     {
-        require(!isNotRegistered(vaultId), "vaultId should be registered before revokeUpdateHashPermission");
         notaryMapping[vaultId].aclHashMapping[addressToRevoke] = false;
         emit UpdateHashPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
@@ -154,8 +170,8 @@ contract VaultNotary is Ownable {
     function grantUpdateUriPermission(bytes16 vaultId, address addressToGrant)
         external
         vaultOwnerOnly(vaultId)
+        isRegistered(vaultId)
     {
-        require(!isNotRegistered(vaultId), "vaultId should be registered before grantUpdateUriPermission");
         notaryMapping[vaultId].aclUriMapping[addressToGrant] = true;
         emit UpdateUriPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
@@ -167,8 +183,8 @@ contract VaultNotary is Ownable {
     function revokeUpdateUriPermission(bytes16 vaultId, address addressToRevoke)
         external
         vaultOwnerOnly(vaultId)
+        isRegistered(vaultId)
     {
-        require(!isNotRegistered(vaultId), "vaultId should be registered before revokeUpdateUriPermission");
         notaryMapping[vaultId].aclUriMapping[addressToRevoke] = false;
         emit UpdateUriPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
@@ -211,17 +227,7 @@ contract VaultNotary is Ownable {
         emit VaultHash(msg.sender, vaultId, vaultHash);
     }
 
-    /** @notice This function is only used for testing whether a Vault has been registered yet
-      * @param vaultId bytes16 The ID of the vault to check
-      * @return isRegistered A boolean, true - not registered; false - registered
-      */
-    function isNotRegistered(bytes16 vaultId)
-        internal
-        view
-        returns(bool _isNotRegistered)
-    {
-        return notaryMapping[vaultId].vaultOwner == address(0x0);
-    }
+
 
 }
 
