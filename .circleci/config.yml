@@ -160,13 +160,11 @@ jobs: # a collection of steps
             export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/LoadContract.json)
             jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/meta.json || { echo "Current version of LOAD contract is already deployed"; exit 1; }
             jq -r '.contracts.LOAD.versions[env.VERSION].abi=env.ABI | .contracts.LOAD.versions[env.VERSION].bin=env.BYTECODE | .contracts.LOAD.versions[env.VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.LOAD.latest=env.VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
-
 #            export NOTARY_VERSION=$(cat truffle/contracts/VaultNotary/VERSION)
 #            export ABI=$(jq -rc .abi truffle/build/contracts/VaultNotary.json)
 #            export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/VaultNotary.json)
 #            jq -e '.contracts.VaultNotary.latest != env.NOTARY_VERSION' meta-contracts/meta.json || { echo "Current version of VAULT NOTARY contract is already deployed"; exit 1; }
 #            jq -r '.contracts.VaultNotary.versions[env.NOTARY_VERSION].abi=env.ABI | .contracts.VaultNotary.versions[env.VERSION].bin=env.BYTECODE | .contracts.VaultNotary.versions[env.VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.VaultNotary.latest=env.VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
-
             git -C meta-contracts commit -a -m "Published LOAD $VERSION to meta-contracts"
 #            git -C meta-contracts commit -a -m "Published LOAD $NOTARY_VERSION to meta-contracts"
             git -C meta-contracts push
