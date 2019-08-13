@@ -2,6 +2,7 @@
   "scripts": {
     "truffle": "./node_modules/.bin/truffle",
     "lint": "./node_modules/.bin/solhint ./**/**/*.sol",
+    "docgen": "./node_modules/.bin/solidity-docgen",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "flatten": "./node_modules/.bin/soljitsu flatten --truffle=./ --dest-dir=./flat-sol",
     "combine": "./node_modules/.bin/soljitsu combine --truffle=./ --dest-dir=./combined-sol",
@@ -20,6 +21,7 @@
     "openzeppelin-solidity": "^2.1.2",
     "solhint": "^1.5.1",
     "solidity-coverage": "^0.6.3",
+    "solidity-docgen": "^0.3.0-beta.4",
     "soljitsu": "^1.0.0",
     "surya": "^0.2.7",
     "truffle": "^5.0.3",
