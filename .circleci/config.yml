@@ -23,7 +23,7 @@ jobs: # a collection of steps
       - run:
           name: "Download solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.0/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
@@ -71,7 +71,7 @@ jobs: # a collection of steps
       - run:  # Temporary fix for https://github.com/trufflesuite/truffle/issues/469
           name: "Download solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.0/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
