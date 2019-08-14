@@ -82,20 +82,20 @@ jobs: # a collection of steps
       - store_test_results:
           path: truffle/test-results
 
-#  solidity-coverage:  # Disabled due to incompatibility with Truffle 5/Sol 0.5.0
-#    docker:
-#      - image: circleci/node:10.10-stretch
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Solidity test coverage"
-#          command: |
-#            cd truffle
-#            npm run coverage || true
-#      - store_artifacts:
-#          path: truffle/coverage
+  solidity-coverage:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Solidity test coverage"
+          command: |
+            cd truffle
+            npm run coverage || true
+      - store_artifacts:
+          path: truffle/coverage
 
   slither:
     docker:
@@ -186,9 +186,9 @@ workflows:
       - truffle-tests:
           requires:
             - truffle-compile
-#      - solidity-coverage:
-#          requires:
-#            - truffle-compile
+      - solidity-coverage:
+          requires:
+            - truffle-compile
       - slither:
           requires:
             - truffle-compile
