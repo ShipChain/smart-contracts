@@ -417,8 +417,6 @@ contract LoadContract is Ownable {
             msg.sender.transfer(amount);
         } else if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.SHIP) {
             ERC20(shipTokenContractAddress).transfer(msg.sender, amount);
-        } else {
-            revert("Cannot withdraw, unknown fundingType");
         }
     }
 

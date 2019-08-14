@@ -14,7 +14,7 @@ const SHIPToken = artifacts.require("SHIPToken");
 
 const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
-const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2};
+const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2, INVALID: 99};
 
 const SECONDS_IN_A_DAY = 86400;
 
@@ -541,6 +541,19 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
 
+    //should delete if confirmed we will remove the else clause
+
+    // it("should be able to revert if withdrawing with wrong EscrowFundingType", async () => {
+    //     const shipmentUuid = await createShipment(EscrowFundingType.INVALID);
+    //     await shipToken.approveAndCall(contract.address, web3.utils.toWei("1", "ether"), shipmentUuid, {from: SHIPPER});
+    //     await contract.setInProgress(shipmentUuid, {from: CARRIER});
+    //     await contract.setComplete(shipmentUuid, {from: CARRIER});
+    //
+    //     await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
+    //     await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "wrong EscrowFundingType");
+    //
+    // });
+
     it("should be able to withdraw all from overfunded SHIP escrow", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.SHIP);
         await shipToken.approveAndCall(contract.address, web3.utils.toWei("2", "ether"), shipmentUuid, {from: SHIPPER});
@@ -553,11 +566,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
         let balance = await shipToken.balanceOf(CARRIER);
-        //let balance = await shipToken.methods.balanceOf(CARRIER).call();
-        //let balance = await shipToken.balanceOf(CARRIER).call();
-        //let balance = await shipToken.getBalance(CARRIER).call();
-        //console.log("balance="+balance);
-        //console.log("balance="+JSON.stringify(balance));
         expect(web3.utils.toBN(balance)).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))));
 
     });
