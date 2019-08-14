@@ -24,7 +24,7 @@
     "solidity-docgen": "^0.3.0-beta.4",
     "soljitsu": "^1.0.0",
     "surya": "^0.2.7",
-    "truffle": "^5.0.3",
+    "truffle": "^5.0.31",
     "truffle-assertions": "^0.7.2",
     "uuid": "^3.3.2",
     "uuid-to-hex": "^1.0.3"

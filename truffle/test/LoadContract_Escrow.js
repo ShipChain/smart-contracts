@@ -548,10 +548,14 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setComplete(shipmentUuid, {from: CARRIER});
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
         let carrierBalance = await shipToken.balanceOf(CARRIER);
+        console.log("currentBalance"+JSON.stringify(carrierBalance));
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
         let balance = await shipToken.balanceOf(CARRIER);
+        //let balance = await shipToken.methods.balanceOf(CARRIER).call();
+        //let balance = await shipToken.balanceOf(CARRIER).call();
+        //let balance = await shipToken.getBalance(CARRIER).call();
         //console.log("balance="+balance);
         console.log("balance="+JSON.stringify(balance));
         expect(web3.utils.toBN(balance)).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))));
