@@ -10,7 +10,7 @@ const bnChai = require('bn-chai');
 chai.use(bnChai(BN));
 
 const LoadContract = artifacts.require("LoadContract");
-const SHIPToken = artifacts.require("./utils/SHIPToken.sol");
+const SHIPToken = artifacts.require("SHIPToken");
 
 const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
@@ -548,7 +548,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setComplete(shipmentUuid, {from: CARRIER});
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
         let carrierBalance = await shipToken.balanceOf(CARRIER);
-        console.log("currentBalance"+JSON.stringify(carrierBalance));
+        //console.log("currentBalance"+JSON.stringify(carrierBalance));
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
@@ -557,7 +557,7 @@ contract('LoadContract with Escrow', async (accounts) => {
         //let balance = await shipToken.balanceOf(CARRIER).call();
         //let balance = await shipToken.getBalance(CARRIER).call();
         //console.log("balance="+balance);
-        console.log("balance="+JSON.stringify(balance));
+        //console.log("balance="+JSON.stringify(balance));
         expect(web3.utils.toBN(balance)).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))));
 
     });
