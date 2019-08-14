@@ -1007,7 +1007,10 @@ Emits a `Transfer` event.
 ### <span id="IERC20-allowance-address-address-"></span> `allowance(address owner, address spender) → uint256` (external)
 
 Returns the remaining number of tokens that `spender` will be
-allowed to spend on behalf of `owner` through `transferFrom`. This is
+allowed ed:   package.json
+
+kkkkkkkkkkkkkk
+to spend on behalf of `owner` through `transferFrom`. This is
 zero by default.
 
 This value changes when `approve` or `transferFrom` are called.
