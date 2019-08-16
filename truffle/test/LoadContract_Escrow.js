@@ -223,8 +223,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         const balanceAfterSub = balanceAfterAdd.sub(gasCost);
         expect(updatedCarrierBalance).to.eq.BN(balanceAfterSub);
 
-        //expect(web3.utils.toBN(await web3.eth.getBalance())).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))).sub(gasCost));
-
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
 
@@ -250,7 +248,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         let balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
         const balanceAfterSub = balanceAfterAdd.sub(gasCost);
         expect(updatedCarrierBalance).to.eq.BN(balanceAfterSub);
-        //expect(web3.utils.toBN(await web3.eth.getBalance(CARRIER))).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))).sub(gasCost));
     });
 
     it("should be able to refund ETH escrow", async () => {
@@ -282,7 +279,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
 
-        //expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))).sub(gasCost));
         const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
         let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
         const balanceAfterSub = balanceAfterAdd.sub(gasCost);
@@ -323,7 +319,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        //expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("0.5", "ether"))).sub(gasCost));
 
         const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
         let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("0.5", "ether")));
@@ -402,7 +397,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("carrier should be able to issue refunds after 90 days", async () => {
@@ -425,7 +424,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("moderator should be able to issue refunds after 90 days", async () => {
@@ -448,7 +451,12 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        //expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
     //#endregion
 
@@ -567,7 +575,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await shipToken.balanceOf(CARRIER))).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))));
+
+        const updatedCarrierBalance = await shipToken.balanceOf(CARRIER);
+        const balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        expect(updatedCarrierBalance).to.eq.BN(balanceAfterAdd);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
@@ -579,12 +590,13 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.setComplete(shipmentUuid, {from: CARRIER});
         await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
         let carrierBalance = await shipToken.balanceOf(CARRIER);
-        //console.log("currentBalance"+JSON.stringify(carrierBalance));
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        let balance = await shipToken.balanceOf(CARRIER);
-        expect(web3.utils.toBN(balance)).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))));
+
+        const updatedCarrierBalance = await shipToken.balanceOf(CARRIER);
+        const balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
+        expect(updatedCarrierBalance).to.eq.BN(balanceAfterAdd);
 
     });
 
@@ -607,7 +619,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await shipToken.balanceOf(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))));
+        //expect(web3.utils.toBN(await shipToken.balanceOf(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))));
+
+        const updatedShipperBalance = await shipToken.balanceOf(SHIPPER);
+        const balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterAdd);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
