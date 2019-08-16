@@ -6,7 +6,6 @@ import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import {Shipment} from "./lib/Shipment.sol";
 import {Escrow} from "./lib/Escrow.sol";
 import {Converter} from "./lib/Converter.sol";
-//import {VaultNotary} from "../VaultNotary/VaultNotary.sol";
 
 
 /** @title Load Contract */
