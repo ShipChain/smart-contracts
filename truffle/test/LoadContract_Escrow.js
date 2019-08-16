@@ -355,11 +355,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         const balanceAfterSub = balanceAfterAdd.sub(gasCost);
         expect(updatedBalance).to.eq.BN(balanceAfterSub);
 
-        // expect(web3.utils.toBN(await web3.eth.getBalance(ATTACKER)))
-        //        .to.eq.BN
-        //       (invalidBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")))
-        //                      .sub(gasCost));
-
     });
 
     it("shipper should be able to issue refunds after 90 days", async () => {
