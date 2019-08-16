@@ -619,10 +619,9 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        //expect(web3.utils.toBN(await shipToken.balanceOf(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))));
 
         const updatedShipperBalance = await shipToken.balanceOf(SHIPPER);
-        const balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
+        const balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
         expect(updatedShipperBalance).to.eq.BN(balanceAfterAdd);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
