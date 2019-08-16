@@ -546,19 +546,6 @@ contract('LoadContract with Escrow', async (accounts) => {
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
 
-    //should delete if confirmed we will remove the else clause
-
-    // it("should be able to revert if withdrawing with wrong EscrowFundingType", async () => {
-    //     const shipmentUuid = await createShipment(EscrowFundingType.INVALID);
-    //     await shipToken.approveAndCall(contract.address, web3.utils.toWei("1", "ether"), shipmentUuid, {from: SHIPPER});
-    //     await contract.setInProgress(shipmentUuid, {from: CARRIER});
-    //     await contract.setComplete(shipmentUuid, {from: CARRIER});
-    //
-    //     await contract.releaseEscrow(shipmentUuid, {from: MODERATOR});
-    //     await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: CARRIER}), "wrong EscrowFundingType");
-    //
-    // });
-
     it("should be able to withdraw all from overfunded SHIP escrow", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.SHIP);
         await shipToken.approveAndCall(contract.address, web3.utils.toWei("2", "ether"), shipmentUuid, {from: SHIPPER});
