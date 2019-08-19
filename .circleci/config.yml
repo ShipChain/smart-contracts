@@ -57,7 +57,7 @@ jobs: # a collection of steps
           name: "Run Mythril"
           command: |
             cd truffle
-            myth truffle
+            myth truffle --max-depth 18
           no_output_timeout: 30m
 
   truffle-tests:
