@@ -227,7 +227,5 @@ contract VaultNotary is Ownable {
         emit VaultHash(msg.sender, vaultId, vaultHash);
     }
 
-
-
 }
 

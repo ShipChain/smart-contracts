@@ -31,7 +31,6 @@ const timeTravel = async seconds => {
 };
 
 
-
 async function createShipToken(accounts){
     const shipToken = await SHIPToken.new();
     await shipToken.mint(accounts[0], web3.utils.toWei("1000", "ether"));
