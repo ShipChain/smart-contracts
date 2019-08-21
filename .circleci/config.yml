@@ -48,7 +48,7 @@ jobs: # a collection of steps
 
   mythril:
     docker:
-      - image: mythril/myth:0.21.0
+      - image: mythril/myth:0.21.12
     steps:
       - checkout
       - attach_workspace:
@@ -57,7 +57,7 @@ jobs: # a collection of steps
           name: "Run Mythril"
           command: |
             cd truffle
-            myth truffle --max-depth 20
+            myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --max-depth 16 --execution-timeout 1740
           no_output_timeout: 30m
 
   truffle-tests:
@@ -126,7 +126,7 @@ jobs: # a collection of steps
           command: |
             rm /project/example.sol
             cp -r "$(realpath truffle/flat-sol)/." /project
-            rm /project/Migrations.sol
+            rm /project/Migrations.sol /project/openzeppelin*.sol
             cd /sec
             python3 docker_run_securify.py -p /project
           no_output_timeout: 30m
