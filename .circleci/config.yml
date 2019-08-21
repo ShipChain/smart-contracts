@@ -48,7 +48,7 @@ jobs: # a collection of steps
 
   mythril:
     docker:
-      - image: mythril/myth:0.21.14
+      - image: mythril/myth:0.21.15
     steps:
       - checkout
       - attach_workspace:
@@ -57,7 +57,7 @@ jobs: # a collection of steps
           name: "Run Mythril"
           command: |
             cd truffle
-            myth truffle --max-depth 18
+            myth truffle --max-depth 20
           no_output_timeout: 30m
 
   truffle-tests:
@@ -162,14 +162,17 @@ jobs: # a collection of steps
             jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/meta.json || { echo "Current version of LOAD contract is already deployed"; exit 1; }
             jq -r '.contracts.LOAD.versions[env.VERSION].abi=env.ABI | .contracts.LOAD.versions[env.VERSION].bin=env.BYTECODE | .contracts.LOAD.versions[env.VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.LOAD.latest=env.VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
             git -C meta-contracts commit -a -m "Published LOAD $VERSION to meta-contracts"
+            git -C meta-contracts push
 
+      - run:
+          name: "Update meta-contracts repo with new VaultNotary version"
+          command: |
             export NOTARY_VERSION=$(cat truffle/contracts/VaultNotary/VERSION)
             export ABI=$(jq -rc .abi truffle/build/contracts/VaultNotary.json)
             export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/VaultNotary.json)
             jq -e '.contracts.VaultNotary.latest != env.NOTARY_VERSION' meta-contracts/meta.json || { echo "Current version of VAULT NOTARY contract is already deployed"; exit 1; }
-            jq -r '.contracts.VaultNotary.versions[env.NOTARY_VERSION].abi=env.ABI | .contracts.VaultNotary.versions[env.NOTOARY_VERSION].bin=env.BYTECODE | .contracts.VaultNotary.versions[env.NOTARY_VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.VaultNotary.latest=env.NOTARY_VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
+            jq -r '.contracts.VaultNotary.versions[env.NOTARY_VERSION].abi=env.ABI | .contracts.VaultNotary.versions[env.NOTARY_VERSION].bin=env.BYTECODE | .contracts.VaultNotary.versions[env.NOTARY_VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.VaultNotary.latest=env.NOTARY_VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
             git -C meta-contracts commit -a -m "Published VaultNotary $NOTARY_VERSION to meta-contracts"
-
             git -C meta-contracts push
 
 workflows:
