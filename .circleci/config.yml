@@ -48,7 +48,7 @@ jobs: # a collection of steps
 
   mythril:
     docker:
-      - image: mythril/myth:0.21.15
+      - image: mythril/myth:0.21.12
     steps:
       - checkout
       - attach_workspace:
