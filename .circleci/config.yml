@@ -57,7 +57,7 @@ jobs: # a collection of steps
           name: "Run Mythril"
           command: |
             cd truffle
-            myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --max-depth 16 --execution-timeout 1740
+            myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --solv 0.5.11 --max-depth 16 --execution-timeout 1740
           no_output_timeout: 30m
 
   truffle-tests:
