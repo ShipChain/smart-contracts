@@ -126,7 +126,6 @@ jobs: # a collection of steps
           command: |
             rm /project/example.sol
             cp -r "$(realpath truffle/flat-sol)/." /project
-#            rm /project/Migrations.sol /project/openzeppelin*.sol
             rm /project/Migrations.sol
             cd /sec
             python3 docker_run_securify.py -p /project
