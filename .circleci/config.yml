@@ -48,7 +48,7 @@ jobs: # a collection of steps
 
   mythril:
     docker:
-      - image: mythril/myth:0.21.12
+      - image: mythril/myth:0.21.14
     steps:
       - checkout
       - attach_workspace:
@@ -126,7 +126,8 @@ jobs: # a collection of steps
           command: |
             rm /project/example.sol
             cp -r "$(realpath truffle/flat-sol)/." /project
-            rm /project/Migrations.sol /project/openzeppelin*.sol
+#            rm /project/Migrations.sol /project/openzeppelin*.sol
+            rm /project/Migrations.sol
             cd /sec
             python3 docker_run_securify.py -p /project
           no_output_timeout: 30m
