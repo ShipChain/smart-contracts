@@ -52,8 +52,7 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     async function createShipment(fundingType = EscrowFundingType.SHIP, fundingAmount = web3.utils.toWei("1", "ether")){
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment(shipmentUuid, fundingType, fundingAmount, {from: SHIPPER});
-        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, fundingType, fundingAmount, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -77,7 +76,7 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     it("should create a LoadShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.ETHER, web3.utils.toWei("1", "ether"), {from: SHIPPER});
+        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.ETHER, web3.utils.toWei("1", "ether"), CARRIER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === uuidToHex32(shipmentUuid);
@@ -117,7 +116,7 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     //#region ETH
     it("should not create a ETHER Escrow with contractedAmount greater than the max supply", async () => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.ETHER, web3.utils.toWei("100000001", "ether"), {from: SHIPPER}));
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.ETHER, web3.utils.toWei("100000001", "ether"), CARRIER, {from: SHIPPER}));
     });
 
     it("should prevent accepting Eth via fallback function", async () => {
@@ -459,7 +458,7 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     //#region SHIP
     it("should not allow SHIP shipments to be created before token address is set", async() => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("1", "ether"), {from: SHIPPER}), "Token address must be set");
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("1", "ether"), CARRIER, {from: SHIPPER}), "Token address must be set");
     });
 
     it("should set the shipTokenContractAddress", async () => {
@@ -487,7 +486,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     });
 
     it("should not create a SHIP Escrow with contractedAmount greater than the max supply", async () => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("500000001", "ether"), {from: SHIPPER}));
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("500000001", "ether"), CARRIER, {from: SHIPPER}));
     });
 
     it("should only allow token address to be set once", async () => {

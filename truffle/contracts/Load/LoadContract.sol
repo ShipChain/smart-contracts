@@ -196,22 +196,6 @@ contract LoadContract is Ownable {
         emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
-   /** @notice createNewShipment function to provide backward compatibility.
-               This one will no set the carrier address.
-      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
-      * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
-      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
-      defined.
-      * @dev Emits ShipmentCreated on success     
-     */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount)
-        external
-        notDeprecated
-    {
-        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, address(0x0));
-    }
-
     /** @notice Creates a new Shipment and stores it in the Load Registry.
                 This one will set the carrier address.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
@@ -221,7 +205,7 @@ contract LoadContract is Ownable {
       * @param _carrierAddress address The address of the carrier for this shipment
       * @dev Emits ShipmentCreated on success.
       */
-    function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
     _fundingType, uint256 _contractedAmount, address _carrierAddress)
         public 
         notDeprecated
