@@ -222,7 +222,7 @@ contract LoadContract is Ownable {
                     "Token address must be set");
             require(escrow.state == Escrow.State.NOT_CREATED, "Escrow already exists");
         } else {
-            require(_contractedAmount == 0, "Cannot specify a contracted amount for a shipment with no escrow");
+            require(_contractedAmount == 0x0, "Cannot specify a contracted amount for a shipment with no escrow");
         }
 
         Shipment.Data storage shipment = allShipmentData[_shipmentUuid];
@@ -231,10 +231,11 @@ contract LoadContract is Ownable {
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
 
-        if (_carrierAddress != address(0))
+       emit ShipmentCreated(msg.sender, _shipmentUuid);
+
+       if (_carrierAddress != address(0x0))
             setCarrier(_shipmentUuid, _carrierAddress);
 
-        emit ShipmentCreated(msg.sender, _shipmentUuid);
 
         if (_fundingType != Escrow.FundingType.NO_FUNDING) {
             escrow.state = Escrow.State.CREATED;

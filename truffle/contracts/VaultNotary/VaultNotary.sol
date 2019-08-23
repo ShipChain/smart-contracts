@@ -9,24 +9,35 @@ import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
   * owner.
   */
 contract VaultNotary is Ownable {
-    struct Data {
-        // The address of the Vault owner
-        address vaultOwner;
-        string vaultHash;
-        string vaultUri;
 
+    struct Data {
+        /* Struct Slot 0 */
+        // The access control mapping to record whether an address can update the Hash of a Vault
+        mapping(address => bool) aclHashMapping;
+
+        /* Struct Slot 1 */
         // The access control mapping to record whether an address can update the Uri of a Vault
         mapping(address => bool) aclUriMapping;
 
-        // The access control mapping to record whether an address can update the Hash of a Vault
-        mapping(address => bool) aclHashMapping;
+        /* Struct Slot 2 */
+        // The address of the Vault owner, 20 bytes
+        address vaultOwner;
+
+        /* Struct Slot 3 */
+        string vaultHash;
+
+        /* Struct  Slot 4 */
+        string vaultUri;
+
     }
 
-    // Boolean that controls whether this contract is deprecated or not
-    bool internal isDeprecated;
-
+    /* Slot 0, data part at keccak256(key . uint256(0)), where . is concatenation*/
     // Each Vault has its own Data
     mapping(bytes16 => VaultNotary.Data) internal notaryMapping;
+
+    /* Slot 1 */
+    // Boolean that controls whether this contract is deprecated or not, 1 byte
+    bool internal isDeprecated;
 
     // Notary Events
     event VaultUri(address indexed msgSender, bytes16 indexed vaultId, string vaultUri);
@@ -53,7 +64,7 @@ contract VaultNotary is Ownable {
       */
     modifier canUpdateUri(bytes16 vaultId) {
         require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclUriMapping[msg.sender],
-            "canUpdateUri, only allow vault owner or the whitelisted users to access");
+            "Only the vault owner or whitelisted users can update vault URI");
         _;
     }
 
@@ -62,7 +73,7 @@ contract VaultNotary is Ownable {
       */
     modifier canUpdateHash(bytes16 vaultId) {
         require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclHashMapping[msg.sender],
-            "canUpdateHash, only allow vault owner or the whitelisted users to access");
+            "Only the vault owner or whitelisted users can update vault hash");
         _;
     }
 
@@ -71,7 +82,7 @@ contract VaultNotary is Ownable {
       * @param vaultId bytes16 ID of the vault to check
       */
     modifier vaultOwnerOnly(bytes16 vaultId) {
-        require(msg.sender == notaryMapping[vaultId].vaultOwner, "method only accessible to vault owner");
+        require(msg.sender == notaryMapping[vaultId].vaultOwner, "Method only accessible to vault owner");
         _;
     }
 
@@ -79,7 +90,7 @@ contract VaultNotary is Ownable {
       * @param vaultId bytes16 The ID of the vault to check
       */
     modifier isNotRegistered(bytes16 vaultId) {
-        require(notaryMapping[vaultId].vaultOwner == address(0x0), "vault ID already exists");
+        require(notaryMapping[vaultId].vaultOwner == address(0x0), "Vault ID already exists");
         _;
     }
 
@@ -87,7 +98,7 @@ contract VaultNotary is Ownable {
       * @param vaultId bytes16 The ID of the vault to check
       */
     modifier isRegistered(bytes16 vaultId) {
-        require(notaryMapping[vaultId].vaultOwner != address(0x0), "vault ID does not exist");
+        require(notaryMapping[vaultId].vaultOwner != address(0x0), "Vault ID does not exist");
         _;
     }
 
@@ -102,8 +113,8 @@ contract VaultNotary is Ownable {
 
     /** @notice This is function to register a vault, will only do the registration if a vaultId has not
                 been registered before
-      * @dev It sets the msg.sender to the vault owner and set the update permission of the owner to true
-      * It calls the setVaultUir and setVaultHash to initialize those two records
+      * @dev It sets the msg.sender to the vault owner, and calls the setVaultUri and setVaultHash to
+      * initialize the uri and hash of a vault
       * @param vaultId bytes16 VaultID to create, is the same as shipment ID in our system
       * @param vaultUri string Vault URI to set
       * @param vaultHash string  Vault hash to set
@@ -200,7 +211,8 @@ contract VaultNotary is Ownable {
         view
         returns(string memory vaultUri, string memory vaultHash)
     {
-        return (notaryMapping[vaultId].vaultUri, notaryMapping[vaultId].vaultHash);
+        vaultUri = notaryMapping[vaultId].vaultUri;
+        vaultHash = notaryMapping[vaultId].vaultHash;
     }
 
     /** @notice Function to set the vault URI
