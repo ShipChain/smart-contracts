@@ -13,11 +13,11 @@ contract VaultNotary is Ownable {
     struct Data {
         /* Struct Slot 0 */
         // The access control mapping to record whether an address can update the Hash of a Vault
-        mapping(address => bool) aclHashMapping;
+        mapping(address => bool) hashAcl;
 
         /* Struct Slot 1 */
         // The access control mapping to record whether an address can update the Uri of a Vault
-        mapping(address => bool) aclUriMapping;
+        mapping(address => bool) uriAcl;
 
         /* Struct Slot 2 */
         // The address of the Vault owner, 20 bytes
@@ -63,7 +63,7 @@ contract VaultNotary is Ownable {
       * only whitelisted user can do the decorated operation
       */
     modifier canUpdateUri(bytes16 vaultId) {
-        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclUriMapping[msg.sender],
+        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].uriAcl[msg.sender],
             "Only the vault owner or whitelisted users can update vault URI");
         _;
     }
@@ -72,7 +72,7 @@ contract VaultNotary is Ownable {
       * only whitelisted user can do the decorated operation
       */
     modifier canUpdateHash(bytes16 vaultId) {
-        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].aclHashMapping[msg.sender],
+        require(msg.sender == notaryMapping[vaultId].vaultOwner || notaryMapping[vaultId].hashAcl[msg.sender],
             "Only the vault owner or whitelisted users can update vault hash");
         _;
     }
@@ -157,7 +157,7 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
     {
-        notaryMapping[vaultId].aclHashMapping[addressToGrant] = true;
+        notaryMapping[vaultId].hashAcl[addressToGrant] = true;
         emit UpdateHashPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
 
@@ -170,7 +170,7 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
     {
-        notaryMapping[vaultId].aclHashMapping[addressToRevoke] = false;
+        notaryMapping[vaultId].hashAcl[addressToRevoke] = false;
         emit UpdateHashPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
 
@@ -183,7 +183,7 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
     {
-        notaryMapping[vaultId].aclUriMapping[addressToGrant] = true;
+        notaryMapping[vaultId].uriAcl[addressToGrant] = true;
         emit UpdateUriPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
 
@@ -196,7 +196,7 @@ contract VaultNotary is Ownable {
         vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
     {
-        notaryMapping[vaultId].aclUriMapping[addressToRevoke] = false;
+        notaryMapping[vaultId].uriAcl[addressToRevoke] = false;
         emit UpdateUriPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
 
