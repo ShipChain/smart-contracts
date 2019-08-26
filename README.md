@@ -166,6 +166,20 @@ bin/myth
 ```
 However, make sure you have done the first two steps of the [Startup section](#startup).
 
+## Local Coverage Test
+To run coverage test locally,
+```bash
+bin/ddo npm run coverage
+```
+
+## Solidity docgen
+To generate the markdown documentation for the NatSpec inline documentation,
+```bash
+bin/ddo npm run flatten
+bin/ddo npm run docgen
+```
+The output file is `truffle/docs/index.md`
+
 ## Documentation
 
 [Mermaid](https://mermaidjs.github.io/) charts in development in `truffle/LoadContract.html`.
