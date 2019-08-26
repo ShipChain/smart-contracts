@@ -94,7 +94,7 @@ This is best for ongoing development as you can deploy new versions of the contr
 
 ## Console
 
-To manually invoke the contract methods in your local network, use the truffle console (a NodeJS REPL).  Here is an example of creating a new LoadShipment using the current LoadRegistry contract and returning the LoadShipment's Shipper:
+To manually invoke the contract methods in your local network, use the truffle console (a NodeJS REPL). To enter the console, use `bin/truffle console`.  Here is an example of creating a new LoadShipment using the current LoadRegistry contract and returning the LoadShipment's Shipper:
 
 ```javascript
 // Get the network accounts
