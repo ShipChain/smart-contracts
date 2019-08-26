@@ -116,7 +116,11 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     //#region ETH
     it("should not create a ETHER Escrow with contractedAmount greater than the max supply", async () => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.ETHER, web3.utils.toWei("100000001", "ether"), CARRIER, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true),
+            EscrowFundingType.ETHER, web3.utils.toWei("100000001", "ether"),
+            CARRIER,
+            {from: SHIPPER}),
+            "Escrow amount must be less than max supply");
     });
 
     it("should prevent accepting Eth via fallback function", async () => {
@@ -287,10 +291,10 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     it("should only be able to set refund address by owner", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: SHIPPER}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: ATTACKER}));
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: SHIPPER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: CARRIER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: MODERATOR}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: ATTACKER}), "Ownable: caller is not the owner");
         let refundAddressTx = await contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: OWNER});
         await truffleAssert.eventEmitted(refundAddressTx, "EscrowRefundAddressSet", ev => {
             return ev.msgSender === OWNER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.refundAddress === MODERATOR;

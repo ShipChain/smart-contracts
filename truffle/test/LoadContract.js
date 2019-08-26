@@ -129,9 +129,8 @@ contract('LoadContract', async (accounts) => {
     it("should have a getShipmentData function, and work with createNewShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0,  CARRIER, {from: SHIPPER});
-        await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
-
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.shipment.shipper, SHIPPER);
         assert.equal(data.shipment.carrier, CARRIER);
@@ -150,24 +149,24 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.vaultHash, "new_hash");
     });
 
-    it("should revert if setVaultUri without permission if using createShipment", async () => {
+    it("should revert if setVaultUri without permission", async () => {
         const shipmentUuid = await createShipment();
-        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: ATTACKER}));
-        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: CARRIER}));
-        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: MODERATOR}));
+        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: ATTACKER}), "Only the vault owner or whitelisted users can update vault URI");
+        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: CARRIER}), "Only the vault owner or whitelisted users can update vault URI");
+        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: MODERATOR}), "Only the vault owner or whitelisted users can update vault URI");
     });
 
-    it("should allow carrier to update hash if using createShipment", async () => {
+    it("should allow carrier to update hash", async () => {
         const shipmentUuid = await createShipment();
         await notary.setVaultHash(shipmentUuid, "new_hash", {from: CARRIER});
         let data = await notary.getVaultNotaryDetails(shipmentUuid);
         assert.equal(data.vaultHash, "new_hash");
     });
 
-    it("should revert if setVaultHash without permission if using createShipment", async () => {
+    it("should revert if setVaultHash without permission", async () => {
         const shipmentUuid = await createShipment();
-        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: ATTACKER}));
-        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: MODERATOR}));
+        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: ATTACKER}), "Only the vault owner or whitelisted users can update vault hash");
+        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: MODERATOR}), "Only the vault owner or whitelisted users can update vault hash");
     });
 
     it("should set inProgress", async () => {
@@ -262,10 +261,10 @@ contract('LoadContract', async (accounts) => {
     });
 
     it("should not create new shipments if the contract is deprecated", async () => {
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}), "Ownable: caller is not the owner");
         let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
             return ev.msgSender === OWNER && ev.isDeprecated === true;
