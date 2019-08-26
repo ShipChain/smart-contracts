@@ -13,9 +13,8 @@ function uuidToHex32(uuid) {
 
 contract('VaultNotary', async (accounts) => {
     const OWNER = accounts[0];
-    const SHIPPER = accounts[1];
-    const CARRIER = accounts[2];
-    const MODERATOR = accounts[3];
+    const ALICE = accounts[1];
+    const BOB = accounts[2];
     const ATTACKER = accounts[9];
 
     let contract;
@@ -27,7 +26,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "hash";
-        await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
         return vaultId;
     }
 
@@ -37,18 +36,18 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "hash";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
-            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -63,18 +62,18 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "";
         const vaultHash = "hash";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
-            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventNotEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultUri === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -89,18 +88,18 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "uri";
         const vaultHash = "";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
-            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventNotEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultHash === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -115,18 +114,18 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "";
         const vaultHash = "";
-        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER});
+        const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
-            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventNotEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultUri === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventNotEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultHash === "" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -142,7 +141,7 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault()
         const vaultUri = "uri";
         const vaultHash = "hash";
-        await truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE}), "Vault ID already exists");
 
     });
 
@@ -151,41 +150,39 @@ contract('VaultNotary', async (accounts) => {
     it("should revert the grantUpdateHashPermission transaction if vaultId is not registered", async () => {
         //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, BOB, {from: ALICE}), "Method only accessible to vault owner");
     });
 
     it("should revert the grantUpdateHashPermission, if not called from the vaultOwner", async () => {
         //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, CARRIER, {from: ATTACKER}));
+        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, BOB, {from: ATTACKER}),"Method only accessible to vault owner");
     });
 
 
     //*******************partially testing revokeUpdateHashPermission************************
     it("should revert the revokeUpdateHashPermission transaction if vaultId is not registered", async () => {
-        //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, BOB, {from: ALICE}), "Method only accessible to vault owner");
     });
 
     it("should revert the revokeUpdateHashPermission not called from the vaultOwner", async () => {
         //first create a vault
-        const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: ATTACKER}));
+        const vaultId = await registerVault()
+        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, BOB, {from: ATTACKER}), "Method only accessible to vault owner");
     });
 
     //****************partially testing grantUpdateUriPermission***********************
 
     it("should revert the grantUpdateUriPermission transaction if vaultId is not registered", async () => {
-        //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, CARRIER, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, BOB, {from: ALICE}));
     });
 
     it("should revert the grantUpdateUriPermission, if not called from the vaultOwner", async () => {
         //first create a vault
-        const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, CARRIER, {from: ATTACKER}));
+        const vaultId = await registerVault()
+        await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, BOB, {from: ATTACKER}));
     });
 
 
@@ -193,13 +190,13 @@ contract('VaultNotary', async (accounts) => {
     it("should revert the revokeUpdateUriPermission transaction if vaultId is not registered", async () => {
         //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, CARRIER, {from: SHIPPER}));
+        await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, BOB, {from: ALICE}));
     });
 
     it("should revert the revokeUpdateUriPermission not called from the vaultOwner", async () => {
         //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, CARRIER, {from: ATTACKER}));
+        await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, BOB, {from: ATTACKER}));
     });
 
 
@@ -207,9 +204,9 @@ contract('VaultNotary', async (accounts) => {
 
     it("should set the uri, if the address is the SHIPPER, after registerVault", async () => {
         const vaultId = await registerVault();
-        const setUriTx = await contract.setVaultUri(vaultId, "new_uri",  {from: SHIPPER});
+        const setUriTx = await contract.setVaultUri(vaultId, "new_uri",  {from: ALICE});
         await truffleAssert.eventEmitted(setUriTx, "VaultUri", ev => {
-            return ev.vaultUri === "new_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultUri === "new_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -223,14 +220,14 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdateUriPermission(vaultId, CARRIER, {from: SHIPPER});
+        const grantTx = await contract.grantUpdateUriPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(grantTx, "UpdateUriPermissionGranted", ev => {
-            return ev.addressToGrant === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToGrant === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        const setUriTx = await contract.setVaultUri(vaultId, "carrier_uri",  {from: CARRIER});
+        const setUriTx = await contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB});
         await truffleAssert.eventEmitted(setUriTx, "VaultUri", ev => {
-            return ev.vaultUri === "carrier_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === CARRIER;
+            return ev.vaultUri === "carrier_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === BOB;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -241,7 +238,7 @@ contract('VaultNotary', async (accounts) => {
     it("should revert the setVaultUri transaction when permission not granted yet", async () => {
         //first create a vault
         const vaultId = await registerVault();
-        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI");
 
     });
 
@@ -250,18 +247,18 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdateUriPermission(vaultId, CARRIER, {from: SHIPPER});
+        const grantTx = await contract.grantUpdateUriPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(grantTx, "UpdateUriPermissionGranted", ev => {
-            return ev.addressToGrant === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToGrant === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdateUriPermission(vaultId, CARRIER, {from: SHIPPER});
+        const revokeTx = await contract.revokeUpdateUriPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(revokeTx, "UpdateUriPermissionRevoked", ev => {
-            return ev.addressToRevoke === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI" );
 
     });
 
@@ -270,12 +267,12 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdateUriPermission(vaultId, CARRIER, {from: SHIPPER});
+        const revokeTx = await contract.revokeUpdateUriPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(revokeTx, "UpdateUriPermissionRevoked", ev => {
-            return ev.addressToRevoke === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI");
 
     });
 
@@ -284,9 +281,9 @@ contract('VaultNotary', async (accounts) => {
 
     it("should set the hash, if the address is the SHIPPER, after registerVault", async () => {
         const vaultId = await registerVault();
-        const setHashTx = await contract.setVaultHash(vaultId, "new_hash",  {from: SHIPPER});
+        const setHashTx = await contract.setVaultHash(vaultId, "new_hash",  {from: ALICE});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
-            return ev.vaultHash === "new_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === SHIPPER;
+            return ev.vaultHash === "new_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -300,14 +297,14 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        const grantTx = await contract.grantUpdateHashPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(grantTx, "UpdateHashPermissionGranted", ev => {
-            return ev.addressToGrant === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToGrant === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        const setHashTx = await contract.setVaultHash(vaultId, "carrier_hash",  {from: CARRIER});
+        const setHashTx = await contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
-            return ev.vaultHash === "carrier_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === CARRIER;
+            return ev.vaultHash === "carrier_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === BOB;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
@@ -318,7 +315,7 @@ contract('VaultNotary', async (accounts) => {
     it("should revert the setVaultHash transaction when permission not granted yet", async () => {
         //first create a vault
         const vaultId = await registerVault();
-        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
 
     });
 
@@ -327,18 +324,18 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const grantTx = await contract.grantUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        const grantTx = await contract.grantUpdateHashPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(grantTx, "UpdateHashPermissionGranted", ev => {
-            return ev.addressToGrant === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToGrant === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(revokeTx, "UpdateHashPermissionRevoked", ev => {
-            return ev.addressToRevoke === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
 
     });
 
@@ -347,21 +344,20 @@ contract('VaultNotary', async (accounts) => {
         const vaultId = await registerVault();
 
         //grant the permission from the vault owner
-        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, CARRIER, {from: SHIPPER});
+        const revokeTx = await contract.revokeUpdateHashPermission(vaultId, BOB, {from: ALICE});
         await truffleAssert.eventEmitted(revokeTx, "UpdateHashPermissionRevoked", ev => {
-            return ev.addressToRevoke === CARRIER && ev.msgSender === SHIPPER && ev.vaultId === uuidToHex32(vaultId);
+            return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: CARRIER}));
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
 
     });
 
     //**********************testing the setDeprecated************************
     it("should not allow users other than OWNER to setDeprecated", async () => {
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: ALICE}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: BOB}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}), "Ownable: caller is not the owner");
     });
 
     it("should disable the registerVault function after setting deprecated, and enable it if called again", async () => {
