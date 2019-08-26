@@ -3,7 +3,6 @@ const uuidv4 = require('uuid/v4');
 const uuidToHex = require('uuid-to-hex');
 
 const LoadContract = artifacts.require("LoadContract");
-const VaultNotary = artifacts.require("VaultNotary");
 
 const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
@@ -13,28 +12,19 @@ function uuidToHex32(uuid) {
     return uuid + '00000000000000000000000000000000'
 }
 
-
 contract('LoadContract', async (accounts) => {
+
     const OWNER = accounts[0];
     const SHIPPER = accounts[1];
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
     const ATTACKER = accounts[9];
 
-    async function createNotary() {
-        const notaryContract = await VaultNotary.new();
-        return notaryContract;
-    }
-
     let contract;
-    let notary;
-
 
     async function createShipment(){
         const shipmentUuid = uuidToHex(uuidv4(), true);
         await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
-        await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
-        await notary.grantUpdateHashPermission(shipmentUuid, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -49,15 +39,12 @@ contract('LoadContract', async (accounts) => {
     }
 
     before(async () =>{
-        notary = await createNotary();
         contract = await LoadContract.deployed();
     });
-
 
     it("should create a LoadShipment with carrier address", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
         const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
-        await notary.registerVault(shipmentUuid, "uri", "hash", {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === uuidToHex32(shipmentUuid);
@@ -71,10 +58,6 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.shipment.state, ShipmentState.CREATED);
         assert.equal(data.shipment.carrier, CARRIER);
         assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
-
-        const notaryData = await notary.getVaultNotaryDetails(shipmentUuid);
-        assert.equal(notaryData.vaultHash, "hash");
-        assert.equal(notaryData.vaultUri, "uri");
 
     });
 
@@ -136,37 +119,6 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.shipment.carrier, CARRIER);
         assert.equal(data.shipment.moderator, MODERATOR);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
-    });
-
-    it("should allow SHIPPER to update the uri and hash", async () => {
-        const shipmentUuid = await createShipment();
-
-        await notary.setVaultUri(shipmentUuid, "new_uri", {from: SHIPPER});
-        await notary.setVaultHash(shipmentUuid, "new_hash", {from: SHIPPER});
-
-        let data = await notary.getVaultNotaryDetails(shipmentUuid);
-        assert.equal(data.vaultUri, "new_uri");
-        assert.equal(data.vaultHash, "new_hash");
-    });
-
-    it("should revert if setVaultUri without permission", async () => {
-        const shipmentUuid = await createShipment();
-        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: ATTACKER}), "Only the vault owner or whitelisted users can update vault URI");
-        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: CARRIER}), "Only the vault owner or whitelisted users can update vault URI");
-        await truffleAssert.reverts(notary.setVaultUri(shipmentUuid, "new_uri", {from: MODERATOR}), "Only the vault owner or whitelisted users can update vault URI");
-    });
-
-    it("should allow carrier to update hash", async () => {
-        const shipmentUuid = await createShipment();
-        await notary.setVaultHash(shipmentUuid, "new_hash", {from: CARRIER});
-        let data = await notary.getVaultNotaryDetails(shipmentUuid);
-        assert.equal(data.vaultHash, "new_hash");
-    });
-
-    it("should revert if setVaultHash without permission", async () => {
-        const shipmentUuid = await createShipment();
-        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: ATTACKER}), "Only the vault owner or whitelisted users can update vault hash");
-        await truffleAssert.reverts(notary.setVaultHash(shipmentUuid, "new_hash", {from: MODERATOR}), "Only the vault owner or whitelisted users can update vault hash");
     });
 
     it("should set inProgress", async () => {
