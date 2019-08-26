@@ -2,7 +2,7 @@
   "scripts": {
     "truffle": "./node_modules/.bin/truffle",
     "lint": "./node_modules/.bin/solhint ./**/**/*.sol",
-    "docgen": "./node_modules/.bin/solidity-docgen -i flat-sol-ex",
+    "docgen": "./node_modules/.bin/solidity-docgen -i flat-sol",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "flatten": "./node_modules/.bin/soljitsu flatten --truffle=./ --dest-dir=./flat-sol",
     "combine": "./node_modules/.bin/soljitsu combine --truffle=./ --dest-dir=./combined-sol",

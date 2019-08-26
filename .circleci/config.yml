@@ -90,6 +90,12 @@ jobs: # a collection of steps
       - attach_workspace:
           at: truffle
       - run:
+          name: "Install solc"
+          command: |
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
+            chmod +x solc-static-linux
+            sudo mv solc-static-linux /usr/bin/solc
+      - run:
           name: "Solidity test coverage"
           command: |
             cd truffle

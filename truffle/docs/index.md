@@ -13,8 +13,7 @@
 [LoadContract-setDeprecated-bool-]: #LoadContract-setDeprecated-bool-
 [LoadContract-setShipTokenContractAddress-address-]: #LoadContract-setShipTokenContractAddress-address-
 [LoadContract-setEscrowRefundAddress-bytes16-address-]: #LoadContract-setEscrowRefundAddress-bytes16-address-
-[LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-]: #LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-
-[LoadContract-createNewShipment2-bytes16-enum-Escrow-FundingType-uint256-address-]: #LoadContract-createNewShipment2-bytes16-enum-Escrow-FundingType-uint256-address-
+[LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-address-]: #LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-address-
 [LoadContract-setCarrier-bytes16-address-]: #LoadContract-setCarrier-bytes16-address-
 [LoadContract-setModerator-bytes16-address-]: #LoadContract-setModerator-bytes16-address-
 [LoadContract-setInProgress-bytes16-]: #LoadContract-setInProgress-bytes16-
@@ -111,6 +110,67 @@
 [VaultNotary-UpdateUriPermissionRevoked-address-bytes16-address-]: #VaultNotary-UpdateUriPermissionRevoked-address-bytes16-address-
 [VaultNotary-ContractDeprecatedSet-address-bool-]: #VaultNotary-ContractDeprecatedSet-address-bool-
 [Ownable-OwnershipTransferred-address-address-]: #Ownable-OwnershipTransferred-address-address-
+[MintableToken]: #MintableToken
+[MintableToken-canMint--]: #MintableToken-canMint--
+[Ownable-onlyOwner--]: #Ownable-onlyOwner--
+[MintableToken-mint-address-uint256-]: #MintableToken-mint-address-uint256-
+[MintableToken-finishMinting--]: #MintableToken-finishMinting--
+[Ownable-constructor--]: #Ownable-constructor--
+[Ownable-owner--]: #Ownable-owner--
+[Ownable-isOwner--]: #Ownable-isOwner--
+[Ownable-renounceOwnership--]: #Ownable-renounceOwnership--
+[Ownable-transferOwnership-address-]: #Ownable-transferOwnership-address-
+[Ownable-_transferOwnership-address-]: #Ownable-_transferOwnership-address-
+[ERC20-totalSupply--]: #ERC20-totalSupply--
+[ERC20-balanceOf-address-]: #ERC20-balanceOf-address-
+[ERC20-transfer-address-uint256-]: #ERC20-transfer-address-uint256-
+[ERC20-allowance-address-address-]: #ERC20-allowance-address-address-
+[ERC20-approve-address-uint256-]: #ERC20-approve-address-uint256-
+[ERC20-transferFrom-address-address-uint256-]: #ERC20-transferFrom-address-address-uint256-
+[ERC20-increaseAllowance-address-uint256-]: #ERC20-increaseAllowance-address-uint256-
+[ERC20-decreaseAllowance-address-uint256-]: #ERC20-decreaseAllowance-address-uint256-
+[ERC20-_transfer-address-address-uint256-]: #ERC20-_transfer-address-address-uint256-
+[ERC20-_mint-address-uint256-]: #ERC20-_mint-address-uint256-
+[ERC20-_burn-address-uint256-]: #ERC20-_burn-address-uint256-
+[ERC20-_approve-address-address-uint256-]: #ERC20-_approve-address-address-uint256-
+[ERC20-_burnFrom-address-uint256-]: #ERC20-_burnFrom-address-uint256-
+[MintableToken-Minted-address-uint256-]: #MintableToken-Minted-address-uint256-
+[MintableToken-MintFinished--]: #MintableToken-MintFinished--
+[Ownable-OwnershipTransferred-address-address-]: #Ownable-OwnershipTransferred-address-address-
+[IERC20-Transfer-address-address-uint256-]: #IERC20-Transfer-address-address-uint256-
+[IERC20-Approval-address-address-uint256-]: #IERC20-Approval-address-address-uint256-
+[ApproveAndCallFallBack]: #ApproveAndCallFallBack
+[ApproveAndCallFallBack-receiveApproval-address-uint256-address-bytes-]: #ApproveAndCallFallBack-receiveApproval-address-uint256-address-bytes-
+[SHIPToken]: #SHIPToken
+[MintableToken-canMint--]: #MintableToken-canMint--
+[Ownable-onlyOwner--]: #Ownable-onlyOwner--
+[SHIPToken-constructor--]: #SHIPToken-constructor--
+[SHIPToken-approveAndCall-address-uint256-bytes-]: #SHIPToken-approveAndCall-address-uint256-bytes-
+[MintableToken-mint-address-uint256-]: #MintableToken-mint-address-uint256-
+[MintableToken-finishMinting--]: #MintableToken-finishMinting--
+[Ownable-owner--]: #Ownable-owner--
+[Ownable-isOwner--]: #Ownable-isOwner--
+[Ownable-renounceOwnership--]: #Ownable-renounceOwnership--
+[Ownable-transferOwnership-address-]: #Ownable-transferOwnership-address-
+[Ownable-_transferOwnership-address-]: #Ownable-_transferOwnership-address-
+[ERC20-totalSupply--]: #ERC20-totalSupply--
+[ERC20-balanceOf-address-]: #ERC20-balanceOf-address-
+[ERC20-transfer-address-uint256-]: #ERC20-transfer-address-uint256-
+[ERC20-allowance-address-address-]: #ERC20-allowance-address-address-
+[ERC20-approve-address-uint256-]: #ERC20-approve-address-uint256-
+[ERC20-transferFrom-address-address-uint256-]: #ERC20-transferFrom-address-address-uint256-
+[ERC20-increaseAllowance-address-uint256-]: #ERC20-increaseAllowance-address-uint256-
+[ERC20-decreaseAllowance-address-uint256-]: #ERC20-decreaseAllowance-address-uint256-
+[ERC20-_transfer-address-address-uint256-]: #ERC20-_transfer-address-address-uint256-
+[ERC20-_mint-address-uint256-]: #ERC20-_mint-address-uint256-
+[ERC20-_burn-address-uint256-]: #ERC20-_burn-address-uint256-
+[ERC20-_approve-address-address-uint256-]: #ERC20-_approve-address-address-uint256-
+[ERC20-_burnFrom-address-uint256-]: #ERC20-_burnFrom-address-uint256-
+[MintableToken-Minted-address-uint256-]: #MintableToken-Minted-address-uint256-
+[MintableToken-MintFinished--]: #MintableToken-MintFinished--
+[Ownable-OwnershipTransferred-address-address-]: #Ownable-OwnershipTransferred-address-address-
+[IERC20-Transfer-address-address-uint256-]: #IERC20-Transfer-address-address-uint256-
+[IERC20-Approval-address-address-uint256-]: #IERC20-Approval-address-address-uint256-
 [SafeMath]: #SafeMath
 [SafeMath-add-uint256-uint256-]: #SafeMath-add-uint256-uint256-
 [SafeMath-sub-uint256-uint256-]: #SafeMath-sub-uint256-uint256-
@@ -169,8 +229,7 @@
 - [`setDeprecated(bool _isDeprecated)`][LoadContract-setDeprecated-bool-]
 - [`setShipTokenContractAddress(address _shipTokenAddress)`][LoadContract-setShipTokenContractAddress-address-]
 - [`setEscrowRefundAddress(bytes16 _shipmentUuid, address _refundAddress)`][LoadContract-setEscrowRefundAddress-bytes16-address-]
-- [`createNewShipment(bytes16 _shipmentUuid, enum Escrow.FundingType _fundingType, uint256 _contractedAmount)`][LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-]
-- [`createNewShipment2(bytes16 _shipmentUuid, enum Escrow.FundingType _fundingType, uint256 _contractedAmount, address _carrierAddress)`][LoadContract-createNewShipment2-bytes16-enum-Escrow-FundingType-uint256-address-]
+- [`createNewShipment(bytes16 _shipmentUuid, enum Escrow.FundingType _fundingType, uint256 _contractedAmount, address _carrierAddress)`][LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-address-]
 - [`setCarrier(bytes16 _shipmentUuid, address _carrier)`][LoadContract-setCarrier-bytes16-address-]
 - [`setModerator(bytes16 _shipmentUuid, address _moderator)`][LoadContract-setModerator-bytes16-address-]
 - [`setInProgress(bytes16 _shipmentUuid)`][LoadContract-setInProgress-bytes16-]
@@ -266,11 +325,7 @@ Only Owner
 
 Only Owner
 
-### <span id="LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-"></span> `createNewShipment(bytes16 _shipmentUuid, enum Escrow.FundingType _fundingType, uint256 _contractedAmount)` (external)
-
-Emits ShipmentCreated on success     
-
-### <span id="LoadContract-createNewShipment2-bytes16-enum-Escrow-FundingType-uint256-address-"></span> `createNewShipment2(bytes16 _shipmentUuid, enum Escrow.FundingType _fundingType, uint256 _contractedAmount, address _carrierAddress)` (public)
+### <span id="LoadContract-createNewShipment-bytes16-enum-Escrow-FundingType-uint256-address-"></span> `createNewShipment(bytes16 _shipmentUuid, enum Escrow.FundingType _fundingType, uint256 _contractedAmount, address _carrierAddress)` (public)
 
 Emits ShipmentCreated on success.
 
@@ -603,8 +658,8 @@ Will check the message sender, only the owner of a vault can do the operation de
 
 ### <span id="VaultNotary-registerVault-bytes16-string-string-"></span> `registerVault(bytes16 vaultId, string vaultUri, string vaultHash)` (external)
 
-It sets the msg.sender to the vault owner and set the update permission of the owner to true
-It calls the setVaultUir and setVaultHash to initialize those two records
+It sets the msg.sender to the vault owner, and calls the setVaultUri and setVaultHash to
+initialize the uri and hash of a vault
 
 
 ### <span id="VaultNotary-setDeprecated-bool-"></span> `setDeprecated(bool _isDeprecated)` (external)
@@ -668,6 +723,116 @@ It calls the setVaultUir and setVaultHash to initialize those two records
 
 
 ### <span id="VaultNotary-ContractDeprecatedSet-address-bool-"></span> `ContractDeprecatedSet(address msgSender, bool isDeprecated)`
+
+
+
+
+
+## <span id="MintableToken"></span> `MintableToken`
+
+Simple ERC20 Token example, with mintable token creation and update of max supply
+
+- [`canMint()`][MintableToken-canMint--]
+- [`onlyOwner()`][Ownable-onlyOwner--]
+- [`mint(address to, uint256 value)`][MintableToken-mint-address-uint256-]
+- [`finishMinting()`][MintableToken-finishMinting--]
+- [`constructor()`][Ownable-constructor--]
+- [`owner()`][Ownable-owner--]
+- [`isOwner()`][Ownable-isOwner--]
+- [`renounceOwnership()`][Ownable-renounceOwnership--]
+- [`transferOwnership(address newOwner)`][Ownable-transferOwnership-address-]
+- [`_transferOwnership(address newOwner)`][Ownable-_transferOwnership-address-]
+- [`totalSupply()`][ERC20-totalSupply--]
+- [`balanceOf(address account)`][ERC20-balanceOf-address-]
+- [`transfer(address recipient, uint256 amount)`][ERC20-transfer-address-uint256-]
+- [`allowance(address owner, address spender)`][ERC20-allowance-address-address-]
+- [`approve(address spender, uint256 value)`][ERC20-approve-address-uint256-]
+- [`transferFrom(address sender, address recipient, uint256 amount)`][ERC20-transferFrom-address-address-uint256-]
+- [`increaseAllowance(address spender, uint256 addedValue)`][ERC20-increaseAllowance-address-uint256-]
+- [`decreaseAllowance(address spender, uint256 subtractedValue)`][ERC20-decreaseAllowance-address-uint256-]
+- [`_transfer(address sender, address recipient, uint256 amount)`][ERC20-_transfer-address-address-uint256-]
+- [`_mint(address account, uint256 amount)`][ERC20-_mint-address-uint256-]
+- [`_burn(address account, uint256 value)`][ERC20-_burn-address-uint256-]
+- [`_approve(address owner, address spender, uint256 value)`][ERC20-_approve-address-address-uint256-]
+- [`_burnFrom(address account, uint256 amount)`][ERC20-_burnFrom-address-uint256-]
+- [`Minted(address to, uint256 amount)`][MintableToken-Minted-address-uint256-]
+- [`MintFinished()`][MintableToken-MintFinished--]
+- [`OwnershipTransferred(address previousOwner, address newOwner)`][Ownable-OwnershipTransferred-address-address-]
+- [`Transfer(address from, address to, uint256 value)`][IERC20-Transfer-address-address-uint256-]
+- [`Approval(address owner, address spender, uint256 value)`][IERC20-Approval-address-address-uint256-]
+### <span id="MintableToken-canMint--"></span> `canMint()`
+
+
+
+### <span id="MintableToken-mint-address-uint256-"></span> `mint(address to, uint256 value) → bool` (public)
+
+Function to mint tokens
+
+
+### <span id="MintableToken-finishMinting--"></span> `finishMinting() → bool` (public)
+
+Function to stop minting new tokens.
+
+
+### <span id="MintableToken-Minted-address-uint256-"></span> `Minted(address to, uint256 amount)`
+
+
+
+### <span id="MintableToken-MintFinished--"></span> `MintFinished()`
+
+
+
+
+
+## <span id="ApproveAndCallFallBack"></span> `ApproveAndCallFallBack`
+
+
+
+- [`receiveApproval(address from, uint256 tokens, address token, bytes data)`][ApproveAndCallFallBack-receiveApproval-address-uint256-address-bytes-]
+### <span id="ApproveAndCallFallBack-receiveApproval-address-uint256-address-bytes-"></span> `receiveApproval(address from, uint256 tokens, address token, bytes data)` (public)
+
+
+
+
+
+## <span id="SHIPToken"></span> `SHIPToken`
+
+
+
+- [`canMint()`][MintableToken-canMint--]
+- [`onlyOwner()`][Ownable-onlyOwner--]
+- [`constructor()`][SHIPToken-constructor--]
+- [`approveAndCall(address spender, uint256 _value, bytes data)`][SHIPToken-approveAndCall-address-uint256-bytes-]
+- [`mint(address to, uint256 value)`][MintableToken-mint-address-uint256-]
+- [`finishMinting()`][MintableToken-finishMinting--]
+- [`owner()`][Ownable-owner--]
+- [`isOwner()`][Ownable-isOwner--]
+- [`renounceOwnership()`][Ownable-renounceOwnership--]
+- [`transferOwnership(address newOwner)`][Ownable-transferOwnership-address-]
+- [`_transferOwnership(address newOwner)`][Ownable-_transferOwnership-address-]
+- [`totalSupply()`][ERC20-totalSupply--]
+- [`balanceOf(address account)`][ERC20-balanceOf-address-]
+- [`transfer(address recipient, uint256 amount)`][ERC20-transfer-address-uint256-]
+- [`allowance(address owner, address spender)`][ERC20-allowance-address-address-]
+- [`approve(address spender, uint256 value)`][ERC20-approve-address-uint256-]
+- [`transferFrom(address sender, address recipient, uint256 amount)`][ERC20-transferFrom-address-address-uint256-]
+- [`increaseAllowance(address spender, uint256 addedValue)`][ERC20-increaseAllowance-address-uint256-]
+- [`decreaseAllowance(address spender, uint256 subtractedValue)`][ERC20-decreaseAllowance-address-uint256-]
+- [`_transfer(address sender, address recipient, uint256 amount)`][ERC20-_transfer-address-address-uint256-]
+- [`_mint(address account, uint256 amount)`][ERC20-_mint-address-uint256-]
+- [`_burn(address account, uint256 value)`][ERC20-_burn-address-uint256-]
+- [`_approve(address owner, address spender, uint256 value)`][ERC20-_approve-address-address-uint256-]
+- [`_burnFrom(address account, uint256 amount)`][ERC20-_burnFrom-address-uint256-]
+- [`Minted(address to, uint256 amount)`][MintableToken-Minted-address-uint256-]
+- [`MintFinished()`][MintableToken-MintFinished--]
+- [`OwnershipTransferred(address previousOwner, address newOwner)`][Ownable-OwnershipTransferred-address-address-]
+- [`Transfer(address from, address to, uint256 value)`][IERC20-Transfer-address-address-uint256-]
+- [`Approval(address owner, address spender, uint256 value)`][IERC20-Approval-address-address-uint256-]
+### <span id="SHIPToken-constructor--"></span> `constructor()` (public)
+
+Constructor that gives msg.sender all of existing tokens.
+
+### <span id="SHIPToken-approveAndCall-address-uint256-bytes-"></span> `approveAndCall(address spender, uint256 _value, bytes data) → bool success` (public)
 
 
 
@@ -1007,10 +1172,7 @@ Emits a `Transfer` event.
 ### <span id="IERC20-allowance-address-address-"></span> `allowance(address owner, address spender) → uint256` (external)
 
 Returns the remaining number of tokens that `spender` will be
-allowed ed:   package.json
-
-kkkkkkkkkkkkkk
-to spend on behalf of `owner` through `transferFrom`. This is
+allowed to spend on behalf of `owner` through `transferFrom`. This is
 zero by default.
 
 This value changes when `approve` or `transferFrom` are called.
