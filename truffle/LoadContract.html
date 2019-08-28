@@ -25,7 +25,7 @@
 
 <div class="mermaid" id="EscrowSequence" style="display: none">
 
-sequenceDiagram
+   sequenceDiagram
 participant T as Token
 participant E as Escrow
 participant SL as Shipment
@@ -35,14 +35,22 @@ participant S as Shipper
 participant C as Carrier
 participant M as Moderator
 
+S ->>V:registerVault(vaultId, vaultUri, vaultHash)
+activate V
+note over V: emit VaultRegistered
+note over V: emit VaultUri
+note over V: emit VaultHash
+deactivate V
 
-S ->> L: createNewShipment(funding arguments)
+S ->> L: createNewShipment(funding argumenta, carrier)
 activate L
 L -->> SL: setState(CREATED)
 activate SL
 L -->> SL: setShipper(Shipper)
-deactivate SL
 note over L: emit ShipmentCreated
+L -->> SL: setCarrier(Carrier)
+note over L: emit ShipmentCarrierSet
+deactivate SL
 
 opt Escrowed Shipment
 L -->> E: setState(CREATED)
@@ -55,19 +63,6 @@ deactivate E
 note over L: emit EscrowCreated
 deactivate L
 end
-
-S ->>V:registerVault(vaultId, vaultUri, vaultHash)
-activate V
-note over V: emit VaultRegistered
-deactivate V
-
-S ->> L: setCarrier(vaultId, Carrier)
-activate L
-L -->> SL: setCarrier(vaultId, Carrier)
-activate SL
-deactivate SL
-note over L: emit ShipmentCarrierSet
-deactivate L
 
 S->>V: grantUpdateHashPermission(vaultId, Carrier)
 activate V
@@ -84,10 +79,28 @@ note over L: emit ShipmentModeratorSet
 deactivate L
 end
 
+opt Update Carrier
+S ->> L: setCarrier(vaultId, Carrier)
+activate L
+L -->> SL: setCarrier(vaultId, Carrier)
+activate SL
+deactivate SL
+note over L: emit ShipmentCarrierSet
+deactivate L
+
+S->>V: grantUpdateHashPermission(vaultId, Carrier)
+activate V
+deactivate V
+note over V: UpdateHashPermissionGranted
+end
+
+
+opt Update URI
 S ->> V: setVaultUri(vaultId, vaultUri)
 activate V
 deactivate V
 note over V: emit VaultUri
+end
 
 opt Escrowed Shipment
 loop While fundedAmount < contractedAmount
@@ -183,34 +196,35 @@ note over V: UpdateHashPermissionRevoked
 end
 
 
-
-opt Need to Grant the Hash Permission of One Participant
+opt Access Control Calls
+alt Shipper
 S->>V: grantUpdateHashPermission(vaultId, addressToUpdate)
 activate V
 deactivate V
 note over V: UpdateHashPermissionGranted
-end
 
-opt Need to Revoke the Hash Permission of One Participant
+
+
 S->>V: revokeUpdateHashPermission(vaultId, addressToRevoke)
 activate V
 deactivate V
 note over V: UpdateHashPermissionRevoked
-end
 
 
-opt Need to Grant the URI Permission of One Participant
+
+
 S->>V: grantUpdateUriPermission(vaultId, addressToUpdate)
 activate V
 deactivate V
 note over V: UpdateUPermissionGranted
-end
 
-opt Need to Revoke the URI Permission of One Participant
+
+
 S->>V: revokeUpdateUriPermission(vaultId, addressToRevoke)
 activate V
 deactivate V
 note over V: UpdateUriPermissionRevoked
+end
 end
 
 
