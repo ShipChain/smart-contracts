@@ -20,6 +20,9 @@ contract('VaultNotary', async (accounts) => {
     const vaultUri = "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json";
     const vaultHash = "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb";
 
+    const vaultUriToUpdate = "engine://a955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json";
+    const vaultHashToUpdate = "0x8f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb";
+
     let contract;
     before(async () =>{
         contract = await NotaryContract.deployed();
@@ -42,25 +45,24 @@ contract('VaultNotary', async (accounts) => {
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultUri === vaultUri && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultHash === vaultHash && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
 
         //since the setVaultHash and Uri works in the registerVault, it has
         // tested the aclMapping set to true in the registerVault works as expected
-        assert.equal(data.vaultHash, "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb");
-        assert.equal(data.vaultUri, "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json");
+        assert.equal(data.vaultHash, vaultHash);
+        assert.equal(data.vaultUri, vaultUri);
     });
 
     it("should not emit VaultUri if uri is empty string", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "";
-        const vaultHash = "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb";
         const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
@@ -72,20 +74,19 @@ contract('VaultNotary', async (accounts) => {
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultHash === vaultHash && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
 
         //since the setVaultHash and Uri works in the registerVault, it has
         // tested the aclMapping set to true in the registerVault works as expected
-        assert.equal(data.vaultHash, "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb");
+        assert.equal(data.vaultHash, vaultHash);
         assert.equal(data.vaultUri, "");
     });
 
     it("should not emit VaultHash if hash is empty string", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
-        const vaultUri = "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json";
         const vaultHash = "";
         const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
@@ -94,7 +95,7 @@ contract('VaultNotary', async (accounts) => {
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultUri === vaultUri && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventNotEmitted(newVaultTx, "VaultHash", ev => {
@@ -106,7 +107,7 @@ contract('VaultNotary', async (accounts) => {
         //since the setVaultHash and Uri works in the registerVault, it has
         // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, "");
-        assert.equal(data.vaultUri, "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json");
+        assert.equal(data.vaultUri, vaultUri);
     });
 
     it("should not emit VaultHash and VaultUri if both empty strings", async () => {
@@ -201,13 +202,13 @@ contract('VaultNotary', async (accounts) => {
 
     it("should set the uri if the address is the vault owner, after registerVault", async () => {
         const vaultId = await registerVault();
-        const setUriTx = await contract.setVaultUri(vaultId, "new_uri",  {from: ALICE});
+        const setUriTx = await contract.setVaultUri(vaultId, vaultUriToUpdate,  {from: ALICE});
         await truffleAssert.eventEmitted(setUriTx, "VaultUri", ev => {
-            return ev.vaultUri === "new_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultUri === vaultUriToUpdate && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
-        assert.equal(data.vaultUri, "new_uri");
+        assert.equal(data.vaultUri, vaultUriToUpdate);
 
     });
 
@@ -222,20 +223,20 @@ contract('VaultNotary', async (accounts) => {
             return ev.addressToGrant === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        const setUriTx = await contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB});
+        const setUriTx = await contract.setVaultUri(vaultId, vaultUriToUpdate,  {from: BOB});
         await truffleAssert.eventEmitted(setUriTx, "VaultUri", ev => {
-            return ev.vaultUri === "carrier_uri" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === BOB;
+            return ev.vaultUri === vaultUriToUpdate && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === BOB;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
-        assert.equal(data.vaultUri, "carrier_uri");
+        assert.equal(data.vaultUri, vaultUriToUpdate);
 
     });
 
     it("should revert the setVaultUri transaction when permission not granted yet", async () => {
         //first create a vault
         const vaultId = await registerVault();
-        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI");
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, vaultUriToUpdate,  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI");
 
     });
 
@@ -255,7 +256,7 @@ contract('VaultNotary', async (accounts) => {
             return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI" );
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, vaultUriToUpdate,  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI" );
 
     });
 
@@ -269,7 +270,7 @@ contract('VaultNotary', async (accounts) => {
             return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultUri(vaultId, "carrier_uri",  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI");
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, vaultUriToUpdate,  {from: BOB}), "Only the vault owner or whitelisted users can update vault URI");
 
     });
 
@@ -278,13 +279,13 @@ contract('VaultNotary', async (accounts) => {
 
     it("should set the hash, if the address is the SHIPPER, after registerVault", async () => {
         const vaultId = await registerVault();
-        const setHashTx = await contract.setVaultHash(vaultId, "new_hash",  {from: ALICE});
+        const setHashTx = await contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: ALICE});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
-            return ev.vaultHash === "new_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultHash === vaultHashToUpdate && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
-        assert.equal(data.vaultHash, "new_hash");
+        assert.equal(data.vaultHash, vaultHashToUpdate);
 
     });
 
@@ -299,20 +300,20 @@ contract('VaultNotary', async (accounts) => {
             return ev.addressToGrant === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        const setHashTx = await contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB});
+        const setHashTx = await contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: BOB});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
-            return ev.vaultHash === "carrier_hash" && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === BOB;
+            return ev.vaultHash === vaultHashToUpdate && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === BOB;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
-        assert.equal(data.vaultHash, "carrier_hash");
+        assert.equal(data.vaultHash, vaultHashToUpdate);
 
     });
 
     it("should revert the setVaultHash transaction when permission not granted yet", async () => {
         //first create a vault
         const vaultId = await registerVault();
-        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
 
     });
 
@@ -332,7 +333,7 @@ contract('VaultNotary', async (accounts) => {
             return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
 
     });
 
@@ -346,7 +347,7 @@ contract('VaultNotary', async (accounts) => {
             return ev.addressToRevoke === BOB && ev.msgSender === ALICE && ev.vaultId === uuidToHex32(vaultId);
         });
 
-        await truffleAssert.reverts(contract.setVaultHash(vaultId, "carrier_hash",  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: BOB}), "Only the vault owner or whitelisted users can update vault hash");
 
     });
 
