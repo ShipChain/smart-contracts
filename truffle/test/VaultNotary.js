@@ -17,6 +17,9 @@ contract('VaultNotary', async (accounts) => {
     const BOB = accounts[2];
     const ATTACKER = accounts[9];
 
+    const vaultUri = "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json";
+    const vaultHash = "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb";
+
     let contract;
     before(async () =>{
         contract = await NotaryContract.deployed();
@@ -24,8 +27,6 @@ contract('VaultNotary', async (accounts) => {
 
     async function registerVault() {
         const vaultId = uuidToHex(uuidv4(), true);
-        const vaultUri = "uri";
-        const vaultHash = "hash";
         await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
         return vaultId;
     }
@@ -34,8 +35,6 @@ contract('VaultNotary', async (accounts) => {
 
     it("should create a vault notary", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
-        const vaultUri = "uri";
-        const vaultHash = "hash";
         const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
@@ -43,25 +42,25 @@ contract('VaultNotary', async (accounts) => {
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultUri === "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultHash === "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
 
         //since the setVaultHash and Uri works in the registerVault, it has
         // tested the aclMapping set to true in the registerVault works as expected
-        assert.equal(data.vaultHash, "hash");
-        assert.equal(data.vaultUri, "uri");
+        assert.equal(data.vaultHash, "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb");
+        assert.equal(data.vaultUri, "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json");
     });
 
     it("should not emit VaultUri if uri is empty string", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
         const vaultUri = "";
-        const vaultHash = "hash";
+        const vaultHash = "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb";
         const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultRegistered", ev => {
@@ -73,20 +72,20 @@ contract('VaultNotary', async (accounts) => {
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultHash", ev => {
-            return ev.vaultHash === "hash" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultHash === "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         const data = await contract.getVaultNotaryDetails(vaultId);
 
         //since the setVaultHash and Uri works in the registerVault, it has
         // tested the aclMapping set to true in the registerVault works as expected
-        assert.equal(data.vaultHash, "hash");
+        assert.equal(data.vaultHash, "0x9f01c8657936adf4b03d2a90f59319737fe3ef784828c04dd5eee810d791fedb");
         assert.equal(data.vaultUri, "");
     });
 
     it("should not emit VaultHash if hash is empty string", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
-        const vaultUri = "uri";
+        const vaultUri = "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json";
         const vaultHash = "";
         const newVaultTx = await contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE});
 
@@ -95,7 +94,7 @@ contract('VaultNotary', async (accounts) => {
         });
 
         await truffleAssert.eventEmitted(newVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === "uri" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
+            return ev.vaultUri === "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json" && ev.vaultId == uuidToHex32(vaultId) && ev.msgSender === ALICE;
         });
 
         await truffleAssert.eventNotEmitted(newVaultTx, "VaultHash", ev => {
@@ -107,7 +106,7 @@ contract('VaultNotary', async (accounts) => {
         //since the setVaultHash and Uri works in the registerVault, it has
         // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, "");
-        assert.equal(data.vaultUri, "uri");
+        assert.equal(data.vaultUri, "engine://b955b4a3-c317-43b5-8215-8987c8f322a1/4b38973b-da4a-423c-ade7-e8a409b5ff1b/meta.json");
     });
 
     it("should not emit VaultHash and VaultUri if both empty strings", async () => {
@@ -139,8 +138,6 @@ contract('VaultNotary', async (accounts) => {
     //this checks the vaultOwner assignment and the modifier vaultOwnerOnly works
     it("should revert the transaction if a vault notary exists", async () => {
         const vaultId = await registerVault()
-        const vaultUri = "uri";
-        const vaultHash = "hash";
         await truffleAssert.reverts(contract.registerVault(vaultId, vaultUri, vaultHash, {from: ALICE}), "Vault ID already exists");
 
     });
