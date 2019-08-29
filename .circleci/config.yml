@@ -115,8 +115,9 @@ jobs: # a collection of steps
           command: |
             cd truffle
             mkdir slither || true
-            slither . --print inheritance-graph --json slither/output.json || true
-            dot -Tpng export.dot > slither/LoadContract.png
+            slither . --json slither/output.json || true
+            slither . --print inheritance-graph || true
+            dot -Tpng contracts.dot > slither/LoadContract.png
       - store_artifacts:
           path: truffle/slither
 
