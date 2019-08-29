@@ -105,7 +105,7 @@ jobs: # a collection of steps
 
   slither:
     docker:
-      - image: shipchain/slither:0.5.2
+      - image: shipchain/slither:0.5.11
     steps:
       - checkout
       - attach_workspace:
@@ -135,7 +135,7 @@ jobs: # a collection of steps
             rm /project/Migrations.sol
             cd /sec
             python3 docker_run_securify.py -p /project
-          no_output_timeout: 30m
+          no_output_timeout: 60m
 
   deploy-version:
     docker:
