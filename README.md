@@ -164,6 +164,13 @@ If you want to run `myth` locally, you can run,
 ```bash
 bin/myth
 ```
+if you have myth installed locally, you can run, 
+```bash
+bin/ddo npm run flatten
+cd truffle
+myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --max-depth 20
+
+```
 However, make sure you have done the first two steps of the [Startup section](#startup).
 
 ## Local Coverage Test
