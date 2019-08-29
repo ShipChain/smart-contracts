@@ -130,8 +130,6 @@ contract('VaultNotary', async (accounts) => {
 
         const data = await contract.getVaultNotaryDetails(vaultId);
 
-        //since the setVaultHash and Uri works in the registerVault, it has
-        // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, "");
         assert.equal(data.vaultUri, "");
     });

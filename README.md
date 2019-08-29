@@ -164,6 +164,7 @@ If you want to run `myth` locally, you can run,
 ```bash
 bin/myth
 ```
+
 if you have myth installed locally, you can run, 
 ```bash
 bin/ddo npm run flatten
