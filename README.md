@@ -157,7 +157,7 @@ The inline documentation of the solidity source files in this project follows th
 To run `securify` locally, you can run this command,
 ```bash
 bin/ddo npm run flatten
-docker run -v $(pwd)/truffle/flat-sol:/project shipchain/securify:aef12a32
+docker run -v $(pwd)/truffle/flat-sol:/project shipchain/securify:aef12a3
 ```
 
 If you want to run `myth` locally, you can run,
