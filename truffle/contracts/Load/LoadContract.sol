@@ -53,8 +53,7 @@ contract LoadContract is Ownable {
     /* Slot 2 */
     mapping (bytes16 => Escrow.Data) private allEscrowData;
 
-    /** @dev Revert if the contract has been deprecated
-      */
+    /** @dev Revert if the contract has been deprecated */
     modifier notDeprecated() {
         require(!isDeprecated, "This version of the LOAD contract has been deprecated");
         _;
