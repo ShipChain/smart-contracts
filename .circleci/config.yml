@@ -131,12 +131,13 @@ jobs: # a collection of steps
       - run:
           name: "Securify tests"
           command: |
+            chown -R $USER:$USER /dev/null
             rm /project/example.sol
             cp -r "$(realpath truffle/flat-sol)/." /project
             rm /project/Migrations.sol
             cd /sec
             python3 docker_run_securify.py -p /project
-          no_output_timeout: 60m
+          no_output_timeout: 10m
 
   deploy-version:
     docker:
