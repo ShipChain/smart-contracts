@@ -42,7 +42,7 @@ note over V: emit VaultUri
 note over V: emit VaultHash
 deactivate V
 
-S ->> L: createNewShipment(funding argumenta, carrier)
+S ->> L: createNewShipment(funding arguments, carrier)
 activate L
 L -->> SL: setState(CREATED)
 activate SL
@@ -198,7 +198,7 @@ end
 
 opt Access Control Calls
 alt Shipper
-S->>V: grantUpdateHashPermission(vaultId, addressToUpdate)
+S->>V: grantUpdateHashPermission(vaultId, addressToGrant)
 activate V
 deactivate V
 note over V: UpdateHashPermissionGranted
@@ -213,7 +213,7 @@ note over V: UpdateHashPermissionRevoked
 
 
 
-S->>V: grantUpdateUriPermission(vaultId, addressToUpdate)
+S->>V: grantUpdateUriPermission(vaultId, addressToGrant)
 activate V
 deactivate V
 note over V: UpdateUPermissionGranted
