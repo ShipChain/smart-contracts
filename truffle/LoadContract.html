@@ -188,13 +188,6 @@ note over V: emit VaultHash
 deactivate V
 end
 
-opt Need to Revoke the Permission of Carrier
-S->>V: revokeUpdateHashPermission(vaultID, Carrier)
-activate V
-deactivate V
-note over V: UpdateHashPermissionRevoked
-end
-
 
 opt Access Control Calls
 alt Shipper
@@ -202,7 +195,6 @@ S->>V: grantUpdateHashPermission(vaultId, addressToGrant)
 activate V
 deactivate V
 note over V: UpdateHashPermissionGranted
-
 
 
 S->>V: revokeUpdateHashPermission(vaultId, addressToRevoke)
