@@ -279,7 +279,7 @@ contract('VaultNotary', async (accounts) => {
     it("should set the hash, if the address is the vault owner, after registerVault", async () => {
         const vaultId = await registerVault();
 
-        //ALICE is the shipper used in the registerVault function above
+        //ALICE is the vault owner used in the registerVault function above
         const setHashTx = await contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: ALICE});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
             return ev.vaultHash === vaultHashToUpdate && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
