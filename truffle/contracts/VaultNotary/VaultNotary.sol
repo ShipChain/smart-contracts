@@ -154,8 +154,8 @@ contract VaultNotary is Ownable {
       */
     function grantUpdateHashPermission(bytes16 vaultId, address addressToGrant)
         external
-        vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
+        vaultOwnerOnly(vaultId)
     {
         notaryMapping[vaultId].hashAcl[addressToGrant] = true;
         emit UpdateHashPermissionGranted(msg.sender, vaultId, addressToGrant);
@@ -167,8 +167,8 @@ contract VaultNotary is Ownable {
       */
     function revokeUpdateHashPermission(bytes16 vaultId, address addressToRevoke)
         external
-        vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
+        vaultOwnerOnly(vaultId)
     {
         notaryMapping[vaultId].hashAcl[addressToRevoke] = false;
         emit UpdateHashPermissionRevoked(msg.sender, vaultId, addressToRevoke);
@@ -180,8 +180,8 @@ contract VaultNotary is Ownable {
       */
     function grantUpdateUriPermission(bytes16 vaultId, address addressToGrant)
         external
-        vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
+        vaultOwnerOnly(vaultId)
     {
         notaryMapping[vaultId].uriAcl[addressToGrant] = true;
         emit UpdateUriPermissionGranted(msg.sender, vaultId, addressToGrant);
@@ -193,8 +193,8 @@ contract VaultNotary is Ownable {
       */
     function revokeUpdateUriPermission(bytes16 vaultId, address addressToRevoke)
         external
-        vaultOwnerOnly(vaultId)
         isRegistered(vaultId)
+        vaultOwnerOnly(vaultId)
     {
         notaryMapping[vaultId].uriAcl[addressToRevoke] = false;
         emit UpdateUriPermissionRevoked(msg.sender, vaultId, addressToRevoke);
