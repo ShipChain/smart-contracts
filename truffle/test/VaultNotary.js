@@ -5,11 +5,9 @@ const uuidToHex = require('uuid-to-hex');
 const NotaryContract = artifacts.require("VaultNotary");
 
 
-
 function uuidToHex32(uuid) {
     return uuid + '00000000000000000000000000000000'
 }
-
 
 contract('VaultNotary', async (accounts) => {
     const OWNER = accounts[0];
@@ -276,7 +274,6 @@ contract('VaultNotary', async (accounts) => {
 
     });
 
-
     //**************Hash: testing setVaultHash and grantUpdateHashPermission**************
 
     it("should set the hash, if the address is the shipper, after registerVault", async () => {
@@ -292,7 +289,6 @@ contract('VaultNotary', async (accounts) => {
         assert.equal(data.vaultHash, vaultHashToUpdate);
 
     });
-
 
     it("should set the hash if we grant the permission to another address", async () => {
         //first create a vault
@@ -383,6 +379,4 @@ contract('VaultNotary', async (accounts) => {
         });
         await (registerVault());
     });
-
-
 });
