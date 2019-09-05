@@ -1,7 +1,14 @@
 {
     "solidity.linter": "solhint",
+    "solidity.solhintRules": {
+        "avoid-throw": false,
+        "avoid-suicide": "error",
+        "avoid-sha3": "warn",
+        "indent": ["warn", 4]
+    },
     "solidity.packageDefaultDependenciesContractsDirectory": "",
     "solidity.packageDefaultDependenciesDirectory": "truffle/node_modules",
+    "solidity.compileUsingLocalVersion" : "truffle/node_modules/solc/soljson.js",
     "editor.rulers": [120],
     //"editor.wordWrap": "wordWrapColumn",
     "editor.wrappingIndent": "indent",
