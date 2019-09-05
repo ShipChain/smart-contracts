@@ -276,7 +276,7 @@ contract('VaultNotary', async (accounts) => {
 
     //**************Hash: testing setVaultHash and grantUpdateHashPermission**************
 
-    it("should set the hash, if the address is the shipper, after registerVault", async () => {
+    it("should set the hash, if the address is the vault owner, after registerVault", async () => {
         const vaultId = await registerVault();
 
         //ALICE is the shipper used in the registerVault function above
