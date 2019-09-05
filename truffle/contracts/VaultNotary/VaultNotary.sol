@@ -227,6 +227,7 @@ contract VaultNotary is Ownable {
       */
     function setVaultUri(bytes16 vaultId, string memory vaultUri)
         public
+        isRegistered(vaultId)
         canUpdateUri(vaultId)
     {
         notaryMapping[vaultId].vaultUri = vaultUri;
@@ -240,6 +241,7 @@ contract VaultNotary is Ownable {
       */
     function setVaultHash(bytes16 vaultId, string memory vaultHash)
         public
+        isRegistered(vaultId)
         canUpdateHash(vaultId)
     {
         notaryMapping[vaultId].vaultHash = vaultHash;

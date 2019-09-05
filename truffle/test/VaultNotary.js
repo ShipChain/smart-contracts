@@ -229,6 +229,12 @@ contract('VaultNotary', async (accounts) => {
 
     });
 
+    it("should revert the setVaultUri transaction when vaultId does not exist", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        await truffleAssert.reverts(contract.setVaultUri(vaultId, vaultUriToUpdate,  {from: BOB}), "Vault ID does not exist"); 
+
+    });
+
     it("should revert the setVaultUri transaction when permission not granted yet", async () => {
         //first create a vault
         const vaultId = await registerVault();
@@ -273,8 +279,10 @@ contract('VaultNotary', async (accounts) => {
 
     //**************Hash: testing setVaultHash and grantUpdateHashPermission**************
 
-    it("should set the hash, if the address is the SHIPPER, after registerVault", async () => {
+    it("should set the hash, if the address is the shipper, after registerVault", async () => {
         const vaultId = await registerVault();
+
+        //ALICE is the shipper used in the registerVault function above
         const setHashTx = await contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: ALICE});
         await truffleAssert.eventEmitted(setHashTx, "VaultHash", ev => {
             return ev.vaultHash === vaultHashToUpdate && ev.vaultId === uuidToHex32(vaultId) && ev.msgSender === ALICE;
@@ -303,6 +311,12 @@ contract('VaultNotary', async (accounts) => {
 
         const data = await contract.getVaultNotaryDetails(vaultId);
         assert.equal(data.vaultHash, vaultHashToUpdate);
+
+    });
+
+    it("should revert the setVaultHash transaction when vaultId does not exist", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        await truffleAssert.reverts(contract.setVaultHash(vaultId, vaultHashToUpdate,  {from: BOB}), "Vault ID does not exist"); 
 
     });
 
