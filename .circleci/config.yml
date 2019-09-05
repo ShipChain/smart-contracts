@@ -136,7 +136,7 @@ jobs: # a collection of steps
             rm /project/Migrations.sol
             cd /sec
             python3 docker_run_securify.py -p /project
-          no_output_timeout: 90m
+          no_output_timeout: 30m
 
   deploy-version:
     docker:
