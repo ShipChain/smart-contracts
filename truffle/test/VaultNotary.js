@@ -144,14 +144,13 @@ contract('VaultNotary', async (accounts) => {
     //****************partially testing grantUpdateHashPermission***********************
 
     it("should revert the grantUpdateHashPermission transaction if vaultId is not registered", async () => {
-        //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, BOB, {from: ALICE}), "Method only accessible to vault owner");
+        await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, BOB, {from: ALICE}), "Vault ID does not exist");
     });
 
     it("should revert the grantUpdateHashPermission, if not called from the vaultOwner", async () => {
         //first create a vault
-        const vaultId = uuidToHex(uuidv4(), true);
+        const vaultId = await registerVault();
         await truffleAssert.reverts(contract.grantUpdateHashPermission(vaultId, BOB, {from: ATTACKER}),"Method only accessible to vault owner");
     });
 
@@ -159,12 +158,12 @@ contract('VaultNotary', async (accounts) => {
     //*******************partially testing revokeUpdateHashPermission************************
     it("should revert the revokeUpdateHashPermission transaction if vaultId is not registered", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, BOB, {from: ALICE}), "Method only accessible to vault owner");
+        await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, BOB, {from: ALICE}), "Vault ID does not exist");
     });
 
     it("should revert the revokeUpdateHashPermission not called from the vaultOwner", async () => {
         //first create a vault
-        const vaultId = await registerVault()
+        const vaultId = await registerVault();
         await truffleAssert.reverts(contract.revokeUpdateHashPermission(vaultId, BOB, {from: ATTACKER}), "Method only accessible to vault owner");
     });
 
@@ -172,26 +171,25 @@ contract('VaultNotary', async (accounts) => {
 
     it("should revert the grantUpdateUriPermission transaction if vaultId is not registered", async () => {
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, BOB, {from: ALICE}), "Method only accessible to vault owner");
+        await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, BOB, {from: ALICE}), "Vault ID does not exist");
     });
 
     it("should revert the grantUpdateUriPermission, if not called from the vaultOwner", async () => {
         //first create a vault
-        const vaultId = await registerVault()
+        const vaultId = await registerVault();
         await truffleAssert.reverts(contract.grantUpdateUriPermission(vaultId, BOB, {from: ATTACKER}), "Method only accessible to vault owner");
     });
 
 
     //*******************partially testing revokeUpdateUriPermission************************
     it("should revert the revokeUpdateUriPermission transaction if vaultId is not registered", async () => {
-        //first create a vault
         const vaultId = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, BOB, {from: ALICE}), "Method only accessible to vault owner");
+        await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, BOB, {from: ALICE}), "Vault ID does not exist");
     });
 
     it("should revert the revokeUpdateUriPermission not called from the vaultOwner", async () => {
         //first create a vault
-        const vaultId = uuidToHex(uuidv4(), true);
+        const vaultId = await registerVault();
         await truffleAssert.reverts(contract.revokeUpdateUriPermission(vaultId, BOB, {from: ATTACKER}), "Method only accessible to vault owner");
     });
 
