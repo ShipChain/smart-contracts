@@ -177,9 +177,9 @@ jobs: # a collection of steps
             export NOTARY_VERSION=$(cat truffle/contracts/VaultNotary/VERSION)
             export ABI=$(jq -rc .abi truffle/build/contracts/VaultNotary.json)
             export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/VaultNotary.json)
-            jq -e '.contracts.VaultNotary.latest != env.NOTARY_VERSION' meta-contracts/meta.json || { echo "Current version of VAULT NOTARY contract is already deployed"; exit 1; }
-            jq -r '.contracts.VaultNotary.versions[env.NOTARY_VERSION].abi=env.ABI | .contracts.VaultNotary.versions[env.NOTARY_VERSION].bin=env.BYTECODE | .contracts.VaultNotary.versions[env.NOTARY_VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.VaultNotary.latest=env.NOTARY_VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
-            git -C meta-contracts commit -a -m "Published VaultNotary $NOTARY_VERSION to meta-contracts"
+            jq -e '.contracts.NOTARY.latest != env.NOTARY_VERSION' meta-contracts/meta.json || { echo "Current version of NOTARY contract is already deployed"; exit 1; }
+            jq -r '.contracts.NOTARY.versions[env.NOTARY_VERSION].abi=env.ABI | .contracts.NOTARY.versions[env.NOTARY_VERSION].bin=env.BYTECODE | .contracts.NOTARY.versions[env.NOTARY_VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.NOTARY.latest=env.NOTARY_VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
+            git -C meta-contracts commit -a -m "Published NOTARY $NOTARY_VERSION to meta-contracts"
             git -C meta-contracts push
 
 workflows:
