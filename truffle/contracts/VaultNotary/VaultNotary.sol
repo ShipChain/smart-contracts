@@ -114,15 +114,15 @@ contract VaultNotary is Ownable {
     /** @notice This is function to register a vault, will only do the registration if a vaultId has not
                 been registered before
       * @dev It sets the msg.sender to the vault owner, and calls the setVaultUri and setVaultHash to
-      * initialize the uri and hash of a vault
+      * initialize the uri and hash of a vault. It emits VaultRegistered on success.
       * @param vaultId bytes16 VaultID to create, is the same as shipment ID in our system
       * @param vaultUri string Vault URI to set
       * @param vaultHash string  Vault hash to set
       */
     function registerVault(bytes16 vaultId, string calldata vaultUri, string calldata vaultHash)
         external
-        isNotRegistered(vaultId)
         notDeprecated
+        isNotRegistered(vaultId)
     {
         notaryMapping[vaultId].vaultOwner = msg.sender;
 
@@ -138,6 +138,7 @@ contract VaultNotary is Ownable {
 
     /** @notice Sets the contract isDeprecated flag. Vault registration will be disabled if isDeprecated == True
       * Only contract owner can set this
+      * @dev It emits ContractDeprecatedSet on success
       * @param _isDeprecated bool Boolean control variable
       */
     function setDeprecated(bool _isDeprecated)
@@ -148,7 +149,8 @@ contract VaultNotary is Ownable {
         emit ContractDeprecatedSet(msg.sender, isDeprecated);
     }
 
-    /** @notice Function to grant update permission to both Hash field in one vault
+    /** @notice Function to grant update permission to the hash field in a vault
+      * @dev It emits UpdateHashPermissionGranted on success
       * @param vaultId bytes16 The ID of Vault to grant permission
       * @param addressToGrant address The address to grant permission
       */
@@ -161,7 +163,8 @@ contract VaultNotary is Ownable {
         emit UpdateHashPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
 
-    /** @notice Function to revoke update permission to both the Hash field in one vault
+    /** @notice Function to revoke update permission to the hash field in a vault
+      * @dev It emits UpdateHashPermissionRevoked on success
       * @param vaultId The ID of Vault to revoke permission
       * @param addressToRevoke address The address to revoke permission
       */
@@ -174,7 +177,8 @@ contract VaultNotary is Ownable {
         emit UpdateHashPermissionRevoked(msg.sender, vaultId, addressToRevoke);
     }
 
-    /** @notice Function to grant update permission to both Uri field in one vault
+    /** @notice Function to grant update permission to the Uri field in a vault
+      * @dev It emits UpdateUriPermissionGranted on success
       * @param vaultId bytes16 The ID of Vault to grant permission
       * @param addressToGrant address The address to grant permission
       */
@@ -187,7 +191,8 @@ contract VaultNotary is Ownable {
         emit UpdateUriPermissionGranted(msg.sender, vaultId, addressToGrant);
     }
 
-    /** @notice Function to revoke update permission to both the Uri field in one vault
+    /** @notice Function to revoke update permission to the Uri field in a vault
+      * @dev It emits UpdateUriPermissionRevoked on success
       * @param vaultId The ID of Vault to revoke permission
       * @param addressToRevoke address The address to revoke permission
       */
@@ -216,6 +221,7 @@ contract VaultNotary is Ownable {
     }
 
     /** @notice Function to set the vault URI
+      * @dev It emits VaultUri on success
       * @param vaultId bytes16 ID of the vault to set
       * @param vaultUri string The vault URI to set
       */
@@ -228,6 +234,7 @@ contract VaultNotary is Ownable {
     }
 
     /** @notice Function to set the vault hash
+      * @dev It emits VaultHash on success
       * @param vaultId bytes16 ID of the vault to set
       * @param vaultHash string The vault hash to set
       */
