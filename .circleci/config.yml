@@ -30,7 +30,7 @@ jobs: # a collection of steps
           name: "Compile Truffle"
           command: |
             cd truffle
-            npm install
+            yarn
             npm run truffle -- compile --all --network circleci
       - run:
           name: "Flatten solidity for static analysis"
