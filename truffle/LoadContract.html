@@ -24,23 +24,34 @@
 <div class="loader" id="loader"></div>
 
 <div class="mermaid" id="EscrowSequence" style="display: none">
-sequenceDiagram
+
+   sequenceDiagram
 participant T as Token
 participant E as Escrow
 participant SL as Shipment
+participant V as VaultNotaryContract
 participant L as LoadContract
 participant S as Shipper
 participant C as Carrier
 participant M as Moderator
 
+S ->>V:registerVault(vaultId, vaultUri, vaultHash)
+activate V
+note over V: emit VaultRegistered
+note over V: emit VaultUri
+note over V: emit VaultHash
+deactivate V
 
-S ->> L: createNewShipment(funding arguments)
+S ->> L: createNewShipment(funding arguments, carrier)
 activate L
 L -->> SL: setState(CREATED)
 activate SL
 L -->> SL: setShipper(Shipper)
-deactivate SL
 note over L: emit ShipmentCreated
+L -->> SL: setCarrier(Carrier)
+note over L: emit ShipmentCarrierSet
+deactivate SL
+
 opt Escrowed Shipment
 L -->> E: setState(CREATED)
 activate E
@@ -53,31 +64,43 @@ note over L: emit EscrowCreated
 deactivate L
 end
 
-S ->> L: setCarrier()
-activate L
-L -->> SL: setCarrier(Carrier)
-activate SL
-deactivate SL
-note over L: emit ShipmentCarrierSet
-deactivate L
+S->>V: grantUpdateHashPermission(vaultId, Carrier)
+activate V
+deactivate V
+note over V: UpdateHashPermissionGranted
 
 opt Moderated Shipment
-S ->> L: setModerator()
+S ->> L: setModerator(vaultId, Moderator)
 activate L
-L -->> SL: setModerator(Moderator)
+L -->> SL: setModerator(vaultId, Moderator)
 activate SL
 deactivate SL
 note over L: emit ShipmentModeratorSet
 deactivate L
 end
 
-S ->> L: setVaultUri()
+opt Update Carrier
+S ->> L: setCarrier(vaultId, Carrier)
 activate L
-L -->> SL: setVaultUri(uri)
+L -->> SL: setCarrier(vaultId, Carrier)
 activate SL
 deactivate SL
-note over L: emit VaultUri
+note over L: emit ShipmentCarrierSet
 deactivate L
+
+S->>V: grantUpdateHashPermission(vaultId, Carrier)
+activate V
+deactivate V
+note over V: UpdateHashPermissionGranted
+end
+
+
+opt Update URI
+S ->> V: setVaultUri(vaultId, vaultUri)
+activate V
+deactivate V
+note over V: emit VaultUri
+end
 
 opt Escrowed Shipment
 loop While fundedAmount < contractedAmount
@@ -106,6 +129,8 @@ end
 end
 activate L
 L -->> E: setState(FUNDED)
+activate E
+deactivate E
 note over L: emit EscrowFunded
 deactivate L
 end
@@ -157,14 +182,43 @@ deactivate L
 end
 
 loop While in Progress
-C ->> L: setVaultHash()
-activate L
-L -->> SL: setVaultHash(hash)
-activate SL
-deactivate SL
-note over L: emit VaultHash
-deactivate L
+C ->> V: setVaultHash(vaultId, vaultHash)
+activate V
+note over V: emit VaultHash
+deactivate V
 end
+
+
+opt Access Control Calls
+alt Shipper
+S->>V: grantUpdateHashPermission(vaultId, addressToGrant)
+activate V
+deactivate V
+note over V: UpdateHashPermissionGranted
+
+
+S->>V: revokeUpdateHashPermission(vaultId, addressToRevoke)
+activate V
+deactivate V
+note over V: UpdateHashPermissionRevoked
+
+
+
+
+S->>V: grantUpdateUriPermission(vaultId, addressToGrant)
+activate V
+deactivate V
+note over V: UpdateUPermissionGranted
+
+
+
+S->>V: revokeUpdateUriPermission(vaultId, addressToRevoke)
+activate V
+deactivate V
+note over V: UpdateUriPermissionRevoked
+end
+end
+
 
 opt Cancel Shipment
 alt Carrier

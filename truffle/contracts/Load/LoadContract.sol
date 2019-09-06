@@ -1,10 +1,9 @@
-pragma solidity 0.5.0;
+pragma solidity 0.5.11;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import {ERC20} from "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 import {Shipment} from "./lib/Shipment.sol";
-import {Vault} from "./lib/Vault.sol";
 import {Escrow} from "./lib/Escrow.sol";
 import {Converter} from "./lib/Converter.sol";
 
@@ -18,7 +17,6 @@ contract LoadContract is Ownable {
     // Library namespaces
     using Converter for bytes;
     using Shipment for Shipment.Data;
-    using Vault for Shipment.Data;
     using Escrow for Escrow.Data;
 
     // Registry Events
@@ -34,9 +32,6 @@ contract LoadContract is Ownable {
     event ShipmentComplete(address indexed msgSender, bytes16 indexed shipmentUuid);
     event ShipmentCanceled(address indexed msgSender, bytes16 indexed shipmentUuid);
 
-    // Vault Events
-    event VaultUri(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultUri);
-    event VaultHash(address indexed msgSender, bytes16 indexed shipmentUuid, string vaultHash);
 
     // Escrow Events
     event EscrowDeposited(address indexed msgSender, bytes16 indexed shipmentUuid, uint256 amount, uint256 funded);
@@ -58,8 +53,7 @@ contract LoadContract is Ownable {
     /* Slot 2 */
     mapping (bytes16 => Escrow.Data) private allEscrowData;
 
-    /** @dev Revert if the contract has been deprecated
-      */
+    /** @dev Revert if the contract has been deprecated */
     modifier notDeprecated() {
         require(!isDeprecated, "This version of the LOAD contract has been deprecated");
         _;
@@ -201,58 +195,17 @@ contract LoadContract is Ownable {
         emit EscrowRefundAddressSet(msg.sender, _shipmentUuid, _refundAddress);
     }
 
-   /** @notice createNewShipment function to provide backward compantibility. 
-      * @param _shipmentUuid bytes16 representation of the shipment's UUID.
-      * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
-      * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
-      defined.
-      * @dev Emits ShipmentCreated on success     
-     */
-    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount)
-        external
-        notDeprecated
-    {
-        createNewShipment2(_shipmentUuid, _fundingType, _contractedAmount, "", "", address(0x0));
-    }
-
-    /** @notice Associates a Vault URL with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultUri string URI of the external vault.
-      * @dev Emits VaultUri on success
-      */
-    function setVaultUri(bytes16 _shipmentUuid, string calldata _vaultUri)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultUri(_shipmentUuid, _vaultUri);
-    }
-
-    /** @notice Associates a Vault Hash with this Shipment.
-      * @param _shipmentUuid bytes16 Shipment's UUID.
-      * @param _vaultHash string Hash of the external vault.
-      * @dev Emits VaultHash on success.
-      */
-    function setVaultHash(bytes16 _shipmentUuid, string calldata _vaultHash)
-        external
-        shipmentExists(_shipmentUuid)
-    {
-        allShipmentData[_shipmentUuid].setVaultHash(_shipmentUuid, _vaultHash);
-    }
-
     /** @notice Creates a new Shipment and stores it in the Load Registry.
+                This one will set the carrier address.
       * @param _shipmentUuid bytes16 representation of the shipment's UUID.
       * @param _fundingType Escrow.FundingType Type of funding for the escrow.  Can be NO_FUNDING for no escrow.
       * @param _contractedAmount uint256 Escrow token/ether amount if escrow is
       defined.
-      * @param _vaultUri string The Uri of Vault
-      * @param _vaultHash string The hash of Vault
-      * @param _carrierAddress address The addres of the carrier for this shipment
+      * @param _carrierAddress address The address of the carrier for this shipment
       * @dev Emits ShipmentCreated on success.
       */
-    function createNewShipment2(bytes16 _shipmentUuid, Escrow.FundingType
-    _fundingType, uint256 _contractedAmount, string memory _vaultUri, string
-    memory _vaultHash, address _carrierAddress)
+    function createNewShipment(bytes16 _shipmentUuid, Escrow.FundingType
+    _fundingType, uint256 _contractedAmount, address _carrierAddress)
         public 
         notDeprecated
     {
@@ -277,13 +230,11 @@ contract LoadContract is Ownable {
         shipment.state = Shipment.State.CREATED;
         shipment.shipper = msg.sender;
 
-        //use the set functions here to make sure events are emitted even when
-        //creating a new shipment
-        shipment.setVaultUri(_shipmentUuid, _vaultUri);
-        shipment.setVaultHash(_shipmentUuid, _vaultHash);
-        shipment.setCarrier(_shipmentUuid, _carrierAddress);
-
         emit ShipmentCreated(msg.sender, _shipmentUuid);
+
+        if (_carrierAddress != address(0x0))
+            setCarrier(_shipmentUuid, _carrierAddress);
+
 
         if (_fundingType != Escrow.FundingType.NO_FUNDING) {
             escrow.state = Escrow.State.CREATED;
@@ -356,14 +307,12 @@ contract LoadContract is Ownable {
         public
         view
         returns(address shipper, address carrier, address moderator,
-        Shipment.State state, string memory vaultUri, string memory vaultHash)
+        Shipment.State state)
     {
         shipper = allShipmentData[_shipmentUuid].shipper;
         carrier = allShipmentData[_shipmentUuid].carrier;
         moderator = allShipmentData[_shipmentUuid].moderator;
         state = allShipmentData[_shipmentUuid].state;
-        vaultUri = allShipmentData[_shipmentUuid].vaultUri;
-        vaultHash = allShipmentData[_shipmentUuid].vaultHash;
     }
 
     /** @notice Returns the Escrow state.
@@ -453,8 +402,6 @@ contract LoadContract is Ownable {
             msg.sender.transfer(amount);
         } else if (allEscrowData[_shipmentUuid].fundingType == Escrow.FundingType.SHIP) {
             ERC20(shipTokenContractAddress).transfer(msg.sender, amount);
-        } else {
-            revert("Cannot withdraw, unknown fundingType");
         }
     }
 

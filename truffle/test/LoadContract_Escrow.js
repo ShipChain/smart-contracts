@@ -10,11 +10,11 @@ const bnChai = require('bn-chai');
 chai.use(bnChai(BN));
 
 const LoadContract = artifacts.require("LoadContract");
-const SHIPToken = artifacts.require("./utils/SHIPToken.sol");
+const SHIPToken = artifacts.require("SHIPToken");
 
 const ShipmentState = {NOT_CREATED: 0, CREATED: 1, IN_PROGRESS: 2, COMPLETE: 3, CANCELED: 4};
 const EscrowState = {NOT_CREATED: 0, CREATED: 1, FUNDED: 2, RELEASED: 3, REFUNDED: 4, WITHDRAWN: 5};
-const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2};
+const EscrowFundingType = {NO_FUNDING: 0, SHIP: 1, ETHER: 2, INVALID: 99};
 
 const SECONDS_IN_A_DAY = 86400;
 
@@ -30,6 +30,7 @@ const timeTravel = async seconds => {
   await send('evm_mine');
 };
 
+
 async function createShipToken(accounts){
     const shipToken = await SHIPToken.new();
     await shipToken.mint(accounts[0], web3.utils.toWei("1000", "ether"));
@@ -44,18 +45,14 @@ contract('LoadContract with Escrow', async (accounts) => {
     const SHIPPER = accounts[1];
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
-    const INVALID = accounts[9];
-    let shipToken;
+    const ATTACKER = accounts[9];
 
+    let shipToken;
     let contract;
-    before(async () =>{
-        contract = await LoadContract.deployed();
-    });
 
     async function createShipment(fundingType = EscrowFundingType.SHIP, fundingAmount = web3.utils.toWei("1", "ether")){
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment(shipmentUuid, fundingType, fundingAmount, {from: SHIPPER});
-        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, fundingType, fundingAmount, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -69,14 +66,17 @@ contract('LoadContract with Escrow', async (accounts) => {
         };
     }
 
+
+
     before(async () => {
         shipToken = await createShipToken(accounts);
         contract = await LoadContract.deployed();
     });
 
+
     it("should create a LoadShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.ETHER, web3.utils.toWei("1", "ether"), {from: SHIPPER});
+        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.ETHER, web3.utils.toWei("1", "ether"), CARRIER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === uuidToHex32(shipmentUuid);
@@ -116,7 +116,11 @@ contract('LoadContract with Escrow', async (accounts) => {
 
     //#region ETH
     it("should not create a ETHER Escrow with contractedAmount greater than the max supply", async () => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.ETHER, web3.utils.toWei("100000001", "ether"), {from: SHIPPER}));
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true),
+            EscrowFundingType.ETHER, web3.utils.toWei("100000001", "ether"),
+            CARRIER,
+            {from: SHIPPER}),
+            "Escrow amount must be less than max supply");
     });
 
     it("should prevent accepting Eth via fallback function", async () => {
@@ -215,7 +219,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(CARRIER))).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))).sub(gasCost));
+
+        const updatedCarrierBalance = web3.utils.toBN(await web3.eth.getBalance(CARRIER));
+        let balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedCarrierBalance).to.eq.BN(balanceAfterSub);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
@@ -237,7 +245,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(CARRIER))).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))).sub(gasCost));
+
+        const updatedCarrierBalance = web3.utils.toBN(await web3.eth.getBalance(CARRIER));
+        let balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedCarrierBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("should be able to refund ETH escrow", async () => {
@@ -268,17 +280,21 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
 
     it("should only be able to set refund address by owner", async () => {
         const shipmentUuid = await createShipment(EscrowFundingType.ETHER);
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: SHIPPER}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: INVALID}));
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: SHIPPER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: CARRIER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: MODERATOR}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: ATTACKER}), "Ownable: caller is not the owner");
         let refundAddressTx = await contract.setEscrowRefundAddress(shipmentUuid, MODERATOR, {from: OWNER});
         await truffleAssert.eventEmitted(refundAddressTx, "EscrowRefundAddressSet", ev => {
             return ev.msgSender === OWNER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.refundAddress === MODERATOR;
@@ -305,7 +321,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("0.5", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("0.5", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("owner should be able to rescue funded ETH escrow", async () => {
@@ -324,7 +344,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("owner should be able to rescue to a different address", async () => {
@@ -334,20 +358,25 @@ contract('LoadContract with Escrow', async (accounts) => {
         assert.equal(data.shipment.state, ShipmentState.CREATED);
         assert.equal(data.escrow.state, EscrowState.FUNDED);
 
-        await contract.setEscrowRefundAddress(shipmentUuid, INVALID, {from: OWNER});
+        await contract.setEscrowRefundAddress(shipmentUuid, ATTACKER, {from: OWNER});
 
         await truffleAssert.reverts(contract.refundEscrow(shipmentUuid, {from: SHIPPER}), "Refunds can only be issued to Canceled shipments by the Moderator");
         await contract.refundEscrow(shipmentUuid, {from: OWNER});
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
 
-        let invalidBalance = web3.utils.toBN(await web3.eth.getBalance(INVALID));
-        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: INVALID});
+        let attackerBalance = web3.utils.toBN(await web3.eth.getBalance(ATTACKER));
+        let withdrawTxReceipt = await contract.withdrawEscrow(shipmentUuid, {from: ATTACKER});
         const withdrawTx = await web3.eth.getTransaction(withdrawTxReceipt.tx);
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(INVALID))).to.eq.BN(invalidBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedAttackerBalance = web3.utils.toBN(await web3.eth.getBalance(ATTACKER));
+        let balanceAfterAdd =  attackerBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedAttackerBalance).to.eq.BN(balanceAfterSub);
+
     });
 
     it("shipper should be able to issue refunds after 90 days", async () => {
@@ -369,7 +398,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("carrier should be able to issue refunds after 90 days", async () => {
@@ -392,7 +425,11 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
 
     it("moderator should be able to issue refunds after 90 days", async () => {
@@ -415,20 +452,24 @@ contract('LoadContract with Escrow', async (accounts) => {
         const gasCost = web3.utils.toBN(withdrawTx.gasPrice).mul(web3.utils.toBN(withdrawTxReceipt.receipt.gasUsed));
         data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await web3.eth.getBalance(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether"))).sub(gasCost));
+
+        const updatedShipperBalance = web3.utils.toBN(await web3.eth.getBalance(SHIPPER));
+        let balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        const balanceAfterSub = balanceAfterAdd.sub(gasCost);
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterSub);
     });
     //#endregion
 
     //#region SHIP
     it("should not allow SHIP shipments to be created before token address is set", async() => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("1", "ether"), {from: SHIPPER}), "Token address must be set");
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("1", "ether"), CARRIER, {from: SHIPPER}), "Token address must be set");
     });
 
     it("should set the shipTokenContractAddress", async () => {
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: SHIPPER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: CARRIER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: INVALID}));
+        await truffleAssert.reverts(contract.setShipTokenContractAddress(shipToken.address, {from: ATTACKER}));
         await truffleAssert.reverts(contract.setShipTokenContractAddress('0x0000000000000000000000000000000000000000', {from: OWNER}), "Must provide a token address");
         let tokenContractTx = await contract.setShipTokenContractAddress(shipToken.address, {from: OWNER});
         await truffleAssert.eventEmitted(tokenContractTx, "TokenContractAddressSet", ev => {
@@ -449,7 +490,7 @@ contract('LoadContract with Escrow', async (accounts) => {
     });
 
     it("should not create a SHIP Escrow with contractedAmount greater than the max supply", async () => {
-        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("500000001", "ether"), {from: SHIPPER}));
+        await truffleAssert.reverts(contract.createNewShipment(uuidToHex(uuidv4(), true), EscrowFundingType.SHIP, web3.utils.toWei("500000001", "ether"), CARRIER, {from: SHIPPER}));
     });
 
     it("should only allow token address to be set once", async () => {
@@ -534,7 +575,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await shipToken.balanceOf(CARRIER))).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))));
+
+        const updatedCarrierBalance = await shipToken.balanceOf(CARRIER);
+        const balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        expect(updatedCarrierBalance).to.eq.BN(balanceAfterAdd);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: MODERATOR}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });
@@ -549,7 +593,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.withdrawEscrow(shipmentUuid, {from: CARRIER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await shipToken.balanceOf(CARRIER))).to.eq.BN(carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2", "ether"))));
+
+        const updatedCarrierBalance = await shipToken.balanceOf(CARRIER);
+        const balanceAfterAdd = carrierBalance.add(web3.utils.toBN(web3.utils.toWei("2.0", "ether")));
+        expect(updatedCarrierBalance).to.eq.BN(balanceAfterAdd);
 
     });
 
@@ -572,7 +619,10 @@ contract('LoadContract with Escrow', async (accounts) => {
         await contract.withdrawEscrow(shipmentUuid, {from: SHIPPER});
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.escrow.state, EscrowState.WITHDRAWN);
-        expect(web3.utils.toBN(await shipToken.balanceOf(SHIPPER))).to.eq.BN(shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1", "ether"))));
+
+        const updatedShipperBalance = await shipToken.balanceOf(SHIPPER);
+        const balanceAfterAdd = shipperBalance.add(web3.utils.toBN(web3.utils.toWei("1.0", "ether")));
+        expect(updatedShipperBalance).to.eq.BN(balanceAfterAdd);
 
         await truffleAssert.reverts(contract.withdrawEscrow(shipmentUuid, {from: SHIPPER}), "Escrow can only be withdrawn by carrier if released or by shipper if refunded");
     });

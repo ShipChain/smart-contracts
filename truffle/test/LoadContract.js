@@ -12,23 +12,19 @@ function uuidToHex32(uuid) {
     return uuid + '00000000000000000000000000000000'
 }
 
-
 contract('LoadContract', async (accounts) => {
+
     const OWNER = accounts[0];
     const SHIPPER = accounts[1];
     const CARRIER = accounts[2];
     const MODERATOR = accounts[3];
-    const INVALID = accounts[9];
+    const ATTACKER = accounts[9];
 
     let contract;
-    before(async () =>{
-        contract = await LoadContract.deployed();
-    });
 
     async function createShipment(){
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
-        await contract.setCarrier(shipmentUuid, CARRIER, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
         return shipmentUuid;
     }
@@ -42,28 +38,13 @@ contract('LoadContract', async (accounts) => {
         };
     }
 
-    it("should create a LoadShipment without Uri, Hash and carrier address", async () => {
-        const shipmentUuid = uuidToHex(uuidv4(), true);
-        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
-
-        await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
-            return ev.shipmentUuid === uuidToHex32(shipmentUuid);
-        });
-
-        const data = await getShipmentEscrowData(shipmentUuid);
-
-        assert.equal(data.shipment.shipper, SHIPPER);
-        assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultHash, "");
-        assert.equal(data.shipment.vaultUri, "");
-        assert.equal(data.shipment.carrier, 0x0);
-        assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
+    before(async () =>{
+        contract = await LoadContract.deployed();
     });
 
-    it("should create a LoadShipment with Uri, Hash and carrier address", async () => {
+    it("should create a LoadShipment with carrier address", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-
-        const newShipmentTx = await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
+        const newShipmentTx = await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
 
         await truffleAssert.eventEmitted(newShipmentTx, "ShipmentCreated", ev => {
             return ev.shipmentUuid === uuidToHex32(shipmentUuid);
@@ -72,28 +53,17 @@ contract('LoadContract', async (accounts) => {
             return ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.carrier === CARRIER;
         });
 
-        await truffleAssert.eventEmitted(newShipmentTx, "VaultUri", ev => {
-            return ev.msgSender === SHIPPER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultUri === "uri";
-        });
-
-        await truffleAssert.eventEmitted(newShipmentTx, "VaultHash", ev => {
-            return ev.msgSender === SHIPPER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultHash === "hash";
-        });
-
-
         const data = await getShipmentEscrowData(shipmentUuid);
-
         assert.equal(data.shipment.shipper, SHIPPER);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultHash, "hash");
-        assert.equal(data.shipment.vaultUri, "uri");
         assert.equal(data.shipment.carrier, CARRIER);
         assert.equal(data.escrow.state, EscrowState.NOT_CREATED);
+
     });
 
     it("should not allow a shipment to be created with a contractedAmount", async() => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await truffleAssert.reverts(contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 1, {from: SHIPPER}), "Cannot specify a contracted amount for a shipment with no escrow");
+        await truffleAssert.reverts(contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 1, CARRIER, {from: SHIPPER}), "Cannot specify a contracted amount for a shipment with no escrow");
     });
 
     it("should fail if shipment does not exist", async() => {
@@ -105,7 +75,7 @@ contract('LoadContract', async (accounts) => {
 
     it("should only allow Shipper to set Carrier", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
 
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.shipment.shipper, SHIPPER);
@@ -123,7 +93,7 @@ contract('LoadContract', async (accounts) => {
 
     it("should only allow Shipper to set Moderator", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, CARRIER, {from: SHIPPER});
 
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.shipment.shipper, SHIPPER);
@@ -139,76 +109,21 @@ contract('LoadContract', async (accounts) => {
         assert.equal(data.shipment.moderator, MODERATOR);
     });
 
-    it("should emit VaultUri and set the vaultUri in the shipment data", async () => {
-        const vaultUri = "vault.example.com/meta.json";
-        const shipmentUuid = await createShipment();
-        const invalidShipment = uuidToHex(uuidv4(), true);
-
-        await truffleAssert.reverts(contract.setVaultUri(invalidShipment, vaultUri), "Shipment does not exist");
-
-        await truffleAssert.reverts(contract.setVaultUri(shipmentUuid, vaultUri), "Only Shipper allowed to set VaultUri");
-
-        const setVaultTx = await contract.setVaultUri(shipmentUuid, vaultUri, {from: SHIPPER});
-
-        await truffleAssert.eventEmitted(setVaultTx, "VaultUri", ev => {
-            return ev.vaultUri === vaultUri && ev.msgSender === SHIPPER && ev.shipmentUuid === uuidToHex32(shipmentUuid);
-        });
-        let data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.vaultUri, vaultUri);
-    });
-
-    it("should have a getShipmentData function, and return the correct shipment attributes", async () => {
-        const shipmentUuid = await createShipment();
-        let data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.shipper, SHIPPER);
-        assert.equal(data.shipment.carrier, CARRIER);
-        assert.equal(data.shipment.moderator, MODERATOR);
-        assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultUri, "");
-        assert.equal(data.shipment.vaultHash, "");
-    });
-
-    it("should have a getShipmentData function, and work with createNewShipment2", async () => {
+    it("should have a getShipmentData function, and work with createNewShipment", async () => {
         const shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment2(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "uri", "hash", CARRIER, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0,  CARRIER, {from: SHIPPER});
         await contract.setModerator(shipmentUuid, MODERATOR, {from: SHIPPER});
+
         let data = await getShipmentEscrowData(shipmentUuid);
         assert.equal(data.shipment.shipper, SHIPPER);
         assert.equal(data.shipment.carrier, CARRIER);
         assert.equal(data.shipment.moderator, MODERATOR);
         assert.equal(data.shipment.state, ShipmentState.CREATED);
-        assert.equal(data.shipment.vaultUri, "uri");
-        assert.equal(data.shipment.vaultHash, "hash");
-    })
-
-    it("should emit VaultHash and set the vaultHash value in the shipment data", async () => {
-        const vaultHash_shipper = "0x1234567890";
-        const vaultHash_carrier = "0x1234567890";
-        const shipmentUuid = await createShipment();
-
-        await truffleAssert.reverts(contract.setVaultHash(shipmentUuid, vaultHash_shipper), "Only Shipper or Carrier allowed to set VaultHash");
-
-        const setVaultTx_shipper = await contract.setVaultHash(shipmentUuid, vaultHash_shipper, {from: SHIPPER});
-
-        await truffleAssert.eventEmitted(setVaultTx_shipper, "VaultHash", ev => {
-            return ev.msgSender === SHIPPER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultHash === vaultHash_shipper;
-        });
-        let data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.vaultHash, vaultHash_shipper);
-
-        const setVaultTx_carrier = await contract.setVaultHash(shipmentUuid, vaultHash_carrier, {from: CARRIER});
-
-        await truffleAssert.eventEmitted(setVaultTx_carrier, "VaultHash", ev => {
-            return  ev.msgSender === CARRIER  && ev.shipmentUuid === uuidToHex32(shipmentUuid) && ev.vaultHash === vaultHash_carrier;
-        });
-        data = await getShipmentEscrowData(shipmentUuid);
-        assert.equal(data.shipment.vaultHash, vaultHash_carrier);
-
     });
 
     it("should set inProgress", async () => {
         let shipmentUuid = uuidToHex(uuidv4(), true);
-        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, {from: SHIPPER});
+        await contract.createNewShipment(shipmentUuid, EscrowFundingType.NO_FUNDING, 0, "0x0000000000000000000000000000000000000000", {from: SHIPPER});
         await truffleAssert.reverts(contract.setInProgress(shipmentUuid, {from: MODERATOR}), "Carrier must exist before marking a shipment In Progress");
 
         shipmentUuid = await createShipment();
@@ -248,7 +163,7 @@ contract('LoadContract', async (accounts) => {
         let shipmentUuid = await createShipment();
 
         // No one else can cancel
-        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: INVALID}), "Only shipper, carrier, or moderator can cancel an Created shipment");
+        await truffleAssert.reverts(contract.setCanceled(shipmentUuid, {from: ATTACKER}), "Only shipper, carrier, or moderator can cancel an Created shipment");
 
         //Shipper can cancel an Created shipment
         await contract.setCanceled(shipmentUuid, {from: SHIPPER});
@@ -298,18 +213,18 @@ contract('LoadContract', async (accounts) => {
     });
 
     it("should not create new shipments if the contract is deprecated", async () => {
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}));
-        await truffleAssert.reverts(contract.setDeprecated(true, {from: INVALID}));
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: SHIPPER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: CARRIER}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: MODERATOR}), "Ownable: caller is not the owner");
+        await truffleAssert.reverts(contract.setDeprecated(true, {from: ATTACKER}), "Ownable: caller is not the owner");
         let deprecationTx = await contract.setDeprecated(true, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
-            return ev.msgSender === OWNER && ev.isDeprecated == true;
+            return ev.msgSender === OWNER && ev.isDeprecated === true;
         });
         await truffleAssert.reverts(createShipment(), "This version of the LOAD contract has been deprecated");
         deprecationTx = await contract.setDeprecated(false, {from: OWNER});
         await truffleAssert.eventEmitted(deprecationTx, "ContractDeprecatedSet", ev => {
-            return ev.msgSender === OWNER && ev.isDeprecated == false;
+            return ev.msgSender === OWNER && ev.isDeprecated === false;
         });
         await createShipment();
     });

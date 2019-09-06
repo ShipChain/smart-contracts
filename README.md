@@ -94,7 +94,7 @@ This is best for ongoing development as you can deploy new versions of the contr
 
 ## Console
 
-To manually invoke the contract methods in your local network, use the truffle console (a NodeJS REPL).  Here is an example of creating a new LoadShipment using the current LoadRegistry contract and returning the LoadShipment's Shipper:
+To manually invoke the contract methods in your local network, use the truffle console (a NodeJS REPL). To enter the console, use `bin/truffle console`.  Here is an example of creating a new LoadShipment using the current LoadRegistry contract and returning the LoadShipment's Shipper:
 
 ```javascript
 // Get the network accounts
@@ -149,18 +149,44 @@ lint in your mind, skip this step. : )
 
 If you need to test with a single test file, you can do that by `bin/truffle test test/TEST_FILE_NAME.js`
 
+## Style Convention
+
+The inline documentation of the solidity source files in this project follows the [NATSpec Format](https://solidity.readthedocs.io/en/v0.5.10/natspec-format.html).
+
 ## Local Security Check
 To run `securify` locally, you can run this command,
 ```bash
 bin/ddo npm run flatten
-docker run -v $(pwd)/truffle/flat-sol:/project shipchain/securify:aef12a32
+docker run -v $(pwd)/truffle/flat-sol:/project shipchain/securify:aef12a3
 ```
 
 If you want to run `myth` locally, you can run,
 ```bash
 bin/myth
 ```
+
+if you have myth installed locally, you can run, 
+```bash
+bin/ddo npm run flatten
+cd truffle
+myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --max-depth 20
+
+```
 However, make sure you have done the first two steps of the [Startup section](#startup).
+
+## Local Coverage Test
+To run coverage test locally,
+```bash
+bin/ddo npm run coverage
+```
+
+## Solidity docgen
+To generate the markdown documentation for the NatSpec inline documentation,
+```bash
+bin/ddo npm run flatten
+bin/ddo npm run docgen
+```
+The output file is `truffle/docs/index.md`
 
 ## Documentation
 

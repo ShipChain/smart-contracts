@@ -1,4 +1,4 @@
 #!/bin/bash
 
 bin/truffle compile
-docker run -v $(pwd)/truffle:/tmp -w "/tmp/" mythril/myth:0.20.0 -x --truffle --verbose-report
+docker run -v $(pwd)/truffle:/tmp -w "/tmp/" mythril/myth:0.21.14 truffle

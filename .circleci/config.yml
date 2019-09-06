@@ -17,20 +17,20 @@ jobs: # a collection of steps
 
   truffle-compile:
     docker:
-      - image: circleci/node:10.10-stretch
+      - image: circleci/node:10.15-stretch
     steps:
       - checkout
       - run:
           name: "Download solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.0/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
           name: "Compile Truffle"
           command: |
             cd truffle
-            npm install
+            yarn
             npm run truffle -- compile --all --network circleci
       - run:
           name: "Flatten solidity for static analysis"
@@ -48,7 +48,7 @@ jobs: # a collection of steps
 
   mythril:
     docker:
-      - image: mythril/myth:0.20.0
+      - image: mythril/myth:0.21.14
     steps:
       - checkout
       - attach_workspace:
@@ -57,7 +57,8 @@ jobs: # a collection of steps
           name: "Run Mythril"
           command: |
             cd truffle
-            myth --truffle
+            myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --solv 0.5.11 --max-depth 16 --execution-timeout 1740
+          no_output_timeout: 30m
 
   truffle-tests:
     docker:
@@ -70,7 +71,7 @@ jobs: # a collection of steps
       - run:  # Temporary fix for https://github.com/trufflesuite/truffle/issues/469
           name: "Download solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.0/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
@@ -81,24 +82,30 @@ jobs: # a collection of steps
       - store_test_results:
           path: truffle/test-results
 
-#  solidity-coverage:  # Disabled due to incompatibility with Truffle 5/Sol 0.5.0
-#    docker:
-#      - image: circleci/node:10.10-stretch
-#    steps:
-#      - checkout
-#      - attach_workspace:
-#          at: truffle
-#      - run:
-#          name: "Solidity test coverage"
-#          command: |
-#            cd truffle
-#            npm run coverage || true
-#      - store_artifacts:
-#          path: truffle/coverage
+  solidity-coverage:
+    docker:
+      - image: circleci/node:10.10-stretch
+    steps:
+      - checkout
+      - attach_workspace:
+          at: truffle
+      - run:
+          name: "Install solc"
+          command: |
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
+            chmod +x solc-static-linux
+            sudo mv solc-static-linux /usr/bin/solc
+      - run:
+          name: "Solidity test coverage"
+          command: |
+            cd truffle
+            npm run coverage || true
+      - store_artifacts:
+          path: truffle/coverage
 
   slither:
     docker:
-      - image: shipchain/slither:0.5.2
+      - image: shipchain/slither:0.5.11
     steps:
       - checkout
       - attach_workspace:
@@ -108,8 +115,9 @@ jobs: # a collection of steps
           command: |
             cd truffle
             mkdir slither || true
-            slither . --print inheritance-graph --json slither/output.json || true
-            dot -Tpng export.dot > slither/LoadContract.png
+            slither . --json slither/output.json || true
+            slither . --print inheritance-graph || true
+            dot -Tpng contracts.dot > slither/LoadContract.png
       - store_artifacts:
           path: truffle/slither
 
@@ -158,9 +166,20 @@ jobs: # a collection of steps
             export VERSION=$(cat truffle/contracts/Load/VERSION)
             export ABI=$(jq -rc .abi truffle/build/contracts/LoadContract.json)
             export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/LoadContract.json)
-            jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/meta.json || { echo "Current version is already deployed"; exit 1; }
+            jq -e '.contracts.LOAD.latest != env.VERSION' meta-contracts/meta.json || { echo "Current version of LOAD contract is already deployed"; exit 1; }
             jq -r '.contracts.LOAD.versions[env.VERSION].abi=env.ABI | .contracts.LOAD.versions[env.VERSION].bin=env.BYTECODE | .contracts.LOAD.versions[env.VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.LOAD.latest=env.VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
             git -C meta-contracts commit -a -m "Published LOAD $VERSION to meta-contracts"
+            git -C meta-contracts push
+
+      - run:
+          name: "Update meta-contracts repo with new VaultNotary version"
+          command: |
+            export NOTARY_VERSION=$(cat truffle/contracts/VaultNotary/VERSION)
+            export ABI=$(jq -rc .abi truffle/build/contracts/VaultNotary.json)
+            export BYTECODE=$(jq -rc .bytecode truffle/build/contracts/VaultNotary.json)
+            jq -e '.contracts.NOTARY.latest != env.NOTARY_VERSION' meta-contracts/meta.json || { echo "Current version of NOTARY contract is already deployed"; exit 1; }
+            jq -r '.contracts.NOTARY.versions[env.NOTARY_VERSION].abi=env.ABI | .contracts.NOTARY.versions[env.NOTARY_VERSION].bin=env.BYTECODE | .contracts.NOTARY.versions[env.NOTARY_VERSION]["git-hash"]=env.CIRCLE_SHA1 | .contracts.NOTARY.latest=env.NOTARY_VERSION' meta-contracts/meta.json | sponge meta-contracts/meta.json
+            git -C meta-contracts commit -a -m "Published NOTARY $NOTARY_VERSION to meta-contracts"
             git -C meta-contracts push
 
 workflows:
@@ -177,9 +196,9 @@ workflows:
       - truffle-tests:
           requires:
             - truffle-compile
-#      - solidity-coverage:
-#          requires:
-#            - truffle-compile
+      - solidity-coverage:
+          requires:
+            - truffle-compile
       - slither:
           requires:
             - truffle-compile

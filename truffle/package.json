@@ -2,6 +2,7 @@
   "scripts": {
     "truffle": "./node_modules/.bin/truffle",
     "lint": "./node_modules/.bin/solhint ./**/**/*.sol",
+    "docgen": "./node_modules/.bin/solidity-docgen -i flat-sol",
     "coverage": "./node_modules/.bin/solidity-coverage",
     "flatten": "./node_modules/.bin/soljitsu flatten --truffle=./ --dest-dir=./flat-sol",
     "combine": "./node_modules/.bin/soljitsu combine --truffle=./ --dest-dir=./combined-sol",
@@ -14,16 +15,17 @@
   "dependencies": {
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
-    "eth-gas-reporter": "^0.1.12",
+    "eth-gas-reporter": "^0.2.11",
     "mocha-junit-reporter": "^1.18.0",
     "mocha-multi-reporters": "^1.1.7",
     "openzeppelin-solidity": "^2.1.2",
     "solhint": "^1.5.1",
-    "solidity-coverage": "^0.5.11",
+    "solidity-coverage": "^0.6.4",
+    "solidity-docgen": "^0.3.0-beta.4",
     "soljitsu": "^1.0.0",
-    "surya": "^0.2.7",
-    "truffle": "^5.0.3",
-    "truffle-assertions": "^0.7.2",
+    "surya": "^0.2.12-dev.14",
+    "truffle": "^5.0.31",
+    "truffle-assertions": "^0.9.1",
     "uuid": "^3.3.2",
     "uuid-to-hex": "^1.0.3"
   }
