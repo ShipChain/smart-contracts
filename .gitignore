@@ -7,3 +7,5 @@ truffle/combined-sol
 truffle/build
 truffle/npm-debug.log
 truffle/abi/
+meta-contracts/
+updateMeta.sh
