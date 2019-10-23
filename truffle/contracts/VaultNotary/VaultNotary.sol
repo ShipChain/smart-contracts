@@ -206,13 +206,13 @@ contract VaultNotary is Ownable {
     }
 
     /** @notice This function can read the vaultUri, vaultHash and vaultOwner given a
-      * vaultId. It can be used in unit tests to verify the values are correct
-      * after calling registerVault or using the setters. It can also be used
-      * by outside users to read the details of a vault. If vaultID is not
-      * registered, the vaultOwner returned will be 0x0. Otherwise, vaultOwner will
-      * not be 0x0. Therefore, the returned vaultOwner can be used to test whether
-      * the queried vault is registered. When vault not registered, the returned
-      * vaultUri and vaultHash will both be empty strings
+      *  vaultId. It can be used in unit tests to verify the values are correct
+      *  after calling registerVault or using the setters. It can also be used
+      *  by outside users to read the details of a vault. If vaultID is not
+      *  registered, the vaultOwner returned will be 0x0. Otherwise, vaultOwner will
+      *  not be 0x0. Therefore, the returned vaultOwner can be used to test whether
+      *  the queried vault is registered. When vault not registered, the returned
+      *  vaultUri and vaultHash will both be empty strings
       * @param vaultId bytes16 The ID of the Vault to query
       * @return vaultUri string The uri of the vault
       * @return vaultHash string The hash of the vault
