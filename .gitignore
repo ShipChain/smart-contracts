@@ -7,3 +7,4 @@ truffle/combined-sol
 truffle/build
 truffle/npm-debug.log
 truffle/abi/
+updateMeta.sh

@@ -316,7 +316,16 @@ contract LoadContract is Ownable {
     }
 
     /** @notice Returns the Escrow state.
-      * @param _shipmentUuid bytes16 Shipment's UUID
+      * @param _shipmentUuid bytes16 Shipment's UUID.
+      * @return contractedAmount uint256 The escrow amount that is contracted for the
+      *  queried shipment.
+      * @return fundedAmount uint256 The amount of funded value for the escrow of the
+      *  queried shipment in the currency specified by fundingType.
+      * @return createdAt uint256 The timestamp that an escrow was created, which is used to
+      *  determine when the escrow can be refunded by the contract owner.
+      * @return fundingType Escrow.FundingType The type of funding for contractedAmount and fundedAmount.
+      * @return state Escrow.State The current state of the queried shipment's escrow.
+      * @return refundAddress address The address to refund to.
       */
     function getEscrowData(bytes16 _shipmentUuid)
         public
@@ -332,7 +341,10 @@ contract LoadContract is Ownable {
         refundAddress = allEscrowData[_shipmentUuid].refundAddress;
     }
 
-    /** @notice Returns the Escrow funding type.
+    /** @notice This is a payable function. It is used to accept eth payments.
+      *  When a user sends eth to this payable function, the eth is added to the
+      *  contracts eth balance. This function then updates the amount of eth
+      *  stored in this shipment's escrow.
       * @param _shipmentUuid bytes16 Shipment's UUID
       */
     function fundEscrowEther(bytes16 _shipmentUuid)

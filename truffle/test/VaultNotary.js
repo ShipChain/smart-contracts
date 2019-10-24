@@ -56,6 +56,7 @@ contract('VaultNotary', async (accounts) => {
         // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, vaultHash);
         assert.equal(data.vaultUri, vaultUri);
+        assert.equal(data.vaultOwner, ALICE);
     });
 
     it("should not emit VaultUri if uri is empty string", async () => {
@@ -77,10 +78,9 @@ contract('VaultNotary', async (accounts) => {
 
         const data = await contract.getVaultNotaryDetails(vaultId);
 
-        //since the setVaultHash and Uri works in the registerVault, it has
-        // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, vaultHash);
         assert.equal(data.vaultUri, "");
+        assert.equal(data.vaultOwner, ALICE);
     });
 
     it("should not emit VaultHash if hash is empty string", async () => {
@@ -106,6 +106,7 @@ contract('VaultNotary', async (accounts) => {
         // tested the aclMapping set to true in the registerVault works as expected
         assert.equal(data.vaultHash, "");
         assert.equal(data.vaultUri, vaultUri);
+        assert.equal(data.vaultOwner, ALICE);
     });
 
     it("should not emit VaultHash and VaultUri if both empty strings", async () => {
@@ -130,6 +131,7 @@ contract('VaultNotary', async (accounts) => {
 
         assert.equal(data.vaultHash, "");
         assert.equal(data.vaultUri, "");
+        assert.equal(data.vaultOwner, ALICE);
     });
 
     //this checks the vaultOwner assignment and the modifier vaultOwnerOnly works
@@ -379,4 +381,13 @@ contract('VaultNotary', async (accounts) => {
         });
         await (registerVault());
     });
+
+    //**********************testing the getVaultNotaryDetails************************
+    it("should return vaultOwner as address 0 when calling getVaultDetails without registering the vault", async () => {
+        const vaultId = uuidToHex(uuidv4(), true);
+        const data = await contract.getVaultNotaryDetails(vaultId);
+        assert.equal(data.vaultOwner, '0x0000000000000000000000000000000000000000')
+    });
+
+
 });
