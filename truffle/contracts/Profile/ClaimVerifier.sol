@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-import './ClaimHolder.sol';
+import "./ClaimHolder.sol";
 
 // **Warning!** This file is a protoype version of our work around ERC 725.
 // This file is now out of date and **should not be used**.

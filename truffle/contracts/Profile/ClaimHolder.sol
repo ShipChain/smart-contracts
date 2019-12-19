@@ -1,7 +1,7 @@
 pragma solidity ^0.5.11;
 
-import './ERC735.sol';
-import './KeyHolder.sol';
+import "./ERC735.sol";
+import "./KeyHolder.sol";
 
 // **Warning!** This file is a protoype version of our work around ERC 725.
 // This file is now out of date and **should not be used**.

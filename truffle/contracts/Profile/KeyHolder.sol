@@ -1,6 +1,6 @@
 pragma solidity ^0.5.11;
 
-import './ERC725.sol';
+import "./ERC725.sol";
 
 // **Warning!** This file is a protoype version of our work around ERC 725.
 // This file is now out of date and **should not be used**.
@@ -64,7 +64,8 @@ contract KeyHolder is ERC725 {
     {
         require(keys[_key].key != _key, "Key already exists"); // Key should not already exist
         if (msg.sender != address(this)) {
-          require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1), "Sender does not have management key"); // Sender has MANAGEMENT_KEY
+          require(keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1),
+                 "Sender does not have management key"); // Sender has MANAGEMENT_KEY
         }
 
         keys[_key].key = _key;
@@ -124,7 +125,8 @@ contract KeyHolder is ERC725 {
 
         emit ExecutionRequested(executionNonce, _to, _value, _data);
 
-        if (keyHasPurpose(keccak256(abi.encodePacked(msg.sender)),1) || keyHasPurpose(keccak256(abi.encodePacked(msg.sender)),2)) {
+        if (keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 1)
+            || keyHasPurpose(keccak256(abi.encodePacked(msg.sender)), 2)) {
             approve(executionNonce, true);
         }
 
