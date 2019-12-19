@@ -63,7 +63,7 @@ contract ClaimVerifier {
 
   function getRecoveredAddress(bytes memory sig, bytes32 dataHash)
       public
-      view
+      pure
       returns (address addr)
   {
       bytes32 ra;
