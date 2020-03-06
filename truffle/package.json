@@ -16,6 +16,7 @@
     "bn-chai": "^1.0.1",
     "chai": "^4.2.0",
     "eth-gas-reporter": "^0.2.11",
+    "es-abstract": "^1.14.1",
     "mocha-junit-reporter": "^1.18.0",
     "mocha-multi-reporters": "^1.1.7",
     "openzeppelin-solidity": "^2.1.2",

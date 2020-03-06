@@ -1,4 +1,4 @@
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 import "truffle/Assert.sol";
 import { Converter } from "../contracts/Load/lib/Converter.sol";

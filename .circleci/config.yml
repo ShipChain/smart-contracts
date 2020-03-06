@@ -23,7 +23,7 @@ jobs: # a collection of steps
       - run:
           name: "Download solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
@@ -57,7 +57,7 @@ jobs: # a collection of steps
           name: "Run Mythril"
           command: |
             cd truffle
-            myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --solv 0.5.11 --max-depth 16 --execution-timeout 1740
+            myth analyze flat-sol/Load*.sol flat-sol/VaultNotary*.sol --solv 0.5.12 --max-depth 16 --execution-timeout 1740
           no_output_timeout: 30m
 
   truffle-tests:
@@ -71,7 +71,7 @@ jobs: # a collection of steps
       - run:  # Temporary fix for https://github.com/trufflesuite/truffle/issues/469
           name: "Download solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
@@ -92,7 +92,7 @@ jobs: # a collection of steps
       - run:
           name: "Install solc"
           command: |
-            wget https://github.com/ethereum/solidity/releases/download/v0.5.11/solc-static-linux
+            wget https://github.com/ethereum/solidity/releases/download/v0.5.12/solc-static-linux
             chmod +x solc-static-linux
             sudo mv solc-static-linux /usr/bin/solc
       - run:
@@ -105,7 +105,7 @@ jobs: # a collection of steps
 
   slither:
     docker:
-      - image: shipchain/slither:0.5.11
+      - image: shipchain/slither:0.5.12
     steps:
       - checkout
       - attach_workspace:

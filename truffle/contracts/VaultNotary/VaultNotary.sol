@@ -1,5 +1,5 @@
 /// @author Jianwei Liu jliu@shipchain.io
-pragma solidity 0.5.11;
+pragma solidity 0.5.12;
 
 import {Ownable} from "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
