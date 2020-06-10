@@ -26,7 +26,7 @@ contract VaultNotary is Ownable {
         /* Struct Slot 3 */
         string vaultHash;
 
-        /* Struct  Slot 4 */
+        /* Struct Slot 4 */
         string vaultUri;
 
     }
